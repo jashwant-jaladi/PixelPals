@@ -1,29 +1,31 @@
-import { Route, Routes, Navigate, Outlet, useLocation } from "react-router-dom";
-import Home from "./pages/Home";
-import Profile from "./pages/Profile";
-import Register from "./pages/Register";
-import Login from "./pages/Login";
-import ResetPassword from "./pages/ResetPassword";
+import React from 'react'
+import { Routes, Route } from 'react-router-dom'
+import Login from './pages/Login'
+import Register from './pages/Register'
+import ResetPassword from './pages/ResetPassword'
+import UserPage from './pages/UserPage'
+import PostPage from './pages/PostPage'
+import { Container } from '@mui/material'
+import Header from './components/Header'
 
 
-
-
-function App() {
-
-  return (  <>
-      <div className="App">
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<Home />} /> 
-            <Route path="/profile/:id?" element={<Profile />} />
-          </Route>
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/reset-password" element={<ResetPassword />} />
-        </Routes>
-      </div>
+const App = () => {
+  return (
+    <>
+    <Routes>
+      <Route path='/' element={<Login/>} />
+      <Route path='/register' element={<Register/>} />
+      <Route path='/reset-password' element={<ResetPassword/>}/>
+    </Routes>
+    <Container maxWidth="md">
+    <Header/>
+    <Routes>
+      <Route path='/:username' element={<UserPage/>}/>
+      <Route path='/:username/post/:id' element={<PostPage/>}/>
+    </Routes>
+    </Container>
     </>
-  );
+  )
 }
 
-export default App;
+export default App
