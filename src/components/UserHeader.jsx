@@ -33,7 +33,7 @@ const UserHeader = () => {
   return (
     <div>
       <div className='flex justify-between mt-20'>
-        <div>
+        <div className='pt-10'>
           <div className='text-3xl font-bold'>Winston Shamraj</div>
           <div className='flex gap-2 mt-2'>
             <div className='text-xl font-bold'>theShamraj</div>
@@ -42,7 +42,7 @@ const UserHeader = () => {
         </div>
         <Avatar src="https://i.pravatar.cc/300?u=theShamraj" sx={{ width: 150, height: 150 }} />
       </div>
-      <p className='py-5 w-[90%]'>Just a tech lover navigating the world of code. Coffee addict, gym enthusiast, and avid reader. Always up for a good challenge and new adventures. #CodeLife #GymRat #Bookworm</p>
+      <p className='py-5 w-[90%] font-bold'>Just a tech lover navigating the world of code. Coffee addict, gym enthusiast, and avid reader. Always up for a good challenge and new adventures. #CodeLife #GymRat #Bookworm</p>
       <div className='flex justify-between'>
         <div className='flex gap-2 text-pink-700 font-bold'>
           <div>3.2k followers</div>
@@ -86,7 +86,17 @@ const UserHeader = () => {
             }
           }}
       />
+  
+  <div className='flex justify-evenly mt-8 font-bold text-xl'>
+    <div className='w-[50%] border-b-2 text-center'>
+    <div >Posts</div>
     </div>
+    <div className='w-[50%] border-b-2 border-gray-500 text-center'>
+    <div className='text-gray-500'>Replies</div>
+    </div>
+  </div>
+    </div>
+    
   );
 }
 
