@@ -21,7 +21,7 @@ const App = () => {
     <Header/>
     <Routes>
       <Route path='/:username' element={<UserPage/>}/>
-      <Route path='/:username/post/:id' element={<PostPage/>}/>
+      <Route path='/:username/:id' element={<PostPage/>}/>
     </Routes>
     </Container>
     </>

@@ -44,7 +44,7 @@ const UserHeader = () => {
       </div>
       <p className='py-5 w-[90%] font-bold'>Just a tech lover navigating the world of code. Coffee addict, gym enthusiast, and avid reader. Always up for a good challenge and new adventures. #CodeLife #GymRat #Bookworm</p>
       <div className='flex justify-between'>
-        <div className='flex gap-2 text-pink-700 font-bold'>
+        <div className='flex gap-2 text-pink-700 font-bold items-center'>
           <div>3.2k followers</div>
           <span className='font-bold'>.</span>
           <div>instagram.com</div>
