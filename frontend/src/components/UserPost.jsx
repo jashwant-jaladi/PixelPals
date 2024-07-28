@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import { Avatar } from '@mui/material';
 import Actions from './Actions';
 import VerifiedIcon from '@mui/icons-material/Verified';
@@ -8,7 +9,7 @@ import { Link } from 'react-router-dom';
 
 
 const UserPost = () => {
-  
+  const [liked,setLiked] = useState(false)
   return (
     <Link to={"/jashwant"}>
     <div className='flex'>
@@ -38,9 +39,9 @@ const UserPost = () => {
         <div className='flex justify-start'>
           <img src="/boxing-4383119_1280.jpg" alt="post" width={600} height={500} className='mt-8' />
         </div>
-          <Actions />
+          <Actions liked={liked} setLiked={setLiked} />
           <div className='flex gap-3 font-bold text-gray-500 items-center'>
-          <p>238 replies</p>
+          <p>{202 + (liked ? 1 : 0)} replies</p>
           <p className='pb-2 text-xl'>.</p>
           <p>801 likes</p>
         </div>
