@@ -40,8 +40,6 @@ const createPost = async (req, res) => {
     }
 };
 
-
-
 const getPost = async (req, res) => {
     try {
         const postId = req.params.id;
@@ -73,4 +71,73 @@ const deletePost = async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 }
-export { createPost, getPost, deletePost }
+
+const likeAndUnlikePost = async (req, res) => {
+    try{
+        const postId = req.params.id;
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+        if (post.likes.includes(req.user._id)) {
+            await post.updateOne({ $pull: { likes: req.user._id } });
+            return res.status(200).json({ message: "Post unliked successfully" });
+        }
+        await post.updateOne({ $push: { likes: req.user._id } });
+        res.status(200).json({ message: "Post liked successfully" });
+    }
+    catch(err){
+        res.status(404).json({ message: err.message });
+    }
+}
+
+const commentPost = async (req, res) => {
+    try
+    {
+        const postId = req.params.id;
+        const { text} = req.body;
+        const userId=req.user._id;
+        const profilePic=req.user.profilePic;
+        const username=req.user.username;
+
+        if (!text) {
+            return res.status(400).json({ message: "Please fill all the fields" });
+        }
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.status(404).json({ message: "Post not found" });
+        }
+        const comment = {
+            text,
+            postedBy: userId,
+            profilePic,
+            username
+        };
+
+        post.comments.push(comment);
+        await post.save();
+        res.status(200).json({ message: "Comment added successfully", post });
+    }
+    catch(err)
+    {
+        res.status(404).json({ message: err.message });
+    }
+}
+
+const getFeedPosts = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        const following = user.following;
+        const posts = await Post.find({ postedBy: { $in: following } }).populate("postedBy");
+        res.status(200).json({ message: "Posts fetched successfully", posts });
+    }
+    catch (error) {
+        console.error("Error getting feed posts:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
+export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts };
