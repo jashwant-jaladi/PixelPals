@@ -10,10 +10,10 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 
 
 const PostPage = () => {
-  const [liked,setLiked] = useState(false)
+  const [liked, setLiked] = useState(false)
   return (
     <div className='flex'>
-      
+
       <div className='mt-6'>
         <Avatar src="https://i.pravatar.cc/300?u=theShamraj" sx={{ width: 60, height: 60 }} />
       </div>
@@ -32,19 +32,19 @@ const PostPage = () => {
         <div className='flex justify-start'>
           <img src="/boxing-4383119_1280.jpg" alt="post" className='mt-8' />
         </div>
-          <Actions liked={liked} setLiked={setLiked}/>
-          <div className='flex gap-3 font-bold text-gray-500 items-center'>
+        <Actions liked={liked} setLiked={setLiked} />
+        <div className='flex gap-3 font-bold text-gray-500 items-center'>
           <p>238 replies</p>
           <p className='pb-2 text-xl'>.</p>
           <p>{202 + (liked ? 1 : 0)} likes</p>
         </div>
         <hr className='my-3' />
         <div className='flex justify-between items-center'>
-        <p className='font-bold'>  👋 Login to like, post and comment on posts.</p>
-        <Button sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white', }} variant='contained'>Login</Button>
+          <p className='font-bold'>  👋 Login to like, post and comment on posts.</p>
+          <Button sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white', }} variant='contained'>Login</Button>
         </div>
         <hr className='my-3' />
-        <Comment/>
+        <Comment />
       </div>
     </div>
   );

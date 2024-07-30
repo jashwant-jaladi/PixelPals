@@ -5,8 +5,8 @@ import UserPost from '../components/UserPost'
 const UserPage = () => {
   return (
     <>
-    <UserHeader/>
-    <UserPost/>
+      <UserHeader />
+      <UserPost />
 
     </>
   )
