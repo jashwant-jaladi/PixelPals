@@ -5,11 +5,14 @@ import App from './App.jsx';
 import './index.css';
 import { ThemeToggleProvider } from './ThemeContext';
 import { BrowserRouter } from 'react-router-dom';
+import { RecoilRoot } from 'recoil';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
+  <RecoilRoot>
   <ThemeToggleProvider>
     <BrowserRouter>
     <App/>
     </BrowserRouter>
   </ThemeToggleProvider>
+  </RecoilRoot>
 );

@@ -1,6 +1,9 @@
 import React from 'react'
+import { useSetRecoilState } from 'recoil'
+import userAuthState from '../Atom/authAtom'
 
 const Login = () => {
+  const setUserAuth = useSetRecoilState(userAuthState)
   return (
     <>
       <div className='bg-[url("public/pink-7761356_960_720.webp")] h-[100vh] bg-cover flex justify-center'>
@@ -20,12 +23,12 @@ const Login = () => {
                   <button type="reset" className='mt-3 p-3 border-2 mx-6 border-pink-700  rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Guest User</button>
                 </div>
               </form>
-              <p className='text-center text-pink-700 mt-14'>Don't have an account? <a className='underline text-pink-500 hover:text-pink-900' href="/register">register</a></p>
+              <p className='text-center text-pink-700 mt-14'>Don't have an account? <a className='underline text-pink-500 hover:text-pink-900' onClick={()=> setUserAuth('register')}>register</a></p>
               <p className='text-center text-pink-700 mt-2 '>Forgot password? <a className='underline text-pink-500 hover:text-pink-900' href="/reset-password">reset password</a></p>
             </div>
           </div>
 
-          <div className='relative flex flex-col justify-center items-center top-[10%] bg-[url("public/ai-generated-8123097_640.webp")] h-[80vh] w-[30%] bg-contain bg-opacity-20 rounded-r-lg'>
+          <div className='relative flex flex-col justify-center items-center top-[10%] bg-[url("/ai-generated-8123097_640.webp")] h-[80vh] w-[30%] bg-contain bg-opacity-20 rounded-r-lg'>
             <div className='absolute inset-0 bg-black opacity-60 rounded-r-lg'></div>
             <div className='relative z-10 text-white text-center font-bold'>
               <h3 className='text-4xl relative bottom-[30%]'>The new way to connect</h3>
