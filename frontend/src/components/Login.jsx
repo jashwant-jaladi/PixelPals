@@ -1,30 +1,101 @@
-import React from 'react'
-import { useSetRecoilState } from 'recoil'
-import userAuthState from '../Atom/authAtom'
+import React, { useState } from 'react';
+import { useSetRecoilState } from 'recoil';
+import userAuthState from '../Atom/authAtom';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import getUser from '../Atom/getUser';
 
 const Login = () => {
-  const setUserAuth = useSetRecoilState(userAuthState)
+  const setUserAtom = useSetRecoilState(getUser);
+  const setUserAuth = useSetRecoilState(userAuthState);
+  const [input, setInput] = useState({
+    email: '',
+    password: ''
+  });
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [snackbarSeverity, setSnackbarSeverity] = useState('error'); 
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!input.email || !input.password) {
+      setSnackbarMessage('Both email and password are required.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/users/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: input.email,
+          password: input.password
+        })
+      });
+
+      const data = await response.json();
+      localStorage.setItem('PixelPalsUser', JSON.stringify(data.user));
+      setUserAtom(data.user);
+      
+    
+      if (response.ok) {
+        setUserAuth('home');
+      } else {
+        setSnackbarMessage(data.message || 'Login failed. Please check your credentials.');
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setSnackbarMessage('An unexpected error occurred. Please try again later.');
+      setSnackbarSeverity('error');
+      setSnackbarOpen(true);
+    }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbarOpen(false);
+  };
+
   return (
     <>
       <div className='bg-[url("public/pink-7761356_960_720.webp")] h-[100vh] bg-cover flex justify-center'>
         <div className='flex w-[100%] justify-center'>
-
           <div className='flex flex-col justify-center glasseffect w-[30%] h-[80vh] relative top-[10%] rounded-l-lg'>
             <div className='flex flex-col justify-center items-center font-bold text-xl'>
-              <img src="public/pixelpals-high-resolution-logo-black-transparent.png" alt="App-logo" width="350px" height="350px" className='relative bottom-[10%]' />
+              <img src="/pixelpals-high-resolution-logo-black-transparent.png" alt="App-logo" width="350px" height="350px" className='relative bottom-[10%]' />
               <h1 className='text-3xl font-bold text-center text-pink-700 pb-10'>Good to See You!</h1>
-              <form action="submit" className='flex flex-col text-pink-700'>
+              <form className='flex flex-col text-pink-700'>
                 <label htmlFor="email" className='pb-2'>Email</label>
-                <input type="email" name="email" id="email" className='mb-5 gradient-border-1' />
-                <label htmlFor="password className='pb-2">Password</label>
-                <input type="password" name="password" id="password" className='mb-5 gradient-border-1' />
+                <input
+                  type="email"
+                  name="email"
+                  id="email"
+                  className='mb-5 gradient-border-1'
+                  onChange={(e) => setInput({ ...input, email: e.target.value })}
+                  value={input.email}
+                />
+                <label htmlFor="password" className='pb-2'>Password</label>
+                <input
+                  type="password"
+                  name="password"
+                  id="password"
+                  className='mb-5 gradient-border-1'
+                  onChange={(e) => setInput({ ...input, password: e.target.value })}
+                  value={input.password}
+                />
                 <div className='flex justify-center w-[100%] h-[100%]'>
-                  <button type="submit" className='mt-3 p-3 pl-7 pr-7 border-2 border-pink-700  rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Login</button>
-                  <button type="reset" className='mt-3 p-3 border-2 mx-6 border-pink-700  rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Guest User</button>
+                  <button type="submit" onClick={handleLogin} className='mt-3 p-3 pl-7 pr-7 border-2 border-pink-700 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Login</button>
+                  <button type="reset" className='mt-3 p-3 border-2 mx-6 border-pink-700 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Guest User</button>
                 </div>
               </form>
-              <p className='text-center text-pink-700 mt-14'>Don't have an account? <a className='underline text-pink-500 hover:text-pink-900' onClick={()=> setUserAuth('register')}>register</a></p>
-              <p className='text-center text-pink-700 mt-2 '>Forgot password? <a className='underline text-pink-500 hover:text-pink-900' href="/reset-password">reset password</a></p>
+              <p className='text-center text-pink-700 mt-14'>Don't have an account? <a className='underline text-pink-500 hover:text-pink-900' onClick={() => setUserAuth('register')}>register</a></p>
+              <p className='text-center text-pink-700 mt-2'>Forgot password? <a className='underline text-pink-500 hover:text-pink-900' href="/reset-password">reset password</a></p>
             </div>
           </div>
 
@@ -42,20 +113,27 @@ const Login = () => {
                 Rediscover yourself
               </div>
               <p></p>
-              <div className='text-pink-700 pr-20 '>
-                <button className=' font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border text-pink-700 hover:bg-pink-700 hover:text-white transition duration-300 '>Learn more</button>
+              <div className='text-pink-700 pr-20'>
+                <button className='font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border text-pink-700 hover:bg-pink-700 hover:text-white transition duration-300'>Learn more</button>
                 <button className='text-pink-700 font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Invite others</button>
               </div>
             </div>
           </div>
-
-
         </div>
       </div>
 
-
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

@@ -12,33 +12,27 @@ import Logout from './components/Logout';
 
 const App = () => {
   const location = useLocation();
+  const user = useRecoilValue(getUser);
 
-  const showHeader =  location.pathname !== '/auth';
-  const useContainer = location.pathname !== '/auth';
-  const user=useRecoilValue(getUser);
+  // Determine if the container should be full width or medium width
+  const isAuthPage = location.pathname === '/auth';
+  const containerMaxWidth = isAuthPage ? 'false' : 'md'; // Full screen for AuthPage, 'md' for others
+
   return (
     <>
-      {showHeader && <Header />}
+      {location.pathname !== '/auth' && <Header />}
       
-      {useContainer ? (
-        <Container maxWidth="md" sx={{ mt: 8 }}> 
-        {user&&<Logout/>}
-          <Routes>
-            <Route path="/" element={user?<Homepage />:<Navigate to="/auth" />} /> 
-            <Route path="/auth" element={!user?<AuthPage />:<Navigate to="/" />} />
-            <Route path="/:username" element={<UserPage />} />
-            <Route path="/:username/:id" element={<PostPage />} />
-          </Routes>
-        </Container>
-      ) : (
+      <Container maxWidth={containerMaxWidth} disableGutters >
+        {user && <Logout />}
         <Routes>
-          <Route path="/" element={<Homepage />} />
-          <Route path="/auth" element={<AuthPage />} />
+          {/* AuthPage should not redirect but use container with full width */}
+          <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
+          {/* All other routes */}
+          <Route path="/" element={user ? <Homepage /> : <Navigate to="/auth" />} />
           <Route path="/:username" element={<UserPage />} />
           <Route path="/:username/:id" element={<PostPage />} />
         </Routes>
-      )}
-      
+      </Container>
     </>
   );
 };
