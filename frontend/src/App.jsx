@@ -9,6 +9,7 @@ import Header from './components/Header';
 import { useRecoilValue } from 'recoil';
 import getUser from './Atom/getUser';
 import Logout from './components/Logout';
+import UpdateProfilePage from './pages/UpdateProfilePage';
 
 const App = () => {
   const location = useLocation();
@@ -29,7 +30,9 @@ const App = () => {
           <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
           {/* All other routes */}
           <Route path="/" element={user ? <Homepage /> : <Navigate to="/auth" />} />
+          <Route path="/update" element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />} />
           <Route path="/:username" element={<UserPage />} />
+          
           <Route path="/:username/:id" element={<PostPage />} />
         </Routes>
       </Container>

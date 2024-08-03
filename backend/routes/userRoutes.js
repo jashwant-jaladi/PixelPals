@@ -9,5 +9,5 @@ Router.post("/signup", signupUser);
 Router.post("/login", loginUser);
 Router.post("/logout", logoutUser)
 Router.post("/follow/:id", protectRoute, followandUnfollowUser)
-Router.post("/update/:id", protectRoute, updateProfile)
+Router.put("/update/:id", protectRoute, updateProfile)
 export default Router

@@ -88,7 +88,8 @@ const followandUnfollowUser = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-    const { name, username, email, password, profilePic, bio } = req.body;
+    const { name, username, email, password, bio } = req.body;
+    let { profilePic } = req.body;
     try {
         const user = await User.findById(req.user._id);
         if (req.params.id !== req.user._id.toString()) {
@@ -107,6 +108,15 @@ const updateProfile = async (req, res) => {
             user.bio = bio || user.bio;
             const updatedUser = await user.save();
             res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
+            if(profilePic){
+                if(user.profilePic){
+                    await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
+                }
+                const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
+                    upload_preset: "social_media",
+                })
+                profilePic = uploadedResponse.secure_url;
+            }
         }
         else {
             res.status(404).json({ message: "User not found" });

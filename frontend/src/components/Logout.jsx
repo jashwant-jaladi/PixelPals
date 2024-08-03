@@ -1,7 +1,8 @@
 import React from 'react';
 import { Button } from '@mui/material';
 import { pink } from '@mui/material/colors';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
+import {  useSetRecoilState } from 'recoil';
+import LogoutIcon from '@mui/icons-material/Logout';
 import getUser from '../Atom/getUser';
 
 const Logout = () => {
@@ -47,7 +48,7 @@ const Logout = () => {
           },
         }}
       >
-        Logout
+        <LogoutIcon />
       </Button>
     </div>
   );
