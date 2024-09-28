@@ -7,12 +7,12 @@ import getUser from '../Atom/getUser';
 const UpdateProfilePage = () => {
   const [user, setUser] = useRecoilState(getUser);
   const [input, setInput] = useState({
-    name: user.name,
-    username: user.username,
-    bio: user.bio,
-    email: user.email,
+    name: user.name || '',
+    username: user.username || '',
+    bio: user.bio || '',
+    email: user.email || '',
     password: '',
-    profilePic: user.profilePic || '', // Ensure profilePic is initialized
+    profilePic: user.profilePic || '', 
   });
 
   const [snackbar, setSnackbar] = useState({
@@ -84,7 +84,7 @@ const UpdateProfilePage = () => {
       reader.onloadend = (e) => {
         setInput((prevInput) => ({
           ...prevInput,
-          profilePic: e.target.result
+          profilePic: e.target.result // Base64 string for the image
         }));
       };
       reader.readAsDataURL(file);

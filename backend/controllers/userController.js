@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import generateAndSetCookies from "../utils/helper/generateAndSetCookies.js";
+import { v2 as cloudinary } from "cloudinary";
 
 
 const signupUser = async (req, res) => {
@@ -88,44 +89,72 @@ const followandUnfollowUser = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
-    const { name, username, email, password, bio } = req.body;
+    const { name, email, username, password, bio } = req.body;
     let { profilePic } = req.body;
+
+    const userId = req.user._id;
+
     try {
-        const user = await User.findById(req.user._id);
-        if (req.params.id !== req.user._id.toString()) {
-            return res.status(401).json({ message: "You can update only your profile" });
+        let user = await User.findById(userId);
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        if (req.params.id !== userId.toString()) {
+            return res.status(403).json({ error: "You cannot update other user's profile" });
         }
-        if (user) {
-            if (password) {
-                const salt = await bcrypt.genSalt(10);
-                const hashedPassword = await bcrypt.hash(password, salt);
-                user.password = hashedPassword;
-            }
-            user.name = name || user.name;
-            user.username = username || user.username;
-            user.email = email || user.email;
-            user.profilePic = profilePic || user.profilePic;
-            user.bio = bio || user.bio;
-            const updatedUser = await user.save();
-            res.status(200).json({ message: "Profile updated successfully", user: updatedUser });
-            if(profilePic){
-                if(user.profilePic){
-                    await cloudinary.uploader.destroy(user.profilePic.split("/").pop().split(".")[0]);
+
+        if (password) {
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(password, salt);
+            user.password = hashedPassword;
+        }
+
+        // Handle profilePic if present in the request
+        if (profilePic && profilePic !== user.profilePic) {
+            // Remove old profile picture from Cloudinary if it exists
+            if (user.profilePic) {
+                try {
+                    const publicId = user.profilePic.split("/").pop().split(".")[0];
+                    console.log('Deleting old profile pic:', publicId);
+                    await cloudinary.uploader.destroy(publicId);
+                } catch (deleteError) {
+                    console.error("Error deleting old profile picture:", deleteError.message);
                 }
+            }
+
+            // Upload new profile picture
+            try {
                 const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
                     upload_preset: "social_media",
-                })
+                });
                 profilePic = uploadedResponse.secure_url;
+            } catch (uploadError) {
+                console.error("Error uploading new profile picture:", uploadError.message);
+                return res.status(500).json({ error: "Error uploading new profile picture" });
             }
+        } else if (!profilePic) {
+            // If no new profilePic is provided, keep the old one
+            profilePic = user.profilePic;
         }
-        else {
-            res.status(404).json({ message: "User not found" });
-        }
+
+        // Update user details
+        user.name = name || user.name;
+        user.email = email || user.email;
+        user.username = username || user.username;
+        user.profilePic = profilePic || user.profilePic;
+        user.bio = bio || user.bio;
+
+        user = await user.save();
+        user.password = null; // Do not send the password in the response
+
+        res.status(200).json(user); // Send the complete user object back
+    } catch (err) {
+        console.error("Error in updateUser: ", err.message);
+        res.status(500).json({ error: "An internal server error occurred" });
     }
-    catch (error) {
-        res.status(400).json({ message: error.message });
-    }
-}
+};
+
+
+
 
 const getUserProfile = async (req, res) => {
     try {
