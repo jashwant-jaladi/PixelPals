@@ -102,6 +102,21 @@ const updateProfile = async (req, res) => {
             return res.status(403).json({ error: "You cannot update other user's profile" });
         }
 
+        // Check if email or username already exists
+        if (email !== user.email || username !== user.username) {
+            const existingUser = await User.findOne({
+                $or: [
+                    { email: email, _id: { $ne: userId } },
+                    { username: username, _id: { $ne: userId } }
+                ]
+            });
+            if (existingUser) {
+                return res.status(400).json({ 
+                    error: `${email === existingUser.email ? 'Email' : 'Username'} already exists` 
+                });
+            }
+        }
+
         if (password) {
             const salt = await bcrypt.genSalt(10);
             const hashedPassword = await bcrypt.hash(password, salt);
@@ -110,30 +125,20 @@ const updateProfile = async (req, res) => {
 
         // Handle profilePic if present in the request
         if (profilePic && profilePic !== user.profilePic) {
-            // Remove old profile picture from Cloudinary if it exists
-            if (user.profilePic) {
-                try {
-                    const publicId = user.profilePic.split("/").pop().split(".")[0];
-                    console.log('Deleting old profile pic:', publicId);
-                    await cloudinary.uploader.destroy(publicId);
-                } catch (deleteError) {
-                    console.error("Error deleting old profile picture:", deleteError.message);
-                }
-            }
-
-            // Upload new profile picture
             try {
+                if (user.profilePic) {
+                    const publicId = user.profilePic.split("/").pop().split(".")[0];
+                    await cloudinary.uploader.destroy(publicId);
+                }
+
                 const uploadedResponse = await cloudinary.uploader.upload(profilePic, {
                     upload_preset: "social_media",
                 });
                 profilePic = uploadedResponse.secure_url;
-            } catch (uploadError) {
-                console.error("Error uploading new profile picture:", uploadError.message);
-                return res.status(500).json({ error: "Error uploading new profile picture" });
+            } catch (error) {
+                console.error("Error handling profile picture:", error);
+                return res.status(500).json({ error: "Error processing profile picture" });
             }
-        } else if (!profilePic) {
-            // If no new profilePic is provided, keep the old one
-            profilePic = user.profilePic;
         }
 
         // Update user details
@@ -143,16 +148,27 @@ const updateProfile = async (req, res) => {
         user.profilePic = profilePic || user.profilePic;
         user.bio = bio || user.bio;
 
-        user = await user.save();
-        user.password = null; // Do not send the password in the response
+        await user.save();
+        
+        user.password = undefined;
+        // Create a sanitized user object without password
+        const userResponse = {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            username: user.username,
+            profilePic: user.profilePic,
+            bio: user.bio,
+            followers: user.followers,
+            following: user.following
+        };
 
-        res.status(200).json(user); // Send the complete user object back
+        res.status(200).json({ user: userResponse }); // Match the expected response structure
     } catch (err) {
-        console.error("Error in updateUser: ", err.message);
+        console.error("Error in updateUser: ", err);
         res.status(500).json({ error: "An internal server error occurred" });
     }
 };
-
 
 
 

@@ -7,12 +7,12 @@ import getUser from '../Atom/getUser';
 const UpdateProfilePage = () => {
   const [user, setUser] = useRecoilState(getUser);
   const [input, setInput] = useState({
-    name: user.name || '',
-    username: user.username || '',
-    bio: user.bio || '',
-    email: user.email || '',
+    name: user?.name || '',
+    username: user?.username || '',
+    bio: user?.bio || '',
+    email: user?.email || '',
     password: '',
-    profilePic: user.profilePic || '', 
+    profilePic: user?.profilePic || '', 
   });
 
   const [snackbar, setSnackbar] = useState({
@@ -21,11 +21,13 @@ const UpdateProfilePage = () => {
     severity: 'success'
   });
 
+  const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    setSnackbar({ open: false, message: '', severity: 'success' }); // Clear previous messages
+    setIsLoading(true);
+    setSnackbar({ open: false, message: '', severity: 'success' });
 
     try {
       const response = await fetch(`/api/users/update/${user._id}`, {
@@ -39,7 +41,7 @@ const UpdateProfilePage = () => {
           bio: input.bio,
           email: input.email,
           profilePic: input.profilePic,
-          password: input.password
+          password: input.password || undefined // Only send password if it's not empty
         })
       });
 
@@ -51,9 +53,12 @@ const UpdateProfilePage = () => {
           message: data.error,
           severity: 'error'
         });
-      } else {
-        localStorage.setItem('PixelPalsUser', JSON.stringify(data.user));
-        setUser(data.user);
+      } else if (data.user) {
+        // Update both localStorage and Recoil state
+        const updatedUser = data.user;
+        localStorage.setItem('PixelPalsUser', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+        
         setSnackbar({
           open: true,
           message: 'Profile updated successfully!',
@@ -66,6 +71,8 @@ const UpdateProfilePage = () => {
         message: 'An error occurred while updating the profile.',
         severity: 'error'
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
