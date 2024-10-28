@@ -1,11 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { Avatar, Button, Snackbar, Alert } from '@mui/material';
+import { Avatar, Button, Snackbar, Alert, CircularProgress } from '@mui/material';
 import { pink } from '@mui/material/colors';
 import { useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 
 const UpdateProfilePage = () => {
   const [user, setUser] = useRecoilState(getUser);
+  const [updating, setUpdating] = useState(false);
   const [input, setInput] = useState({
     name: user?.name || '',
     username: user?.username || '',
@@ -21,12 +22,12 @@ const UpdateProfilePage = () => {
     severity: 'success'
   });
 
-  const [isLoading, setIsLoading] = useState(false);
+
   const fileInputRef = useRef(null);
 
   const handleUpdate = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setUpdating(true);
     setSnackbar({ open: false, message: '', severity: 'success' });
 
     try {
@@ -72,7 +73,7 @@ const UpdateProfilePage = () => {
         severity: 'error'
       });
     } finally {
-      setIsLoading(false);
+      setUpdating(false);
     }
   };
 
@@ -180,7 +181,8 @@ const UpdateProfilePage = () => {
             />
           </div>
           <div className='flex gap-4'>
-            <Button type='submit' variant='contained' color='success' className='w-full' sx={{ fontWeight: 'bold' }}>Update</Button>
+            
+            {updating?<CircularProgress sx={{ color: pink[500] }} />:<Button type='submit' variant='contained' color='success' className='w-full' sx={{ fontWeight: 'bold' }}>Update</Button>}
             <Button variant='outlined' color='error' className='w-full'>Cancel</Button>
           </div>
         </form>

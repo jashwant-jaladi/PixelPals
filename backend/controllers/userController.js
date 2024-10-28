@@ -150,7 +150,7 @@ const updateProfile = async (req, res) => {
 
         await user.save();
         
-        user.password = undefined;
+        user.password = null;
         // Create a sanitized user object without password
         const userResponse = {
             _id: user._id,
