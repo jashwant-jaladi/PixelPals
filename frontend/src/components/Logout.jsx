@@ -32,24 +32,26 @@ const Logout = () => {
   };
 
   return (
-    <div className="flex justify-end p-4">
-      <Button
-        onClick={logout}
-        variant="contained"
-        sx={{
-          backgroundColor: pink[500], // Main pink color
-          color: '#ffffff', // Text color
-          fontWeight: 'bold',
-          borderRadius: '12px', // Slightly rounded corners
-          boxShadow: `0 4px 6px ${pink[300]}`, // Shadow effect
-          ":hover": {
-            backgroundColor: pink[600], // Darker pink on hover
-            boxShadow: `0 6px 8px ${pink[400]}`, // Enhanced shadow on hover
-          },
-        }}
-      >
-        <LogoutIcon />
-      </Button>
+    <div>
+    <Button
+  onClick={logout}
+  variant="contained"
+  sx={{
+    backgroundColor: 'rgba(176, 73, 174, 0.1)', // Matches glasseffect
+    color: '#ffffff', // Text color
+    fontWeight: 'bold',
+    borderRadius: '12px', 
+    border: '1px solid rgba(176, 73, 174, 0.69)', // Border from glasseffect
+    boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)', // Shadow from glasseffect
+    ":hover": {
+      backgroundColor: 'rgba(176, 73, 174, 0.2)', // Slightly darker for hover
+      boxShadow: '0 6px 35px rgba(0, 0, 0, 0.15)', 
+    },
+  }}
+>
+  <LogoutIcon />
+</Button>
+
     </div>
   );
 };

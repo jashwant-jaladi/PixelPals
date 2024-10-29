@@ -1,7 +1,7 @@
 
 import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
-
+import {v2 as cloudinary} from "cloudinary";
 
 const createPost = async (req, res) => {
     try {
@@ -9,48 +9,58 @@ const createPost = async (req, res) => {
         const { caption, image } = req.body;
 
         if (!postedBy || !caption) {
-            return res.status(400).json({ message: "Please fill all the fields" });
+            return res.status(400).json({ error: "Please fill all the fields" });
         }
 
         const user = await User.findById(postedBy);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ error: "User not found" });
         }
 
         if (user._id.toString() !== req.user._id.toString()) {
-            return res.status(400).json({ message: "You cannot post others profile" });
+            return res.status(400).json({ error: "You cannot post on others' profiles" });
         }
 
         const maxlength = 500;
         if (caption.length > maxlength) {
-            return res.status(400).json({ message: `Caption must be less than ${maxlength} characters` });
+            return res.status(400).json({ error: `Caption must be less than ${maxlength} characters` });
+        }
+
+        let imageUrl = null;
+        
+        if (image) {
+            // Assuming image is a base64 string
+            const base64Image = image.split(';base64,').pop(); // Get the base64 string without the prefix
+            let uploadedResponse = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64Image}`); // Prefix with appropriate MIME type
+            imageUrl = uploadedResponse.secure_url;
         }
 
         const newPost = new Post({
             postedBy,
             caption,
-            image
+            image: imageUrl
         });
 
         const savedPost = await newPost.save();
         res.status(201).json({ message: "Post created successfully", post: savedPost });
     } catch (error) {
         console.error("Error creating post:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ error: "Internal server error" });
     }
 };
+
 
 const getPost = async (req, res) => {
     try {
         const postId = req.params.id;
         const post = await Post.findById(postId).populate("postedBy");
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return res.status(404).json({ error: "Post not found" });
         }
         res.status(200).json({ message: "Post fetched successfully", post });
     } catch (error) {
         console.error("Error getting post:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ error: "Internal server error" });
     }
 };
 
@@ -59,16 +69,16 @@ const deletePost = async (req, res) => {
         const postId = req.params.id;
         const post = await Post.findById(postId);
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return res.status(404).json({ error: "Post not found" });
         }
         if (post.postedBy.toString() !== req.user._id.toString()) {
-            return res.status(401).json({ message: "Unauthorized" });
+            return res.status(401).json({ error: "Unauthorized" });
         }
         await Post.findByIdAndDelete(postId);
         res.status(200).json({ message: "Post deleted successfully" });
     } catch (error) {
         console.error("Error deleting post:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 
@@ -77,7 +87,7 @@ const likeAndUnlikePost = async (req, res) => {
         const postId = req.params.id;
         const post = await Post.findById(postId);
         if (!post) {
-            return res.status(404).json({ message: "Post not found" });
+            return res.status(404).json({ error: "Post not found" });
         }
         if (post.likes.includes(req.user._id)) {
             await post.updateOne({ $pull: { likes: req.user._id } });
@@ -87,7 +97,7 @@ const likeAndUnlikePost = async (req, res) => {
         res.status(200).json({ message: "Post liked successfully" });
     }
     catch(err){
-        res.status(404).json({ message: err.message });
+        res.status(404).json({ error: err.message });
     }
 }
 
@@ -101,7 +111,7 @@ const commentPost = async (req, res) => {
         const username=req.user.username;
 
         if (!text) {
-            return res.status(400).json({ message: "Please fill all the fields" });
+            return res.status(400).json({ error: "Please fill all the fields" });
         }
         const post = await Post.findById(postId);
         if (!post) {
@@ -129,7 +139,7 @@ const getFeedPosts = async (req, res) => {
         const userId = req.user._id;
         const user = await User.findById(userId);
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(404).json({ error: "User not found" });
         }
         const following = user.following;
         const posts = await Post.find({ postedBy: { $in: following } }).populate("postedBy");
@@ -137,7 +147,7 @@ const getFeedPosts = async (req, res) => {
     }
     catch (error) {
         console.error("Error getting feed posts:", error);
-        res.status(500).json({ message: "Internal server error" });
+        res.status(500).json({ error: "Internal server error" });
     }
 }
 export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts };
