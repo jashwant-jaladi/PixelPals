@@ -142,12 +142,16 @@ const getFeedPosts = async (req, res) => {
             return res.status(404).json({ error: "User not found" });
         }
         const following = user.following;
-        const posts = await Post.find({ postedBy: { $in: following } }).populate("postedBy");
+
+        // Modify the populate to select specific fields
+        const posts = await Post.find({ postedBy: { $in: following } })
+            .populate("postedBy", "name profilePic username"); // Add desired fields here
+
         res.status(200).json({ message: "Posts fetched successfully", posts });
-    }
-    catch (error) {
+    } catch (error) {
         console.error("Error getting feed posts:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 }
+
 export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts };

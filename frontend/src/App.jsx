@@ -16,10 +16,10 @@ import CottageIcon from '@mui/icons-material/Cottage';
 
 const App = () => {
   const location = useLocation();
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
   const user = useRecoilValue(getUser);
 
-  // Determine if the container should be full width or medium width
+  
   const isAuthPage = location.pathname === '/auth';
   const containerMaxWidth = isAuthPage ? 'false' : 'md'; // Full screen for AuthPage, 'md' for others
 
@@ -27,10 +27,10 @@ const App = () => {
     <>
       {location.pathname !== '/auth' && <Header />}
       
-      <Container maxWidth={containerMaxWidth} disableGutters >
+      <Container maxWidth={containerMaxWidth} disableGutters>
         {user && (
-          <div className='flex p-4 justify-between'>
-            {/* Account button to navigate to profile */}
+          <div className="flex p-4 justify-between">
+            
             <Button
               variant="contained"
               sx={{
@@ -45,12 +45,12 @@ const App = () => {
                   boxShadow: '0 6px 35px rgba(0, 0, 0, 0.15)',
                 },
               }}
-              onClick={() => navigate(`/${user.username}`)} // Navigate to user profile
+              onClick={() => navigate(`/${user.username}`)}
             >
               <AccountCircleIcon />
             </Button>
 
-            {/* Cottage button to navigate to homepage */}
+            
             <Button
               variant="contained"
               sx={{
@@ -65,7 +65,7 @@ const App = () => {
                   boxShadow: '0 6px 35px rgba(0, 0, 0, 0.15)',
                 },
               }}
-              onClick={() => navigate('/')} // Navigate to homepage
+              onClick={() => navigate('/')}
             >
               <CottageIcon />
             </Button>
@@ -82,7 +82,7 @@ const App = () => {
           <Route path="/:username/:id" element={<PostPage />} />
         </Routes>
         
-        {user && <CreatePost />}
+        {user && <CreatePost />} 
       </Container>
     </>
   );

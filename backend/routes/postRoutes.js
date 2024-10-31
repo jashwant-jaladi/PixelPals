@@ -4,7 +4,7 @@ import protectRoute from "../middleware/protectRoute.js";
 
 const PostRouter = express.Router();
 
-PostRouter.get("/feed/",protectRoute, getFeedPosts);
+PostRouter.get("/feed",protectRoute, getFeedPosts);
 PostRouter.post("/create",protectRoute, createPost);
 PostRouter.get("/:id", getPost);
 PostRouter.delete("/:id",protectRoute, deletePost);

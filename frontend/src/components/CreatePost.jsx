@@ -150,7 +150,8 @@ const CreatePost = () => {
 
   return (
     <>
-      <div className="flex justify-end">
+      {/* Fixed position button */}
+      <div className="fixed bottom-10 right-32">
         <button
           className="flex items-center gap-2 bg-pink-700 text-white p-2 rounded-md glasseffect hover:bg-pink-600"
           onClick={handleClickOpen}
@@ -159,6 +160,7 @@ const CreatePost = () => {
           <p className="font-bold">Create Post</p>
         </button>
       </div>
+      
       <React.Fragment>
         <BootstrapDialog
           onClose={handleClose}
@@ -260,6 +262,6 @@ const CreatePost = () => {
       </Snackbar>
     </>
   );
-};
+}  
 
 export default CreatePost;
