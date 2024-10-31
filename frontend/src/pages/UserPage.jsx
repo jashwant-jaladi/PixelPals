@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { Snackbar } from '@mui/material';
 import UserHeader from '../components/UserHeader';
-import UserPost from '../components/UserPost';
+import Post from '../components/Post';
 import { useParams } from 'react-router-dom';
 
 const UserPage = () => {
-  const [user, setUser] = useState(null); // Initialize as null instead of an empty object
+  const [user, setUser] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
+  const [fetching, setFetching] = useState(true);
+  const [posts, setPosts] = useState([]);
   const { username } = useParams();
 
   useEffect(() => {
@@ -16,8 +18,8 @@ const UserPage = () => {
       try {
         const res = await fetch(`/api/users/profile/${username}`);
         const data = await res.json();
-        
-        if (res.ok) { // Check if the response is OK (status in the range 200-299)
+
+        if (res.ok) {
           setUser(data);
         } else {
           setSnackbarMessage(data.error || 'User not found');
@@ -30,7 +32,34 @@ const UserPage = () => {
         setSnackbarOpen(true);
       }
     };
+
+    const getPosts = async () => {
+      setFetching(true);
+      try {
+        const res = await fetch(`/api/posts/user/${username}`);
+        const data = await res.json();
+
+        if (res.ok) {
+          // Assuming your API returns an object like { message: 'success', posts: [...] }
+          setPosts(data.posts || []); // Use data.posts to set the posts
+          console.log(data);
+        } else {
+          setSnackbarMessage(data.error || 'Failed to fetch posts');
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+        }
+      } catch (error) {
+        setSnackbarMessage(error.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+        setPosts([]);
+      } finally {
+        setFetching(false);
+      }
+    };
+
     getUser();
+    getPosts();
   }, [username]);
 
   const handleSnackbarClose = (event, reason) => {
@@ -42,14 +71,27 @@ const UserPage = () => {
 
   return (
     <>
-      {user ? ( // Conditional rendering based on the user state
-        <>
-          <UserHeader user={user} />
-          <UserPost />
-        </>
-      ) : (
-        <div className='text-center mt-20 text-xl'>Loading...</div> // You can also add a loading spinner or a message
-      )}
+      
+        {user ? (
+          <>
+            <UserHeader user={user} />
+            {fetching ? (
+              <div>Loading posts...</div>
+            ) : (
+              <>
+                {posts.length > 0 ? (
+                  posts.map((post) => (
+                    <Post key={post._id} post={post} />
+                  ))
+                ) : (
+                  <div>No posts found</div>
+                )}
+              </>
+            )}
+          </>
+        ) : (
+          <div>Loading user profile...</div>
+        )}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

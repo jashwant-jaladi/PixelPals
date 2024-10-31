@@ -1,18 +1,24 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Avatar } from '@mui/material';
 import Actions from './Actions';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
+import { useRecoilValue } from 'recoil';
+import getUser from '../Atom/getUser';
+import DeleteIcon from '@mui/icons-material/Delete';
 
-const UserPost = ({ post }) => {
-  const [liked, setLiked] = useState(false);
+
+
+
+const Post = ({ post }) => {
   const navigate = useNavigate();
+  const currentUser = useRecoilValue(getUser);
   return (
     <div className='flex'>
       <div className='mt-6 flex flex-col'>
-        <Link to={`/${post.postedBy.username}`}>
+        <Link to={`/${post._id.username}`}>
           <Avatar src={post.postedBy.profilePic} sx={{ width: 60, height: 60 }} />
         </Link>
         <div className='border-l-2 mt-2 flex-1 border-gray-500 m-auto flex justify-center'></div>
@@ -48,21 +54,21 @@ const UserPost = ({ post }) => {
           <div className='flex gap-3'>
             <div className='text-sm text-gray-500'>{formatDistanceToNow(new Date(post.createdAt))} ago</div>
             <MoreHorizIcon />
+            {currentUser?._id === post.postedBy.username && (
+              <DeleteIcon sx={{ color: 'red' }} />
+            )}
+
           </div>
         </div>
         <p className='mt-5 font-bold'>{post.caption}</p>
         <div className='flex justify-start'>
           <img src={post.image} alt="post" width={600} height={500} className='mt-8' />
         </div>
-        <Actions liked={liked} setLiked={setLiked} />
-        <div className='flex gap-3 font-bold text-gray-500 items-center'>
-          <p>{post.comments.length} replies</p>
-          <p className='pb-2 text-xl'>.</p>
-          <p>{post.likes.length + (liked ? 1 : 0)} likes</p>
-        </div>
+        <Actions post={post} />
+        
       </div>
     </div>
   );
 };
 
-export default UserPost;
+export default Post;

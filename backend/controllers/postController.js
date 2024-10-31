@@ -130,7 +130,7 @@ const commentPost = async (req, res) => {
     }
     catch(err)
     {
-        res.status(404).json({ message: err.message });
+        res.status(404).json({ er: err.message });
     }
 }
 
@@ -154,4 +154,19 @@ const getFeedPosts = async (req, res) => {
     }
 }
 
-export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts };
+const getUserPosts = async (req, res) => {
+    try {
+        const username = req.params.username;   
+        const user = await User.findOne({ username });
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+        const posts = await Post.find({ postedBy: user._id }).sort({ createdAt: -1 });
+        res.status(200).json({ message: "Posts fetched successfully", posts });
+    } catch (error) {
+        console.error("Error getting user posts:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts, getUserPosts };
