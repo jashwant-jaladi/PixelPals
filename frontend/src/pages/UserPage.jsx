@@ -1,48 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Snackbar } from '@mui/material';
+import { Snackbar, CircularProgress } from '@mui/material';
 import UserHeader from '../components/UserHeader';
 import Post from '../components/Post';
 import { useParams } from 'react-router-dom';
+import useGetUserProfile from '../hooks/useGetUserProfile';
 
 const UserPage = () => {
-  const [user, setUser] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
-  const [fetching, setFetching] = useState(true);
+  const [fetchingPosts, setFetchingPosts] = useState(true);
   const [posts, setPosts] = useState([]);
   const { username } = useParams();
+  const { user, loading: loadingUser } = useGetUserProfile();
 
   useEffect(() => {
-    const getUser = async () => {
-      try {
-        const res = await fetch(`/api/users/profile/${username}`);
-        const data = await res.json();
-
-        if (res.ok) {
-          setUser(data);
-        } else {
-          setSnackbarMessage(data.error || 'User not found');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-        }
-      } catch (error) {
-        setSnackbarMessage(error.message);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      }
-    };
-
     const getPosts = async () => {
-      setFetching(true);
+      setFetchingPosts(true);
       try {
         const res = await fetch(`/api/posts/user/${username}`);
         const data = await res.json();
 
         if (res.ok) {
-          // Assuming your API returns an object like { message: 'success', posts: [...] }
-          setPosts(data.posts || []); // Use data.posts to set the posts
-          console.log(data);
+          setPosts(data.posts || []);
         } else {
           setSnackbarMessage(data.error || 'Failed to fetch posts');
           setSnackbarSeverity('error');
@@ -54,11 +34,10 @@ const UserPage = () => {
         setSnackbarOpen(true);
         setPosts([]);
       } finally {
-        setFetching(false);
+        setFetchingPosts(false);
       }
     };
 
-    getUser();
     getPosts();
   }, [username]);
 
@@ -71,27 +50,28 @@ const UserPage = () => {
 
   return (
     <>
-      
-        {user ? (
-          <>
-            <UserHeader user={user} />
-            {fetching ? (
-              <div>Loading posts...</div>
-            ) : (
-              <>
-                {posts.length > 0 ? (
-                  posts.map((post) => (
-                    <Post key={post._id} post={post} />
-                  ))
-                ) : (
-                  <div>No posts found</div>
-                )}
-              </>
-            )}
-          </>
-        ) : (
-          <div>Loading user profile...</div>
-        )}
+      {loadingUser ? (
+        <div className='text-center mt-10 text-gray-500 text-xl'>Loading user profile...</div>
+      ) : (
+        <>
+          <UserHeader user={user} />
+          {fetchingPosts ? (
+            <div className='flex justify-center mt-10'>
+              <CircularProgress />
+            </div>
+          ) : (
+            <>
+              {posts.length > 0 ? (
+                posts.map((post) => (
+                  <Post key={post._id} post={post} />
+                ))
+              ) : (
+                <div className='text-center mt-10 text-gray-500 text-xl'>No posts found</div>
+              )}
+            </>
+          )}
+        </>
+      )}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

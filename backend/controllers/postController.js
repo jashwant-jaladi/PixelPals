@@ -74,8 +74,13 @@ const deletePost = async (req, res) => {
         if (post.postedBy.toString() !== req.user._id.toString()) {
             return res.status(401).json({ error: "Unauthorized" });
         }
+        if (post.image) {
+			const imgId = post.image.split("/").pop().split(".")[0];
+			await cloudinary.uploader.destroy(imgId);
+		}
         await Post.findByIdAndDelete(postId);
         res.status(200).json({ message: "Post deleted successfully" });
+
     } catch (error) {
         console.error("Error deleting post:", error);
         res.status(500).json({ error: "Internal server error" });
@@ -102,37 +107,39 @@ const likeAndUnlikePost = async (req, res) => {
 }
 
 const commentPost = async (req, res) => {
-    try
-    {
+    try {
         const postId = req.params.id;
-        const { text} = req.body;
-        const userId=req.user._id;
-        const profilePic=req.user.profilePic;
-        const username=req.user.username;
+        const { text } = req.body;
+        const userId = req.user._id;
+        const profilePic = req.user.profilePic; // Ensure this is correctly populated
+        const username = req.user.username;
 
         if (!text) {
             return res.status(400).json({ error: "Please fill all the fields" });
         }
+
         const post = await Post.findById(postId);
         if (!post) {
             return res.status(404).json({ message: "Post not found" });
         }
+
         const comment = {
             text,
             postedBy: userId,
-            profilePic,
+            profilePic, 
             username
         };
 
         post.comments.push(comment);
         await post.save();
+
         res.status(200).json({ message: "Comment added successfully", post });
+    } catch (err) {
+        console.error("Error adding comment:", err);
+        res.status(500).json({ error: err.message });
     }
-    catch(err)
-    {
-        res.status(404).json({ er: err.message });
-    }
-}
+};
+
 
 const getFeedPosts = async (req, res) => {
     try {
@@ -161,7 +168,10 @@ const getUserPosts = async (req, res) => {
         if (!user) {
             return res.status(404).json({ error: "User not found" });
         }
-        const posts = await Post.find({ postedBy: user._id }).sort({ createdAt: -1 });
+        const posts = await Post.find({ postedBy: user._id })
+                        .populate("postedBy", "username profilePic")
+                        .sort({ createdAt: -1 });
+
         res.status(200).json({ message: "Posts fetched successfully", posts });
     } catch (error) {
         console.error("Error getting user posts:", error);
