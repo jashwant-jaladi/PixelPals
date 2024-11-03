@@ -14,6 +14,8 @@ import MuiAlert from '@mui/material/Alert';
 import { useRecoilValue } from 'recoil';
 import getUser from '../Atom/getUser';
 import { pink } from '@mui/material/colors';
+import postAtom from '../Atom/postAtom';
+import { useRecoilState } from 'recoil';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -36,6 +38,7 @@ const CreatePost = () => {
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [snackbarMessage, setSnackbarMessage] = React.useState('');
   const [snackbarSeverity, setSnackbarSeverity] = React.useState('success');
+  const [post, setPost] = useRecoilState(postAtom);
   const user = useRecoilValue(getUser);
   const fileInputRef = useRef(null);
 
@@ -100,6 +103,7 @@ const CreatePost = () => {
           const data = await res.json();
           if (res.status === 201) {
             setSnackbarMessage("Post created successfully!");
+            setPost([data, ...post]);
             setSnackbarSeverity("success");
             setText("");
             setImagePreview(null);

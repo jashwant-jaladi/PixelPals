@@ -8,11 +8,13 @@ import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import getUser from '../Atom/getUser';
 import DeleteIcon from '@mui/icons-material/Delete';
+import postAtom from '../Atom/postAtom';
+
 
 const Post = ({ post }) => {
   const navigate = useNavigate();
   const currentUser = useRecoilValue(getUser);
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useRecoilState(postAtom);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // Default severity

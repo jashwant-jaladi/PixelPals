@@ -78,11 +78,11 @@ const App = () => {
           <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
           <Route path="/" element={user ? <Homepage /> : <Navigate to="/auth" />} />
           <Route path="/update" element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />} />
-          <Route path="/:username" element={<UserPage />} />
+          <Route path="/:username" element={user ? <><UserPage /> <CreatePost /></> : <UserPage />} />
           <Route path="/:username/:id" element={<PostPage />} />
         </Routes>
         
-        {user && <CreatePost />} 
+        
       </Container>
     </>
   );

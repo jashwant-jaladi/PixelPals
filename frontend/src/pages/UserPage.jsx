@@ -4,13 +4,15 @@ import UserHeader from '../components/UserHeader';
 import Post from '../components/Post';
 import { useParams } from 'react-router-dom';
 import useGetUserProfile from '../hooks/useGetUserProfile';
+import { useRecoilState } from 'recoil';
+import postAtom from '../Atom/postAtom';
 
 const UserPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
   const [fetchingPosts, setFetchingPosts] = useState(true);
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useRecoilState(postAtom)
   const { username } = useParams();
   const { user, loading: loadingUser } = useGetUserProfile();
 
@@ -39,7 +41,7 @@ const UserPage = () => {
     };
 
     getPosts();
-  }, [username]);
+  }, [username, setPosts]);
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === 'clickaway') {

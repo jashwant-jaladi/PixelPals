@@ -23,7 +23,6 @@ const Homepage = () => {
           throw new Error(data.error || 'Failed to fetch posts');
         }
       } catch (error) {
-        console.error(error.message);
         setSnackbarMessage(error.message);
         setSnackbarOpen(true);
       } finally {
