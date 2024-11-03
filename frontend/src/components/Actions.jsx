@@ -49,7 +49,7 @@ const Actions = ({ post}) => {
     setSnackbarOpen(true);
 
     try {
-      const response = await fetch(`api/posts/like/${post._id}`, {
+      const response = await fetch(`/api/posts/like/${post._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -96,7 +96,7 @@ const Actions = ({ post}) => {
       return;
     }
     try{
-      const response = await fetch(`api/posts/comment/${post._id}`, {
+      const response = await fetch(`/api/posts/comment/${post._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

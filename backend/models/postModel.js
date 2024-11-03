@@ -35,6 +35,10 @@ const postSchema = new mongoose.Schema({
         },
         username: {
             type: String
+        },
+        createdAt: { // Add createdAt field for comments
+            type: Date,
+            default: Date.now // Automatically set to current date
         }
         }
     ]
