@@ -10,9 +10,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Snackbar } from '@mui/material';
 import { formatDistanceToNow } from 'date-fns'; 
 import { Link } from 'react-router-dom';
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 import DeleteIcon from '@mui/icons-material/Delete';
+import postAtom from '../Atom/postAtom';
+
 
 const PostPage = () => {
   const currentUser = useRecoilValue(getUser);
@@ -23,14 +25,15 @@ const PostPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
-  const [post, setPost] = useState(null);
-
+  const [post, setPost] = useRecoilState(postAtom)
+  
+  const currentPost = post[0];
   const handleDeletePost = async (e) => {
     e.preventDefault();
     if (!window.confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const res = await fetch(`/api/posts/${post._id}`, {
+      const res = await fetch(`/api/posts/${currentPost._id}`, {
         method: 'DELETE',
       });
       const data = await res.json();
@@ -55,6 +58,7 @@ const PostPage = () => {
 
   useEffect(() => {
     const getPosts = async () => {
+      setPost([]);
       try {
         const res = await fetch(`/api/posts/${id}`);
         const data = await res.json();
@@ -64,7 +68,7 @@ const PostPage = () => {
           setSnackbarOpen(true);
           return;
         }
-        setPost(data);
+        setPost([data]);
         console.log(data)
       } catch (err) {
         setSnackbarMessage(err.message);
@@ -73,7 +77,11 @@ const PostPage = () => {
       }
     };
     getPosts();
-  }, [id]);
+  }, [id, setPost]);
+
+  if (!currentPost) return null;
+	console.log("currentPost", currentPost);
+
 
   return (
     <div className='flex'>
@@ -87,18 +95,18 @@ const PostPage = () => {
             <VerifiedIcon color='primary' />
           </div>
           <div className='flex gap-3'>
-            <div className='text-sm text-gray-500'>{post?.createdAt && formatDistanceToNow(new Date(post.createdAt))} ago</div>
+            <div className='text-sm text-gray-500'>{currentPost.createdAt && formatDistanceToNow(new Date(currentPost.createdAt))} ago</div>
             <MoreHorizIcon />
             {currentUser?._id === user?._id && (
               <DeleteIcon sx={{ color: 'red', cursor: 'pointer' }} onClick={handleDeletePost} />
             )}
           </div>
         </div>
-        <p className='mt-7 font-bold'>{post?.caption}</p>
+        <p className='mt-7 font-bold'>{currentPost?.caption}</p>
         <div className='flex justify-start'>
-          <img src={post?.image} alt="post" className='mt-8' />
+          <img src={currentPost?.image} alt="post" className='mt-8' />
         </div>
-        <Actions post={post} />
+        <Actions post={currentPost} />
         {!currentUser && 
         <div>
           <hr className='my-3' />
@@ -112,11 +120,11 @@ const PostPage = () => {
         <hr className='my-3' />
 
         {/* Render comments */}
-        {post?.comments?.map((comment, index) => (
+        {currentPost?.comments?.map((comment, index) => (
           <div key={comment._id}>
             <Comment comment={comment} />
             {/* Only render <hr> if this is not the last comment */}
-            {index < post.comments.length - 1 && <hr className='my-3' />}
+            {index < currentPost.comments.length - 1 && <hr className='my-3' />}
           </div>
         ))}
       </div>
