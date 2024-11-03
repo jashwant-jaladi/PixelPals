@@ -57,7 +57,7 @@ const getPost = async (req, res) => {
         if (!post) {
             return res.status(404).json({ error: "Post not found" });
         }
-        res.status(200).json({ message: "Post fetched successfully", post });
+        res.status(200).json(post);
     } catch (error) {
         console.error("Error getting post:", error);
         res.status(500).json({ error: "Internal server error" });

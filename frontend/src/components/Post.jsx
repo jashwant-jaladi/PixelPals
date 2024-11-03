@@ -125,7 +125,7 @@ const Post = ({ post }) => {
             )}
           </div>
         </div>
-        <Link to={`/post/${post._id}`}>
+        <Link to={`/${post.postedBy.username}/${post._id}`}>
         <p className='mt-5 font-bold'>{post.caption}</p>
         <div className='flex justify-start'>
           <img

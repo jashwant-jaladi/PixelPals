@@ -13,18 +13,24 @@ const useGetUserProfile = () => {
         const res = await fetch(`/api/users/profile/${username}`);
         const data = await res.json();
 
-        if (res.ok) {
-          setUser(data);
-        } else {
-          setError(data.error || 'User not found');
+        if(data.error)
+        {
+          snackbarMessage(data.error);
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+          return;
         }
-      } catch (error) {
-        setError(error.message);
-      } finally {
-        setLoading(false);
-      }
-    };
 
+        setUser(data);
+        setLoading(false);
+      } catch (error) {
+ 
+        setSnackbarMessage(error.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+       
+    };
     getUser();
   }, [username]);
 
