@@ -94,7 +94,7 @@ const PostPage = () => {
       <div className='pl-5'>
         <div className='flex justify-between w-full mt-10 font-bold'>
           <div className='flex gap-2'>
-            <div>{user?.name}</div>
+            <div>{user?.username}</div>
             <VerifiedIcon color='primary' />
           </div>
           <div className='flex gap-3'>

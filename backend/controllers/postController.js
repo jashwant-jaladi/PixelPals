@@ -125,7 +125,7 @@ const commentPost = async (req, res) => {
 
         const comment = {
             text,
-            postedBy: userId,
+            userId,
             profilePic, 
             username
         };

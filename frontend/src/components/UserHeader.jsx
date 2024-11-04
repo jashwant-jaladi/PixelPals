@@ -76,7 +76,7 @@ const UserHeader = ({ user }) => {
 
   return (
     <div>
-      <div className='flex justify-between mt-20'>
+      <div className='flex justify-between mt-20 w-[100vw]'>
         <div className='pt-10'>
           <div className='text-3xl font-bold'>{user.name}</div>
           <div className='flex gap-2 mt-2'>

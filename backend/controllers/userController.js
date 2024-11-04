@@ -2,6 +2,7 @@ import User from "../models/userModel.js";
 import bcrypt from "bcryptjs";
 import generateAndSetCookies from "../utils/helper/generateAndSetCookies.js";
 import { v2 as cloudinary } from "cloudinary";
+import post from "../models/postModel.js";
 
 
 const signupUser = async (req, res) => {
@@ -149,7 +150,16 @@ const updateProfile = async (req, res) => {
         user.bio = bio || user.bio;
 
         await user.save();
-        
+        await post.updateMany(
+			{ "comments.userId": userId },
+			{
+				$set: {
+					"comments.$[comment].username": user.username,
+					"comments.$[comment].profilePic": user.profilePic,
+				},
+			},
+			{ arrayFilters: [{ "comment.userId": userId }] }
+		);
         user.password = null;
         // Create a sanitized user object without password
         const userResponse = {
