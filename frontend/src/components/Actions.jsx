@@ -6,28 +6,22 @@ import CommentIcon from '@mui/icons-material/Comment';
 import RepeatIcon from '@mui/icons-material/Repeat';
 import ShareIcon from '@mui/icons-material/Share';
 import FavoriteIcon from '@mui/icons-material/Favorite';
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
+import postAtom from '../Atom/postAtom';
 
 const Actions = ({ post}) => {
   const user = useRecoilValue(getUser);
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
+  const [liked, setLiked] = useState(post.likes.includes(user?._id));
+  const [posts, setPosts] = useRecoilState(postAtom);
+  const [isLiking, setIsLiking] = useState(false);
+	const [isReplying, setIsReplying] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [comment, setComment] = useState('');
-  
 
-  useEffect(() => {
-    if (post && post.likes) {
-      setLikesCount(post.likes.length);
-      if (user && post.likes.includes(user._id)) {
-        setLiked(true);
-      }
-    }
-  }, [user, post]);
 
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
@@ -40,13 +34,8 @@ const Actions = ({ post}) => {
       setSnackbarOpen(true);
       return;
     }
-
-    const newLikedState = !liked;
-    setLiked(newLikedState);
-    setLikesCount(prevCount => prevCount + (newLikedState ? 1 : -1));
-    setSnackbarSeverity('success');
-    setSnackbarMessage(newLikedState ? 'Post liked successfully!' : 'Post unliked');
-    setSnackbarOpen(true);
+    if(isLiking) return;
+    setIsLiking(true);
 
     try {
       const response = await fetch(`/api/posts/like/${post._id}`, {
@@ -58,24 +47,40 @@ const Actions = ({ post}) => {
       const data = await response.json();
 
       if (data.error) {
-        setLiked(!newLikedState);
-        setLikesCount(prevCount => prevCount + (newLikedState ? -1 : 1));
         setSnackbarSeverity('error');
         setSnackbarMessage(data.error);
         setSnackbarOpen(true);
         return;
       }
 
-      if (data.likes) {
-        setLikesCount(data.likes.length);
-      }
+      if (!liked) {
+				
+				const updatedPosts = posts.map((p) => {
+					if (p._id === post._id) {
+						return { ...p, likes: [...p.likes, user._id] };
+					}
+					return p;
+				});
+				setPosts(updatedPosts);
+			} else {
+				// remove the id of the current user from post.likes array
+				const updatedPosts = posts.map((p) => {
+					if (p._id === post._id) {
+						return { ...p, likes: p.likes.filter((id) => id !== user._id) };
+					}
+					return p;
+				});
+				setPosts(updatedPosts);
+			}
 
+      setLiked(!liked);
     } catch (error) {
-      setLiked(!newLikedState);
-      setLikesCount(prevCount => prevCount + (newLikedState ? -1 : 1));
       setSnackbarSeverity('error');
       setSnackbarMessage(error.message);
       setSnackbarOpen(true);
+    }
+    finally {
+      setIsLiking(false);
     }
   };
 
@@ -95,6 +100,8 @@ const Actions = ({ post}) => {
       setSnackbarOpen(true);
       return;
     }
+    if (isReplying) return;
+		setIsReplying(true);
     try{
       const response = await fetch(`/api/posts/comment/${post._id}`, {
         method: 'PUT',
@@ -106,6 +113,7 @@ const Actions = ({ post}) => {
         })
       });
 
+
       const data = await response.json();
      
       if(data.error){
@@ -114,7 +122,13 @@ const Actions = ({ post}) => {
         setSnackbarOpen(true);
         return;
       }
-    
+      const updatedPosts = posts.map((p) => {
+				if (p._id === post._id) {
+					return { ...p, comments: [...p.comments, data] };
+				}
+				return p;
+			});
+      setPosts(updatedPosts);
       setSnackbarSeverity('success');
       setSnackbarMessage('Comment added successfully!');
       setSnackbarOpen(true);
@@ -126,6 +140,9 @@ const Actions = ({ post}) => {
       setSnackbarMessage(error.message);
       setSnackbarOpen(true);
     }
+    finally {
+			setIsReplying(false);
+		}
 
   };
 
@@ -145,7 +162,7 @@ const Actions = ({ post}) => {
         <div className='flex gap-3 font-bold text-gray-500 items-center'>
           <p>{post.comments?.length || 0} replies</p>
           <p className='pb-2 text-xl'>.</p>
-          <p>{likesCount} likes</p>
+          <p>{post.likes?.length || 0} likes</p>
         </div>
       </div>
 

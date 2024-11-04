@@ -3,7 +3,7 @@ import { Avatar } from '@mui/material';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { formatDistanceToNow } from 'date-fns';
 
-const Comment = ({ comment }) => {
+const Comment = ({ comment, lastReply }) => {
   return (
     <div>
       <div className='flex items-center'>
@@ -25,6 +25,7 @@ const Comment = ({ comment }) => {
       <div className='flex flex-col pl-12 pt-3 font-bold text-md'>
         <div>{comment.text}</div>
       </div>
+      {lastReply ? <div className='pl-12 pt-3 font-bold text-md'>hi</div> : null}
     </div>
   );
 };

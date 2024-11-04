@@ -17,17 +17,42 @@ import postAtom from '../Atom/postAtom';
 
 
 const PostPage = () => {
-  const currentUser = useRecoilValue(getUser);
+ 
   const { user, loading: loadingUser } = useGetUserProfile();
+  const [post, setPost] = useRecoilState(postAtom)
   const { id } = useParams();
+  const currentUser = useRecoilValue(getUser);
   const navigate = useNavigate();
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
-  const [post, setPost] = useRecoilState(postAtom)
+  
   
   const currentPost = post[0];
+  useEffect(() => {
+    const getPosts = async () => {
+      setPost([]);
+      try {
+        const res = await fetch(`/api/posts/${id}`);
+        const data = await res.json();
+        if (data.error) {
+          setSnackbarMessage(data.error);
+          setSnackbarSeverity('error');
+          setSnackbarOpen(true);
+          return;
+        }
+        setPost([data]);
+        console.log(data)
+      } catch (err) {
+        setSnackbarMessage(err.message);
+        setSnackbarSeverity('error');
+        setSnackbarOpen(true);
+      }
+    };
+    getPosts();
+  }, [id, setPost]);
+
   const handleDeletePost = async (e) => {
     e.preventDefault();
     if (!window.confirm('Are you sure you want to delete this post?')) return;
@@ -56,29 +81,7 @@ const PostPage = () => {
     }
   };
 
-  useEffect(() => {
-    const getPosts = async () => {
-      setPost([]);
-      try {
-        const res = await fetch(`/api/posts/${id}`);
-        const data = await res.json();
-        if (data.error) {
-          setSnackbarMessage(data.error);
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          return;
-        }
-        setPost([data]);
-        console.log(data)
-      } catch (err) {
-        setSnackbarMessage(err.message);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-      }
-    };
-    getPosts();
-  }, [id, setPost]);
-
+  
   if (!currentPost) return null;
 	console.log("currentPost", currentPost);
 
@@ -119,14 +122,18 @@ const PostPage = () => {
         </div>}
         <hr className='my-3' />
 
-        {/* Render comments */}
-        {currentPost?.comments?.map((comment, index) => (
-          <div key={comment._id}>
-            <Comment comment={comment} />
-            {/* Only render <hr> if this is not the last comment */}
-            {index < currentPost.comments.length - 1 && <hr className='my-3' />}
-          </div>
-        ))}
+  
+        {currentPost.comments.map((comment) => (
+				<Comment
+					key={comment._id}
+					comment={comment}
+					lastReply={comment === currentPost?.comments[currentPost.comments.length - 1]._id}
+				/>
+			))}
+
+
+
+
       </div>
       <Snackbar
         open={snackbarOpen}
