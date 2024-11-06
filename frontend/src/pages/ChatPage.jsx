@@ -17,12 +17,12 @@ const ChatPage = () => {
           }}
         >
             <div className='flex'>
-                <div className='w-[30%] flex flex-col'>
+                <div className='w-[30%] flex flex-col pr-5'>
                     <div>
                     <h3 className='font-bold text-xl'>Recent Chats</h3>
                     </div>
                     <div className='mt-5 flex   items-center gap-3'>
-                        <input type="text" placeholder="Search" className='p-2 border border-gray-300 rounded bg-inherit border-pink-500' />
+                        <input type="text" placeholder="Search" className='p-2 border rounded bg-inherit border-pink-500' />
                         <SearchIcon sx={{ color: 'pink' }} />
                     </div>
                     {false && ( [0,1,2,3,4] ).map((i) =>

@@ -57,3 +57,33 @@
     z-index: -1;
   }
   
+.glass{
+  /* From https://css.glass */
+/* From https://css.glass */
+background: rgba(156, 92, 169, 0.14);
+border-radius: 16px;
+box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+backdrop-filter: blur(7.7px);
+-webkit-backdrop-filter: blur(7.7px);
+border: 1px solid rgba(156, 92, 169, 0.3);
+}
+
+/* Custom scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;             /* Width of the scrollbar */
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;    /* Background of the scrollbar track */
+  border-radius: 10px;    /* Rounded corners for the track */
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: gray;  /* Color of the scrollbar thumb */
+  border-radius: 10px;        /* Rounded corners for the thumb */
+  border: 2px solid #f1f1f1;  /* Adds a border around the thumb for better contrast */
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: darkgray;  /* Darken the color on hover */
+}
