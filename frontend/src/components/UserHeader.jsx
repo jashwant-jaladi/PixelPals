@@ -76,16 +76,21 @@ const UserHeader = ({ user }) => {
 
   return (
     <div>
-      <div className='flex justify-between mt-20 w-[100vw]'>
-        <div className='pt-10'>
-          <div className='text-3xl font-bold'>{user.name}</div>
-          <div className='flex gap-2 mt-2'>
-            <div className='text-xl font-bold'>{user.username}</div>
-            <div className='text-sm py-1 text-pink-700 font-bold bg-pink-400 px-1 rounded-lg'>PixelPals.net</div>
-          </div>
-        </div>
-        <Avatar src={user.profilePic} sx={{ width: 150, height: 150 }} />
+      <div className='flex justify-between items-center mt-20 w-full'>
+  <div className='pt-10'>
+    <div className='text-3xl font-bold'>{user.name}</div>
+    <div className='flex gap-2 mt-2 items-center'>
+      <div className='text-xl font-bold'>{user.username}</div>
+      <div className='text-sm py-1 text-pink-700 font-bold bg-pink-400 px-1 rounded-lg'>
+        PixelPals.net
       </div>
+    </div>
+  </div>
+  <div className='ml-4'>
+    <Avatar src={user.profilePic} sx={{ width: 170, height: 170  }} />
+  </div>
+</div>
+
       <p className='py-5 w-[90%] font-bold'>{user.bio}</p>
       {currentUser?._id === user?._id && (
         <button className='text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300'>
