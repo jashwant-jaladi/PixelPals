@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, useContext } from "react";
 import getUser from "../Atom/getUser";
 import { useRecoilValue } from "recoil";
 import { useEffect, useState } from "react";

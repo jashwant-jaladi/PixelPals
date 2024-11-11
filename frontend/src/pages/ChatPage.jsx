@@ -6,6 +6,7 @@ import MessageContainer from '../components/MessageContainer';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { conversationAtom, messageAtom } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
+import { useSocket } from '../context/socketContext';
 
 const ChatPage = () => {
   const [searchText, setSearchText] = useState('');
@@ -18,7 +19,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useRecoilState(messageAtom);
   const [selectedConversation, setSelectedConversation] = useRecoilState(conversationAtom);
   const currentUser = useRecoilValue(getUser);
-  const { onlineUsers } = useSocket();
+  const {socket, onlineUsers} = useSocket();
  
 
 
@@ -143,7 +144,7 @@ const ChatPage = () => {
           ) : (
             <div className="pt-5">
               {messages.map((message) => (
-                <Conversation key={message._id} conversation={message} />
+                <Conversation key={message._id} conversation={message} isOnline={onlineUsers.includes(message.participants[0]._id)}/>
               ))}
             </div>
           )}

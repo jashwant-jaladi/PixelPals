@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Avatar, Skeleton } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import Message from './Message';
@@ -6,6 +6,8 @@ import MessageInput from './MessageInput';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { conversationAtom } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
+import { useSocket } from '../context/socketContext.jsx';
+
 
 const MessageContainer = () => {
   const [selectedConversation, setSelectedConversation] = useRecoilState(conversationAtom);
@@ -13,7 +15,37 @@ const MessageContainer = () => {
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
   const skeletonCount = 5; // Number of skeletons to display for loading
+  const {socket} = useSocket();
+  const messageEndRef = useRef(null);
+  
+  useEffect(() => {
+    if (!socket) return;
+		socket.on("newMessage", (message) => {
+			if (selectedConversation._id === message.conversationId) {
+				setMessages((prev) => [...prev, message]);
+			}
+      setMessages((prev) => {
+				const updatedConversations = prev.map((conversation) => {
+					if (conversation._id === message.conversationId) {
+						return {
+							...conversation,
+							lastMessage: {
+								text: message.text,
+								sender: message.sender,
+							},
+						};
+					}
+					return conversation;
+				});
+				return updatedConversations;
+			});
+		});
+    return () => socket.off("newMessage");
+	}, [selectedConversation, socket]);
 
+  useEffect(() => {
+		messageEndRef.current?.scrollIntoView({ behavior:"smooth"  });
+	}, [messages]);
   useEffect(() => {
     setLoading(true);
     const getMessages = async () => {
@@ -73,11 +105,12 @@ const MessageContainer = () => {
         ) : (
           // Check if messages is an array before mapping
           Array.isArray(messages) && messages.map((message) => (
-            <Message
-              key={message._id}
+            <div ref={messages.length - 1 === messages.indexOf(message) ? messageEndRef : null} className='flex flex-col'   key={message._id}>
+              <Message
               message={message}
               ownMessage={message.sender === currentUser._id}
             />
+            </div>
           ))
         )}
       </div>

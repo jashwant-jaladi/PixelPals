@@ -6,7 +6,7 @@ import getUser from '../Atom/getUser';
 import CheckIcon from '@mui/icons-material/Check';
 import { conversationAtom } from '../Atom/messageAtom';
 
-const Conversation = ({ conversation }) => {
+const Conversation = ({ conversation, isOnline }) => {
   const user = conversation.participants[0];
   const lastMessage = conversation.lastMessage;
   const currentUser = useRecoilValue(getUser);
@@ -37,7 +37,7 @@ const Conversation = ({ conversation }) => {
         onClick={handleConversationClick}
       >
         <div>
-          <Badge color="success" variant="dot" overlap="circular">
+          <Badge color={isOnline ? "success" : "error"} variant="dot" overlap="circular">
             <Avatar sx={{ width: 60, height: 60 }} src={user.profilePic} />
           </Badge>
         </div>
