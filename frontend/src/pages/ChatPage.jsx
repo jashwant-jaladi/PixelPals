@@ -18,6 +18,7 @@ const ChatPage = () => {
   const [messages, setMessages] = useRecoilState(messageAtom);
   const [selectedConversation, setSelectedConversation] = useRecoilState(conversationAtom);
   const currentUser = useRecoilValue(getUser);
+  const { onlineUsers } = useSocket();
  
 
 

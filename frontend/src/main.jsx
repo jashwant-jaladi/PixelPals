@@ -6,12 +6,14 @@ import './index.css';
 import { ThemeToggleProvider } from './ThemeContext';
 import { BrowserRouter } from 'react-router-dom';
 import { RecoilRoot } from 'recoil';
-
+import { SocketProvider } from './context/socketContext';
 ReactDOM.createRoot(document.getElementById('root')).render(
   <RecoilRoot>
   <ThemeToggleProvider>
     <BrowserRouter>
-    <App/>
+    <SocketProvider>
+        <App/>
+      </SocketProvider>
     </BrowserRouter>
   </ThemeToggleProvider>
   </RecoilRoot>
