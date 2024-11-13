@@ -3,57 +3,85 @@ import { Avatar, Skeleton } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import Message from './Message';
 import MessageInput from './MessageInput';
-import { useRecoilState, useRecoilValue } from 'recoil';
-import { conversationAtom } from '../Atom/messageAtom';
+import { useRecoilValue, useSetRecoilState } from 'recoil';
+import { conversationAtom, messageAtom } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
 import { useSocket } from '../context/socketContext.jsx';
 
-
 const MessageContainer = () => {
-  const [selectedConversation, setSelectedConversation] = useRecoilState(conversationAtom);
+  const selectedConversation = useRecoilValue(conversationAtom);
+  const setConversation = useSetRecoilState(messageAtom);
   const currentUser = useRecoilValue(getUser);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
   const skeletonCount = 5; // Number of skeletons to display for loading
-  const {socket} = useSocket();
+  const { socket } = useSocket();
   const messageEndRef = useRef(null);
-  
+
+  // Cleanup socket listeners and add new ones
   useEffect(() => {
     if (!socket) return;
-		socket.on("newMessage", (message) => {
-			if (selectedConversation._id === message.conversationId) {
-				setMessages((prev) => [...prev, message]);
-			}
-      setMessages((prev) => {
-				const updatedConversations = prev.map((conversation) => {
-					if (conversation._id === message.conversationId) {
-						return {
-							...conversation,
-							lastMessage: {
-								text: message.text,
-								sender: message.sender,
-							},
-						};
-					}
-					return conversation;
-				});
-				return updatedConversations;
-			});
-		});
-    return () => socket.off("newMessage");
-	}, [selectedConversation, socket]);
 
+    const handleNewMessage = (message) => {
+      if (selectedConversation._id === message.conversationId) {
+        setMessages((prev) => [...prev, message]);
+      }
+      setConversation((prev) => {
+        return prev.map((conversation) => {
+          if (conversation._id === message.conversationId) {
+            return {
+              ...conversation,
+              lastMessage: { text: message.text, sender: message.sender },
+            };
+          }
+          return conversation;
+        });
+      });
+    };
+
+    const handleMessagesSeen = ({ conversationId }) => {
+      if (selectedConversation._id === conversationId) {
+        setMessages((prev) => {
+          return prev.map((message) => ({
+            ...message,
+            seen: message.seen || message.sender === currentUser._id,
+          }));
+        });
+      }
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    socket.on("messagesSeen", handleMessagesSeen);
+
+    // Cleanup function
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("messagesSeen", handleMessagesSeen);
+    };
+  }, [socket, selectedConversation, currentUser._id, setConversation]);
+
+  // Mark messages as seen when the last message is from another user
   useEffect(() => {
-		messageEndRef.current?.scrollIntoView({ behavior:"smooth"  });
-	}, [messages]);
+    if (messages.length && messages[messages.length - 1].sender !== currentUser._id) {
+      socket.emit("markMessagesAsSeen", {
+        conversationId: selectedConversation._id,
+        userId: selectedConversation.userId,
+      });
+    }
+  }, [messages, socket, selectedConversation, currentUser._id]);
+
+  // Scroll to the bottom when new messages are added
   useEffect(() => {
-    setLoading(true);
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Fetch messages when the selected conversation changes
+  useEffect(() => {
     const getMessages = async () => {
+      setLoading(true);
       try {
         const res = await fetch(`/api/messages/${selectedConversation.userId}`);
         const data = await res.json();
-
-        // Check if the fetched data is an array; if not, set messages to an empty array
         if (Array.isArray(data)) {
           setMessages(data);
         } else {
@@ -105,11 +133,8 @@ const MessageContainer = () => {
         ) : (
           // Check if messages is an array before mapping
           Array.isArray(messages) && messages.map((message) => (
-            <div ref={messages.length - 1 === messages.indexOf(message) ? messageEndRef : null} className='flex flex-col'   key={message._id}>
-              <Message
-              message={message}
-              ownMessage={message.sender === currentUser._id}
-            />
+            <div ref={messages.length - 1 === messages.indexOf(message) ? messageEndRef : null} className="flex flex-col" key={message._id}>
+              <Message message={message} ownMessage={message.sender === currentUser._id} />
             </div>
           ))
         )}

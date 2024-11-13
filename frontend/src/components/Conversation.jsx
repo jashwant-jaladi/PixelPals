@@ -15,7 +15,6 @@ const Conversation = ({ conversation, isOnline }) => {
   // Handle onClick event to toggle the selected conversation
   const handleConversationClick = () => {
     if (selectedConversation?._id === conversation._id) {
-     
       setSelectedConversation(null);
     } else {
       setSelectedConversation({
@@ -47,7 +46,9 @@ const Conversation = ({ conversation, isOnline }) => {
             <VerifiedIcon color="primary" />
           </div>
           <div className="flex gap-1">
-            {currentUser._id === lastMessage.sender ? <CheckIcon color="primary" /> : null}
+            {currentUser._id === lastMessage.sender && lastMessage.seen ? (
+              <CheckIcon color="success" fontSize="small" />
+            ) : null}
             <p className="text-sm text-gray-500">
               {lastMessage.text.length > 20 ? `${lastMessage.text.slice(0, 15)}...` : lastMessage.text}
             </p>
@@ -59,3 +60,5 @@ const Conversation = ({ conversation, isOnline }) => {
 };
 
 export default Conversation;
+
+
