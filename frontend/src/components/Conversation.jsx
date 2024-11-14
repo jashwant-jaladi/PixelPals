@@ -49,8 +49,24 @@ const Conversation = ({ conversation, isOnline }) => {
             {currentUser._id === lastMessage.sender && lastMessage.seen ? (
               <CheckIcon color="success" fontSize="small" />
             ) : null}
+
             <p className="text-sm text-gray-500">
-              {lastMessage.text.length > 20 ? `${lastMessage.text.slice(0, 15)}...` : lastMessage.text}
+              {/* Check if the last message is an image */}
+              {lastMessage.img ? (
+                <img
+                  src={lastMessage.img} 
+                  alt="Sent image"
+                  style={{
+                    width: '100px', // Adjust size as needed
+                    height: 'auto',
+                    borderRadius: '8px',
+                    objectFit: 'cover',
+                  }}
+                />
+              ) : (
+                // Show text message if no image
+                lastMessage.text.length > 20 ? `${lastMessage.text.slice(0, 15)}...` : lastMessage.text || 'Image File'
+              )}
             </p>
           </div>
         </div>
@@ -60,5 +76,3 @@ const Conversation = ({ conversation, isOnline }) => {
 };
 
 export default Conversation;
-
-

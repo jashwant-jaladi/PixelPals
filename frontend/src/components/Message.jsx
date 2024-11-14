@@ -19,14 +19,15 @@ const Message = ({ ownMessage, message }) => {
       <div
         className={`max-w-xs p-3 rounded-lg shadow-md ${
           ownMessage
-            ? 'bg-pink-700 text-white font-bold rounded-tr-none'
-            : 'bg-gray-100 text-gray-800 font-bold rounded-tl-none'
+            ? 'bg-pink-700 text-white font-bold rounded-tr-none overflow-hidden break-words'
+            : 'bg-gray-100 text-gray-800 font-bold rounded-tl-none overflow-auto'
         }`}
       >
         <p className="font-bold mb-1 text-pink-950">{ownMessage ? 'You' : selectedConversation.username}</p>
-        <p>{message.text}</p>
+        {message.text && <p>{message.text}</p>}
+        {message.img && <img src={message.img} alt="message" className="w-[500px] h-auto" />}
         
-        {/* Check Icon only for own messages */}
+        
         {ownMessage && (
           <span className="inline-block mt-1">
             {message.seen ? (
@@ -38,7 +39,6 @@ const Message = ({ ownMessage, message }) => {
         )}
       </div>
 
-      {/* Avatar for the current user */}
       {ownMessage && (
         <Avatar sx={{ width: 45, height: 45, ml: 2 }} src={currentUser.profilePic} />
       )}
