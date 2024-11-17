@@ -14,7 +14,10 @@ import CreatePost from './components/CreatePost';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CottageIcon from '@mui/icons-material/Cottage';
 import ChatIcon from '@mui/icons-material/Chat';
+import SettingsIcon from '@mui/icons-material/Settings';
 import ChatPage from './pages/ChatPage';
+import Settings from './pages/Settings';
+import NotFoundPage from './pages/NotFoundPage';
 import { Box } from '@mui/material';
 
 const App = () => {
@@ -93,6 +96,24 @@ const App = () => {
               >
                 <ChatIcon />
               </Button>
+              <Button
+                variant="contained"
+                sx={{
+                  backgroundColor: 'rgba(176, 73, 174, 0.1)',
+                  color: '#ffffff',
+                  fontWeight: 'bold',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(176, 73, 174, 0.69)',
+                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
+                  ":hover": {
+                    backgroundColor: 'rgba(176, 73, 174, 0.2)',
+                    boxShadow: '0 6px 35px rgba(0, 0, 0, 0.15)',
+                  },
+                }}
+                onClick={() => navigate('/settings')}
+              >
+                <SettingsIcon />
+              </Button>
 
               <Logout />
             </div>
@@ -102,9 +123,12 @@ const App = () => {
             <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
             <Route path="/" element={user ? <Homepage /> : <Navigate to="/auth" />} />
             <Route path="/update" element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />} />
-            <Route path="/:username" element={user ? <><UserPage /> <CreatePost /></> : <UserPage />} />
+            <Route path="/:username" element={user ? <><UserPage /> <CreatePost /></> : <NotFoundPage />} />
             <Route path="/:username/:id" element={<PostPage />} />
             <Route path="/chat" element={user ? <ChatPage /> : <Navigate to="/auth" />} />
+            <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
+            <Route path='*' element={<NotFoundPage/>}/>
+      
           </Routes>
         </Container>
       </Box>

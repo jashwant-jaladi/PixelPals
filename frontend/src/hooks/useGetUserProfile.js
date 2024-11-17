@@ -16,8 +16,13 @@ const useGetUserProfile = () => {
         if(data.error)
         {
           snackbarMessage(data.error);
-          setSnackbarSeverity('error');
+          setSnackbarSeverity('error'); 
           setSnackbarOpen(true);
+          return;
+        }
+        if(data.isFrozen)
+        {
+          setUser(null)
           return;
         }
 

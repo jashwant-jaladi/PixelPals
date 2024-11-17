@@ -36,6 +36,11 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
+        if(user.isFrozen)
+        {
+            user.isFrozen=false;
+            await user.save();
+        }
         if (user && (await bcrypt.compare(password, user.password))) {
             generateAndSetCookies(user._id, res);
             return res.status(201).json({ message: "Login successful", user });
@@ -221,5 +226,22 @@ const getSuggestedUsers = async (req, res) => {
 	} catch (error) {
 		res.status(500).json({ error: error.message });
 	}
+
 };
-export { signupUser, loginUser, logoutUser, followandUnfollowUser, updateProfile, getUserProfile, getSuggestedUsers }
+
+const freezeAccount = async (req, res) => {
+    try {
+      const userId = req.user._id;
+      const user = await User.findByIdAndUpdate(userId, { isFrozen: true }, { new: true });
+  
+      // Return updated user information to the frontend
+      res.status(200).json({
+        message: "Account frozen successfully",
+        success: true
+      });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  };
+  
+export { signupUser, loginUser, logoutUser, followandUnfollowUser, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount }

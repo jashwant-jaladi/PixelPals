@@ -8,6 +8,7 @@ import { conversationAtom, messageAtom } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
 import { useSocket } from '../context/socketContext.jsx';
 
+
 const MessageContainer = () => {
   const selectedConversation = useRecoilValue(conversationAtom);
   const setConversation = useSetRecoilState(messageAtom);
@@ -17,6 +18,33 @@ const MessageContainer = () => {
   const skeletonCount = 5; // Number of skeletons to display for loading
   const { socket } = useSocket();
   const messageEndRef = useRef(null);
+  const [isTabFocused, setIsTabFocused] = useState(true);
+
+  // Check if the document is in focus
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        setIsTabFocused(false);
+      } else {
+        setIsTabFocused(true);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup the event listener on component unmount
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Function to play the notification sound
+  const playNotificationSound = () => {
+    if (!isTabFocused) {
+      const audio = new Audio("/mixkit-correct-answer-tone-2870.wav");
+      audio.play();
+    }
+  };
 
   // Cleanup socket listeners and add new ones
   useEffect(() => {
@@ -25,7 +53,11 @@ const MessageContainer = () => {
     const handleNewMessage = (message) => {
       if (selectedConversation._id === message.conversationId) {
         setMessages((prev) => [...prev, message]);
+
+        // Play notification sound when new message arrives and the tab is not focused
+        playNotificationSound();
       }
+
       setConversation((prev) => {
         return prev.map((conversation) => {
           if (conversation._id === message.conversationId) {
@@ -58,7 +90,7 @@ const MessageContainer = () => {
       socket.off("newMessage", handleNewMessage);
       socket.off("messagesSeen", handleMessagesSeen);
     };
-  }, [socket, selectedConversation, currentUser._id, setConversation]);
+  }, [socket, selectedConversation, currentUser._id, setConversation, isTabFocused]);
 
   // Mark messages as seen when the last message is from another user
   useEffect(() => {
