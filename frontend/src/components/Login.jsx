@@ -4,6 +4,7 @@ import userAuthState from '../Atom/authAtom';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import getUser from '../Atom/getUser';
+import { Link } from 'react-router-dom';
 
 const Login = () => {
   const setUserAtom = useSetRecoilState(getUser);
@@ -114,7 +115,7 @@ const Login = () => {
               </div>
               <p></p>
               <div className='text-pink-700 pr-20'>
-                <button className='font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border text-pink-700 hover:bg-pink-700 hover:text-white transition duration-300'>Learn more</button>
+                <button className='font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border text-pink-700 hover:bg-pink-700 hover:text-white transition duration-300'> <Link to="/learn-more">Learn more</Link></button>
                 <button className='text-pink-700 font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Invite others</button>
               </div>
             </div>

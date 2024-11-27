@@ -18,6 +18,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ChatPage from './pages/ChatPage';
 import Settings from './pages/Settings';
 import NotFoundPage from './pages/NotFoundPage';
+import ResetRequestForm from './pages/ResetRequestForm';
+import LearnMore from './pages/LearnMore';
 import { Box } from '@mui/material';
 
 const App = () => {
@@ -128,6 +130,8 @@ const App = () => {
             <Route path="/chat" element={user ? <ChatPage /> : <Navigate to="/auth" />} />
             <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path='*' element={<NotFoundPage/>}/>
+            <Route path="/reset-password" element={<ResetRequestForm />} />  
+            <Route path="/learn-more" element={<LearnMore />} />
       
           </Routes>
         </Container>
