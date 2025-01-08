@@ -5,7 +5,7 @@ import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import getUser from '../Atom/getUser';
 import { Link } from 'react-router-dom';
-
+import InviteLink from './Invitelink';
 const Login = () => {
   const setUserAtom = useSetRecoilState(getUser);
   const setUserAuth = useSetRecoilState(userAuthState);
@@ -15,7 +15,8 @@ const Login = () => {
   });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('error'); 
+  const [snackbarSeverity, setSnackbarSeverity] = useState('error');
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -42,8 +43,8 @@ const Login = () => {
       const data = await response.json();
       localStorage.setItem('PixelPalsUser', JSON.stringify(data.user));
       setUserAtom(data.user);
-      
-    
+
+
       if (response.ok) {
         setUserAuth('home');
       } else {
@@ -116,13 +117,31 @@ const Login = () => {
               <p></p>
               <div className='text-pink-700 pr-20'>
                 <button className='font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border text-pink-700 hover:bg-pink-700 hover:text-white transition duration-300'> <Link to="/learn-more">Learn more</Link></button>
-                <button className='text-pink-700 font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Invite others</button>
+                <button
+                  onClick={() => setShowInviteDialog(true)}
+                  className='text-pink-700 font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'
+                >
+                  Invite others
+                </button>
               </div>
             </div>
           </div>
         </div>
       </div>
-
+      {showInviteDialog && (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div className="relative p-6 bg-black rounded-lg shadow-lg">
+      <button
+        onClick={() => setShowInviteDialog(false)}
+        className="absolute -top-10 right-0 text-white bg-red-500 px-3 py-1 rounded-full"
+      >
+        Close
+      </button>
+      <InviteLink />
+    </div>
+  </div>
+  
+      )}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
