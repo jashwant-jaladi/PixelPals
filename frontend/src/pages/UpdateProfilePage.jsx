@@ -3,7 +3,7 @@ import { Avatar, Button, Snackbar, Alert, CircularProgress } from '@mui/material
 import { pink } from '@mui/material/colors';
 import { useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
-
+import { useNavigate } from 'react-router-dom';
 const UpdateProfilePage = () => {
   const [user, setUser] = useRecoilState(getUser);
   const [updating, setUpdating] = useState(false);
@@ -21,7 +21,7 @@ const UpdateProfilePage = () => {
     message: '',
     severity: 'success'
   });
-
+const navigate = useNavigate();
 
   const fileInputRef = useRef(null);
 
@@ -105,6 +105,8 @@ const UpdateProfilePage = () => {
     }
   };
 
+
+
   return (
     <div className='flex items-center justify-center min-h-screen font-bold'>
       <div className='border-2 border-pink-700 w-full max-w-md p-10 flex flex-col items-center glasseffect rounded-lg shadow-lg'>
@@ -183,7 +185,7 @@ const UpdateProfilePage = () => {
           <div className='flex gap-4'>
             
             {updating?<CircularProgress sx={{ color: pink[500] }} />:<Button type='submit' variant='contained' color='success' className='w-full' sx={{ fontWeight: 'bold' }}>Update</Button>}
-            <Button variant='outlined' color='error' className='w-full'>Cancel</Button>
+            <Button variant='outlined' color='error' className='w-full' onClick={() => navigate(-1)}>Cancel</Button>
           </div>
         </form>
       </div>

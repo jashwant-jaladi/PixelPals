@@ -100,7 +100,7 @@ const Login = () => {
             </div>
           </div>
 
-          <div className='relative flex flex-col justify-center items-center top-[10%] bg-[url("/ai-generated-8123097_640.webp")] h-[80vh] w-[30%] bg-contain bg-opacity-20 rounded-r-lg'>
+          <div className='relative flex flex-col justify-center items-center top-[10%] bg-[url("/ai-generated-8123097_640.webp")] h-[80vh] w-[35%] bg-cover bg-center bg-opacity-20 rounded-r-lg'>
             <div className='absolute inset-0 bg-black opacity-60 rounded-r-lg'></div>
             <div className='relative z-10 text-white text-center font-bold'>
               <h3 className='text-4xl relative bottom-[30%]'>The new way to connect</h3>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Snackbar, CircularProgress } from '@mui/material';
+import { Snackbar, CircularProgress, Alert } from '@mui/material';
 import UserHeader from '../components/UserHeader';
 import Post from '../components/Post';
 import { useParams } from 'react-router-dom';
@@ -12,14 +12,13 @@ const UserPage = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
   const [fetchingPosts, setFetchingPosts] = useState(true);
-  const [posts, setPosts] = useRecoilState(postAtom)
+  const [posts, setPosts] = useRecoilState(postAtom);
   const { username } = useParams();
   const { user, loading: loadingUser } = useGetUserProfile();
 
   useEffect(() => {
     const getPosts = async () => {
-      if(!user)
-      {
+      if (!user) {
         return;
       }
       setFetchingPosts(true);
@@ -45,7 +44,7 @@ const UserPage = () => {
     };
 
     getPosts();
-  }, [username, setPosts]);
+  }, [username, setPosts, user]);
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -56,7 +55,6 @@ const UserPage = () => {
 
   return (
     <>
-    
       {loadingUser ? (
         <div className='text-center mt-10 text-gray-500 text-xl'>Loading user profile...</div>
       ) : (
@@ -66,16 +64,14 @@ const UserPage = () => {
             <div className='flex justify-center mt-10'>
               <CircularProgress />
             </div>
+          ) : posts.length === 0 ? (
+            <div className='text-center mt-10 text-pink-700 text-xl'>
+              Looks like you didn't post anything yet, please create a post.
+            </div>
           ) : (
-            <>
-              {posts.length > 0 ? (
-                posts.map((post) => (
-                  <Post key={post._id} post={post} />
-                ))
-              ) : (
-                <div className='text-center mt-10 text-gray-500 text-xl'>No posts found</div>
-              )}
-            </>
+            posts.map((post) => (
+              <Post key={post._id} post={post} />
+            ))
           )}
         </>
       )}
@@ -83,9 +79,12 @@ const UserPage = () => {
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        message={snackbarMessage}
-        severity={snackbarSeverity}
-      />
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+      >
+        <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </>
   );
 };
