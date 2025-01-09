@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
 import generateAndSetCookies from "../utils/helper/generateAndSetCookies.js";
 import { v2 as cloudinary } from "cloudinary";
@@ -36,9 +37,8 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
-        if(user.isFrozen)
-        {
-            user.isFrozen=false;
+        if (user.isFrozen) {
+            user.isFrozen = false;
             await user.save();
         }
         if (user && (await bcrypt.compare(password, user.password))) {
@@ -117,8 +117,8 @@ const updateProfile = async (req, res) => {
                 ]
             });
             if (existingUser) {
-                return res.status(400).json({ 
-                    error: `${email === existingUser.email ? 'Email' : 'Username'} already exists` 
+                return res.status(400).json({
+                    error: `${email === existingUser.email ? 'Email' : 'Username'} already exists`
                 });
             }
         }
@@ -156,15 +156,15 @@ const updateProfile = async (req, res) => {
 
         await user.save();
         await post.updateMany(
-			{ "comments.userId": userId },
-			{
-				$set: {
-					"comments.$[comment].username": user.username,
-					"comments.$[comment].profilePic": user.profilePic,
-				},
-			},
-			{ arrayFilters: [{ "comment.userId": userId }] }
-		);
+            { "comments.userId": userId },
+            {
+                $set: {
+                    "comments.$[comment].username": user.username,
+                    "comments.$[comment].profilePic": user.profilePic,
+                },
+            },
+            { arrayFilters: [{ "comment.userId": userId }] }
+        );
         user.password = null;
         // Create a sanitized user object without password
         const userResponse = {
@@ -202,46 +202,127 @@ const getUserProfile = async (req, res) => {
 
 const getSuggestedUsers = async (req, res) => {
     try {
-		// exclude the current user from suggested users array and exclude users that current user is already following
-		const userId = req.user._id;
+        // exclude the current user from suggested users array and exclude users that current user is already following
+        const userId = req.user._id;
 
-		const usersFollowedByYou = await User.findById(userId).select("following");
+        const usersFollowedByYou = await User.findById(userId).select("following");
 
-		const users = await User.aggregate([
-			{
-				$match: {
-					_id: { $ne: userId },
-				},
-			},
-			{
-				$sample: { size: 10 },
-			},
-		]);
-		const filteredUsers = users.filter((user) => !usersFollowedByYou.following.includes(user._id));
-		const suggestedUsers = filteredUsers.slice(0, 4);
+        const users = await User.aggregate([
+            {
+                $match: {
+                    _id: { $ne: userId },
+                },
+            },
+            {
+                $sample: { size: 10 },
+            },
+        ]);
+        const filteredUsers = users.filter((user) => !usersFollowedByYou.following.includes(user._id));
+        const suggestedUsers = filteredUsers.slice(0, 4);
 
-		suggestedUsers.forEach((user) => (user.password = null));
+        suggestedUsers.forEach((user) => (user.password = null));
 
-		res.status(200).json(suggestedUsers);
-	} catch (error) {
-		res.status(500).json({ error: error.message });
-	}
+        res.status(200).json(suggestedUsers);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 
 };
 
 const freezeAccount = async (req, res) => {
     try {
-      const userId = req.user._id;
-      const user = await User.findByIdAndUpdate(userId, { isFrozen: true }, { new: true });
-  
-      // Return updated user information to the frontend
-      res.status(200).json({
-        message: "Account frozen successfully",
-        success: true
-      });
+        const userId = req.user._id;
+        const user = await User.findByIdAndUpdate(userId, { isFrozen: true }, { new: true });
+
+        // Return updated user information to the frontend
+        res.status(200).json({
+            message: "Account frozen successfully",
+            success: true
+        });
     } catch (error) {
-      res.status(500).json({ error: error.message });
+        res.status(500).json({ error: error.message });
     }
-  };
-  
-export { signupUser, loginUser, logoutUser, followandUnfollowUser, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount }
+};
+
+const transporter = nodemailer.createTransport({
+    service: 'Gmail', // Use your email service provider
+    auth: {
+        user: process.env.EMAIL_USER, // Your email address
+        pass: process.env.EMAIL_PASSWORD, // Your email password or app password
+    },
+});
+
+const resetLink = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        // Check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Construct reset URL (no tokens, using email as a query parameter)
+        const resetUrl = `${process.env.CLIENT_URL}/reset-action/${encodeURIComponent(
+            user.id
+        )}`;
+
+        // Email content
+        const mailOptions = {
+            from: `"PixelPals Support Team" <${process.env.EMAIL_USER}>`,
+            to: user.email,
+            subject: 'Password Reset Request',
+            html: `
+          <p>Hello ${user.name || 'User'},</p>
+          <p>You requested a password reset. Please click the link below to reset your password:</p>
+          <a href="${resetUrl}" style="text-decoration:none; color: #fff; background-color: #007bff; padding: 10px 15px; border-radius: 5px;">Reset Password</a>
+          <p>If you did not request this, please ignore this email.</p>
+          <p>Thank you,</p>
+          <p>Your App Team</p>
+        `,
+        };
+
+        // Send email
+        await transporter.sendMail(mailOptions);
+
+        res.status(200).json({ message: 'Reset link sent successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+};
+
+
+const resetPassword = async (req, res) => {
+    try {
+        const { password } = req.body;
+        const { id } = req.params;
+    
+        // Find user by id (if you're using id for user lookup)
+        const user = await User.findOne({ _id: id });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Validate the password strength (optional but recommended)
+        if (password.length < 6) {
+            return res.status(400).json({ message: 'Password is too short, minimum 6 characters.' });
+        }
+
+        // Hash the new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        user.password = hashedPassword; // Update the user's password
+
+        // Save the updated user object
+        await user.save();
+
+        res.status(200).json({ message: 'Password reset successfully' });
+    } catch (error) {
+        console.error(error); // Log the error for debugging purposes
+        res.status(500).json({ error: error.message || 'Something went wrong.' });
+    }
+};
+
+
+export { signupUser, loginUser, logoutUser, followandUnfollowUser, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };

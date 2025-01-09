@@ -18,9 +18,10 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import ChatPage from './pages/ChatPage';
 import Settings from './pages/Settings';
 import NotFoundPage from './pages/NotFoundPage';
-import ResetRequestForm from './pages/ResetRequestForm';
 import LearnMore from './pages/LearnMore';
 import { Box } from '@mui/material';
+import ResetPasswordRequest from './pages/ResetPasswordRequest';
+import ResetPasswordAction from './pages/ResetPasswordAction';
 
 const App = () => {
   const location = useLocation();
@@ -130,7 +131,8 @@ const App = () => {
             <Route path="/chat" element={user ? <ChatPage /> : <Navigate to="/auth" />} />
             <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path='*' element={<NotFoundPage/>}/>
-            <Route path="/reset-password" element={<ResetRequestForm />} />  
+            <Route path="/reset-password" element={<ResetPasswordRequest />} />  
+            <Route path="/reset-action/:id" element={<ResetPasswordAction />} />
             <Route path="/learn-more" element={<LearnMore />} />
       
           </Routes>
