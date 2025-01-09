@@ -4,6 +4,7 @@ import SendIcon from '@mui/icons-material/Send';
 import CameraAltIcon from '@mui/icons-material/CameraAlt'; // Import Camera Icon
 import { pink } from '@mui/material/colors';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
+import getUser from '../Atom/getUser';
 import { conversationAtom, messageAtom } from '../Atom/messageAtom';
 
 const MessageInput = ({ setMessages }) => {
@@ -13,14 +14,29 @@ const MessageInput = ({ setMessages }) => {
   const [selectedFile, setSelectedFile] = React.useState(null); // To store the selected file
   const selectedConversation = useRecoilValue(conversationAtom);
   const setConversations = useSetRecoilState(messageAtom);
-
+  const currentUser = useRecoilValue(getUser);
   const handleSendMessage = async (e) => {
     e.preventDefault();
-    if (!message.trim() && !selectedFile) return; // Avoid sending empty messages and empty file
-
+    if (!message.trim() && !selectedFile) return;
+   
+    const imgData = selectedFile ? await convertToBase64(selectedFile) : null;
+    
+    // Create optimistic message
+    const optimisticMessage = {
+      _id: Date.now().toString(), // Temporary ID
+      text: message,
+      sender: currentUser._id, // Add currentUser to props or get from context
+      img: imgData,
+      createdAt: new Date().toISOString(),
+      seen: false
+    };
+  
+    // Update UI immediately
+    setMessages(prev => [...prev, optimisticMessage]);
+    setMessage('');
+    setFilePreview(null);
+  
     try {
-      const imgData = selectedFile ? await convertToBase64(selectedFile) : null; // Convert file to base64
-
       const res = await fetch('/api/messages/', {
         method: 'POST',
         headers: {
@@ -29,36 +45,36 @@ const MessageInput = ({ setMessages }) => {
         body: JSON.stringify({
           message,
           recipientId: selectedConversation.userId,
-          img: imgData, // Send image data to the backend
+          img: imgData,
         }),
       });
       
       const data = await res.json();
-      if (data.error) {
-        console.log(data.error);
-      } else {
-        setMessages((prevMessages) => [...prevMessages, data]);
-        setConversations((prevConvs) => {
-          const updatedConversations = prevConvs.map((conversation) => {
-            if (conversation._id === selectedConversation._id) {
-              return {
+      if (data.error) throw new Error(data.error);
+  
+      // Replace optimistic message with real one
+      setMessages(prev => prev.map(msg => 
+        msg._id === optimisticMessage._id ? data : msg
+      ));
+  
+      setConversations(prevConvs => 
+        prevConvs.map(conversation => 
+          conversation._id === selectedConversation._id
+            ? {
                 ...conversation,
                 lastMessage: {
                   text: message,
                   sender: data.sender,
-                  img: imgData, // Include image URL in the conversation
+                  img: imgData,
                 },
-              };
-            }
-            return conversation;
-          });
-          return updatedConversations;
-        });
-      }
-      setMessage('');
-      setFilePreview(null); // Clear preview after sending
+              }
+            : conversation
+        )
+      );
     } catch (error) {
-      console.log(error);
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(msg => msg._id !== optimisticMessage._id));
+      console.error(error);
     }
   };
 

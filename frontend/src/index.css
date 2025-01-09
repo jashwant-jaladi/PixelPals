@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* src/index.css */
+/* src/index.css */
+@layer base {
+  html {
+    font-family: 'Parkinsans', sans-serif;
+  }
+}
+
 
 .glasseffect {
   background: rgba(255, 182, 193, 0.15); /* Softer pink background */

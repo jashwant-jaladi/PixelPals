@@ -19,11 +19,10 @@ const ChatPage = () => {
   const [messages, setMessages] = useRecoilState(messageAtom);
   const [selectedConversation, setSelectedConversation] = useRecoilState(conversationAtom);
   const currentUser = useRecoilValue(getUser);
-  const {socket, onlineUsers} = useSocket();
- 
-
+  const { socket, onlineUsers } = useSocket();
 
   useEffect(() => {
+    // Fetch conversations on mount
     const fetchConversations = async () => {
       try {
         const res = await fetch('/api/messages/conversations');
@@ -38,8 +37,24 @@ const ChatPage = () => {
         setLoading(false);
       }
     };
+
     fetchConversations();
+
+    // Load selected conversation from localStorage
+    const savedConversation = localStorage.getItem('selectedConversation');
+    if (savedConversation) {
+      setSelectedConversation(JSON.parse(savedConversation));
+    }
   }, []);
+
+  useEffect(() => {
+    // Save selected conversation to localStorage whenever it changes
+    if (selectedConversation) {
+      localStorage.setItem('selectedConversation', JSON.stringify(selectedConversation));
+    } else {
+      localStorage.removeItem('selectedConversation');
+    }
+  }, [selectedConversation]);
 
   const showToast = (title, message, severity) => {
     setSnackbarMessage(`${title}: ${message}`);
@@ -53,7 +68,6 @@ const ChatPage = () => {
     try {
       const res = await fetch(`/api/users/profile/${searchText}`);
       const searchedUser = await res.json();
-      console.log(searchedUser)
       if (searchedUser.error) {
         showToast('Error', searchedUser.error, 'error');
         return;
@@ -90,7 +104,6 @@ const ChatPage = () => {
           },
         ],
       };
-      console.log(mockConversation);
       setConversations((prevConvs) => [...prevConvs, mockConversation]);
       setSelectedConversation({
         _id: mockConversation._id,
@@ -144,23 +157,27 @@ const ChatPage = () => {
           ) : (
             <div className="pt-5">
               {messages.map((message) => (
-                <Conversation key={message._id} conversation={message} isOnline={onlineUsers.includes(message.participants[0]._id)}/>
+                <Conversation key={message._id} conversation={message} isOnline={onlineUsers.includes(message.participants[0]._id)} />
               ))}
             </div>
           )}
         </div>
 
-        {!selectedConversation && (
-          <div className="w-[70%]">
-            <div className="flex justify-center">
-              <img src="../public/7050128.webp" alt="Select chat illustration" />
+        <div className="w-[70%]">
+          {selectedConversation && selectedConversation._id ? (
+            <MessageContainer />
+          ) : (
+            <div>
+              <div className="flex justify-center">
+                <img src="/7050128.webp" alt="Select chat illustration" />
+              </div>
+              <div className="flex justify-center font-bold text-3xl">
+                <p>Select a chat to start messaging</p>
+              </div>
             </div>
-            <div className="flex justify-center font-bold text-3xl">
-              <p>Select a chat to start messaging</p>
-            </div>
-          </div>
-        )}
-        {selectedConversation && <MessageContainer />}
+          )}
+        </div>
+
       </div>
       <Snackbar
         open={snackbarOpen}

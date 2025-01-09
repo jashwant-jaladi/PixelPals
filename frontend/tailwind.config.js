@@ -5,7 +5,11 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {    
+      fontFamily: {
+      delius: ['Delius', 'sans-serif'],
+      parkinsans: ['Parkinsans', 'sans-serif'],
+    }},
   },
   plugins: [],
 }
