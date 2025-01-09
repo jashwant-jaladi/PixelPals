@@ -6,6 +6,7 @@ import { pink } from '@mui/material/colors';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 import { conversationAtom, messageAtom } from '../Atom/messageAtom';
+import { useSocket } from '../context/socketContext.jsx'; // Import useSocket for socket access
 
 const MessageInput = ({ setMessages }) => {
   const [message, setMessage] = React.useState('');
@@ -15,6 +16,8 @@ const MessageInput = ({ setMessages }) => {
   const selectedConversation = useRecoilValue(conversationAtom);
   const setConversations = useSetRecoilState(messageAtom);
   const currentUser = useRecoilValue(getUser);
+  const { socket } = useSocket(); // Get socket from context
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() && !selectedFile) return;
@@ -112,6 +115,13 @@ const MessageInput = ({ setMessages }) => {
     setOpenModal(false);
   };
 
+  // Emit typing event
+  const handleTyping = () => {
+    if (message.trim()) {
+      socket.emit('typing', { conversationId: selectedConversation._id, userId: currentUser._id });
+    }
+  };
+
   return (
     <form onSubmit={handleSendMessage} style={{ width: '100%' }}>
       <Box
@@ -130,7 +140,10 @@ const MessageInput = ({ setMessages }) => {
         </IconButton>
         
         <TextField
-          onChange={(e) => setMessage(e.target.value)}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            handleTyping(); // Emit typing event when user types
+          }}
           value={message}
           variant="outlined"
           placeholder="Type a message..."

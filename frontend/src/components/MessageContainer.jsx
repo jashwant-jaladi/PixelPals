@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Avatar, Skeleton } from '@mui/material';
+import { Avatar, Skeleton, CircularProgress } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import Message from './Message';
 import MessageInput from './MessageInput';
@@ -8,104 +8,36 @@ import { conversationAtom, messageAtom } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
 import { useSocket } from '../context/socketContext.jsx';
 
-
 const MessageContainer = () => {
   const selectedConversation = useRecoilValue(conversationAtom);
   const setConversation = useSetRecoilState(messageAtom);
   const currentUser = useRecoilValue(getUser);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
+  const [isTyping, setIsTyping] = useState(false); // State to track if someone is typing
   const skeletonCount = 5; // Number of skeletons to display for loading
   const { socket } = useSocket();
   const messageEndRef = useRef(null);
   const [isTabFocused, setIsTabFocused] = useState(true);
 
-  // Check if the document is in focus
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        setIsTabFocused(false);
-      } else {
-        setIsTabFocused(true);
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Cleanup the event listener on component unmount
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
-
-  // Function to play the notification sound
-  const playNotificationSound = () => {
-    if (!isTabFocused) {
-      const audio = new Audio("/mixkit-correct-answer-tone-2870.wav");
-      audio.play();
-    }
-  };
-
-  // Cleanup socket listeners and add new ones
+  // Listen for typing events from other users
   useEffect(() => {
     if (!socket) return;
 
-    const handleNewMessage = (message) => {
-      if (selectedConversation._id === message.conversationId) {
-        setMessages((prev) => [...prev, message]);
-
-        // Play notification sound when new message arrives and the tab is not focused
-        playNotificationSound();
-      }
-
-      setConversation((prev) => {
-        return prev.map((conversation) => {
-          if (conversation._id === message.conversationId) {
-            return {
-              ...conversation,
-              lastMessage: { text: message.text, sender: message.sender },
-            };
-          }
-          return conversation;
-        });
-      });
-    };
-
-    const handleMessagesSeen = ({ conversationId }) => {
-      if (selectedConversation._id === conversationId) {
-        setMessages((prev) => {
-          return prev.map((message) => ({
-            ...message,
-            seen: message.seen || message.sender === currentUser._id,
-          }));
-        });
+    const handleTyping = (data) => {
+      if (selectedConversation._id === data.conversationId && data.userId !== currentUser._id) {
+        setIsTyping(true);
+        setTimeout(() => setIsTyping(false), 2000); // Reset typing indicator after 2 seconds
       }
     };
 
-    socket.on("newMessage", handleNewMessage);
-    socket.on("messagesSeen", handleMessagesSeen);
+    socket.on('typing', handleTyping);
 
-    // Cleanup function
+    // Cleanup socket listeners on unmount
     return () => {
-      socket.off("newMessage", handleNewMessage);
-      socket.off("messagesSeen", handleMessagesSeen);
+      socket.off('typing', handleTyping);
     };
-  }, [socket, selectedConversation, currentUser._id, setConversation, isTabFocused]);
-
-  // Mark messages as seen when the last message is from another user
-  useEffect(() => {
-    if (messages.length && messages[messages.length - 1].sender !== currentUser._id) {
-      socket.emit("markMessagesAsSeen", {
-        conversationId: selectedConversation._id,
-        userId: selectedConversation.userId,
-      });
-    }
-  }, [messages, socket, selectedConversation, currentUser._id]);
-
-  // Scroll to the bottom when new messages are added
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [socket, selectedConversation, currentUser._id]);
 
   // Fetch messages when the selected conversation changes
   useEffect(() => {
@@ -163,7 +95,6 @@ const MessageContainer = () => {
             </div>
           ))
         ) : (
-          // Check if messages is an array before mapping
           Array.isArray(messages) && messages.map((message) => (
             <div ref={messages.length - 1 === messages.indexOf(message) ? messageEndRef : null} className="flex flex-col" key={message._id}>
               <Message message={message} ownMessage={message.sender === currentUser._id} />
@@ -171,6 +102,14 @@ const MessageContainer = () => {
           ))
         )}
       </div>
+
+      {/* Typing Indicator */}
+      {isTyping && (
+        <div className="flex justify-center p-2 text-gray-500">
+          
+          <span className="ml-2 text-pink-500">User is typing...</span>
+        </div>
+      )}
 
       {/* Message Input Section */}
       <div>
