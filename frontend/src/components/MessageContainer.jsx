@@ -1,16 +1,16 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Avatar, Skeleton, CircularProgress } from '@mui/material';
+import { Avatar, Skeleton } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import Message from './Message';
 import MessageInput from './MessageInput';
-import { useRecoilValue, useSetRecoilState } from 'recoil';
-import { conversationAtom, messageAtom } from '../Atom/messageAtom';
+import { useRecoilValue,  } from 'recoil';
+import { conversationAtom, } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
 import { useSocket } from '../context/socketContext.jsx';
 
 const MessageContainer = () => {
   const selectedConversation = useRecoilValue(conversationAtom);
-  const setConversation = useSetRecoilState(messageAtom);
+
   const currentUser = useRecoilValue(getUser);
   const [loading, setLoading] = useState(true);
   const [messages, setMessages] = useState([]);
@@ -18,7 +18,7 @@ const MessageContainer = () => {
   const skeletonCount = 5; // Number of skeletons to display for loading
   const { socket } = useSocket();
   const messageEndRef = useRef(null);
-  const [isTabFocused, setIsTabFocused] = useState(true);
+
 
   // Listen for typing events from other users
   useEffect(() => {

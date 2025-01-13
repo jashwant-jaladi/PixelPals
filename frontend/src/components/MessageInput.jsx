@@ -1,44 +1,106 @@
 import React from 'react';
-import { InputAdornment, IconButton, TextField, Box, Modal, Button } from '@mui/material';
+import {
+  InputAdornment,
+  IconButton,
+  TextField,
+  Box,
+  Modal,
+  Button,
+  Menu,
+  MenuItem,
+  Typography,
+  
+} from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
-import CameraAltIcon from '@mui/icons-material/CameraAlt'; // Import Camera Icon
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import MoodIcon from '@mui/icons-material/Mood';
+
 import { pink } from '@mui/material/colors';
 import { useRecoilValue, useSetRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 import { conversationAtom, messageAtom } from '../Atom/messageAtom';
-import { useSocket } from '../context/socketContext.jsx'; // Import useSocket for socket access
+import { useSocket } from '../context/socketContext.jsx';
 
 const MessageInput = ({ setMessages }) => {
   const [message, setMessage] = React.useState('');
-  const [filePreview, setFilePreview] = React.useState(null); // To store the file preview
-  const [openModal, setOpenModal] = React.useState(false); // To control the modal visibility
-  const [selectedFile, setSelectedFile] = React.useState(null); // To store the selected file
+  const [filePreview, setFilePreview] = React.useState(null);
+  const [openModal, setOpenModal] = React.useState(false);
+  const [suggestionModalOpen, setSuggestionModalOpen] = React.useState(false);
+  const [selectedFile, setSelectedFile] = React.useState(null);
+  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [selectedMood, setSelectedMood] = React.useState(null);
+  const [suggestion, setSuggestion] = React.useState('');
+
   const selectedConversation = useRecoilValue(conversationAtom);
   const setConversations = useSetRecoilState(messageAtom);
   const currentUser = useRecoilValue(getUser);
-  const { socket } = useSocket(); // Get socket from context
+  const { socket } = useSocket();
+
+  const moods = [
+    { id: 1, name: 'Happy', emoji: '😊', color: '#4CAF50' },
+    { id: 2, name: 'Sad', emoji: '😢', color: '#2196F3' },
+    { id: 3, name: 'Angry', emoji: '😠', color: '#F44336' },
+    { id: 4, name: 'Neutral', emoji: '😐', color: '#9E9E9E' },
+  ];
+
+  const handleMoodClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMoodClose = () => {
+    setAnchorEl(null);
+  };
+  const handleMoodSelection = async (mood) => {
+    setSelectedMood(mood);
+    setAnchorEl(null);
+  
+    // Ensure message is available and not empty
+    if (!message.trim()) {
+      alert('Please enter a message before selecting a mood.');
+      return;
+    }
+    try {
+      const response = await fetch('/api/messages/analyzeMood', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mood: mood.name, text:message }),  // message state is passed here
+      });
+  
+      const data = await response.json();
+      setSuggestion(data.alternativeText);  // Update the suggestion with response
+      setSuggestionModalOpen(true);  // Show suggestion modal for user review
+    } catch (error) {
+      console.error('Error getting suggestion:', error);
+    }
+  };
+  
+  const handleReplaceSuggestion = () => {
+    setMessage(suggestion);
+    setSuggestion('');
+    setSuggestionModalOpen(false);
+    setSelectedMood(null);
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() && !selectedFile) return;
-   
+
     const imgData = selectedFile ? await convertToBase64(selectedFile) : null;
-    
-    // Create optimistic message
     const optimisticMessage = {
-      _id: Date.now().toString(), // Temporary ID
+      _id: Date.now().toString(),
       text: message,
-      sender: currentUser._id, // Add currentUser to props or get from context
+      sender: currentUser._id,
       img: imgData,
       createdAt: new Date().toISOString(),
-      seen: false
+      seen: false,
     };
-  
-    // Update UI immediately
-    setMessages(prev => [...prev, optimisticMessage]);
+
+    setMessages((prev) => [...prev, optimisticMessage]);
     setMessage('');
     setFilePreview(null);
-  
+
     try {
       const res = await fetch('/api/messages/', {
         method: 'POST',
@@ -51,32 +113,14 @@ const MessageInput = ({ setMessages }) => {
           img: imgData,
         }),
       });
-      
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-  
-      // Replace optimistic message with real one
-      setMessages(prev => prev.map(msg => 
-        msg._id === optimisticMessage._id ? data : msg
-      ));
-  
-      setConversations(prevConvs => 
-        prevConvs.map(conversation => 
-          conversation._id === selectedConversation._id
-            ? {
-                ...conversation,
-                lastMessage: {
-                  text: message,
-                  sender: data.sender,
-                  img: imgData,
-                },
-              }
-            : conversation
-        )
+
+      setMessages((prev) =>
+        prev.map((msg) => (msg._id === optimisticMessage._id ? data : msg))
       );
     } catch (error) {
-      // Remove optimistic message on error
-      setMessages(prev => prev.filter(msg => msg._id !== optimisticMessage._id));
+      setMessages((prev) => prev.filter((msg) => msg._id !== optimisticMessage._id));
       console.error(error);
     }
   };
@@ -84,144 +128,159 @@ const MessageInput = ({ setMessages }) => {
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result); // Base64 data URI
+      reader.onloadend = () => resolve(reader.result);
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
   };
 
-  const handleCameraClick = () => {
-    document.getElementById('file-input').click();
-  };
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedFile(file); // Store the selected file
-      setFilePreview(URL.createObjectURL(file)); // Create a preview URL
-      setOpenModal(true); // Open the modal
-    }
-  };
-
-  const handleCloseModal = () => {
-    setOpenModal(false); // Close the modal
-    setFilePreview(null); // Clear the file preview
-    setSelectedFile(null); // Reset the selected file
-  };
-
-  const handleSendFile = () => {
-    // Close modal and initiate sending
-    handleSendMessage({ preventDefault: () => {} });
-    setOpenModal(false);
-  };
-
-  // Emit typing event
-  const handleTyping = () => {
-    if (message.trim()) {
-      socket.emit('typing', { conversationId: selectedConversation._id, userId: currentUser._id });
-    }
-  };
-
   return (
-    <form onSubmit={handleSendMessage} style={{ width: '100%' }}>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          padding: '10px',
-          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-          borderRadius: '50px',
-          bgcolor: 'background.paper',
-          overflow: 'hidden',
-        }}
-      >
-        <IconButton onClick={handleCameraClick} sx={{ color: pink[500], marginRight: 1 }}>
-          <CameraAltIcon />
-        </IconButton>
-        
-        <TextField
-          onChange={(e) => {
-            setMessage(e.target.value);
-            handleTyping(); // Emit typing event when user types
+    <Box sx={{ width: '100%' }}>
+      <form onSubmit={handleSendMessage} style={{ width: '100%' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '10px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+            borderRadius: '50px',
+            bgcolor: 'background.paper',
           }}
-          value={message}
-          variant="outlined"
-          placeholder="Type a message..."
-          fullWidth
-          InputProps={{
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton
-                  type="submit"
-                  sx={{ color: pink[500] }}
-                  onClick={handleSendMessage}
-                >
-                  <SendIcon />
-                </IconButton>
-              </InputAdornment>
-            ),
-            style: {
-              borderRadius: 50,
-              paddingRight: 8,
-            },
-          }}
-        />
-        
-        <input
-          type="file"
-          id="file-input"
-          style={{ display: 'none' }}
-          accept="image/*"
-          onChange={handleFileChange}
-        />
-      </Box>
+        >
+          <IconButton onClick={() => document.getElementById('file-input').click()}>
+            <CameraAltIcon sx={{ color: pink[500] }} />
+          </IconButton>
 
-      {/* Modal for displaying image preview and send button */}
+          <IconButton
+            onClick={handleMoodClick}
+            sx={{
+              color: pink[500],
+            }}
+          >
+            <MoodIcon />
+          </IconButton>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMoodClose}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          >
+            {moods.map((mood) => (
+              <MenuItem
+                key={mood.id}
+                onClick={() => handleMoodSelection(mood)}
+                sx={{
+                  color: mood.color,
+                  '&:hover': { backgroundColor: `${mood.color}22` },
+                }}
+              >
+                {mood.emoji} {mood.name}
+              </MenuItem>
+            ))}
+          </Menu>
+
+          <TextField
+            onChange={(e) => setMessage(e.target.value)}
+            value={message}
+            variant="outlined"
+            placeholder="Type a message..."
+            fullWidth
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton type="submit">
+                    <SendIcon sx={{ color: pink[500] }} />
+                  </IconButton>
+                </InputAdornment>
+              ),
+              style: { borderRadius: 50 },
+            }}
+          />
+
+          <input
+            type="file"
+            id="file-input"
+            style={{ display: 'none' }}
+            accept="image/*"
+            onChange={(e) => {
+              const file = e.target.files[0];
+              if (file) {
+                setSelectedFile(file);
+                setFilePreview(URL.createObjectURL(file));
+                setOpenModal(true);
+              }
+            }}
+          />
+        </Box>
+      </form>
+
       <Modal
-        open={openModal}
-        onClose={handleCloseModal}
-        sx={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}
+        open={suggestionModalOpen}
+        onClose={() => setSuggestionModalOpen(false)}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       >
         <Box
           sx={{
             backgroundColor: 'white',
             padding: '20px',
             borderRadius: '10px',
-            maxWidth: '400px',
             textAlign: 'center',
-            position: 'relative',
+            maxWidth: '400px',
           }}
         >
-          {filePreview && (
-            <Box>
-              <img
-                src={filePreview}
-                alt="Selected preview"
-                style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
-              />
-            </Box>
-          )}
+          <Typography variant="subtitle1">Suggested Alternative:</Typography>
+          <Typography variant="body1" sx={{ mt: 2, mb: 2 }}>
+            {suggestion}
+          </Typography>
           <Button
-            onClick={handleSendFile}
+            onClick={handleReplaceSuggestion}
             variant="contained"
-            color="primary"
             sx={{
-              marginTop: '15px',
               backgroundColor: pink[500],
-              '&:hover': {
-                backgroundColor: pink[700],
-              },
+              '&:hover': { backgroundColor: pink[700] },
             }}
           >
-            Send
+            Replace Message
           </Button>
         </Box>
       </Modal>
-    </form>
+
+      <Modal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Box
+          sx={{
+            backgroundColor: 'white',
+            padding: '20px',
+            borderRadius: '10px',
+            textAlign: 'center',
+            maxWidth: '400px',
+          }}
+        >
+          {filePreview && (
+            <img
+              src={filePreview}
+              alt="Preview"
+              style={{ width: '100%', borderRadius: '10px' }}
+            />
+          )}
+          <Button
+            onClick={() => setOpenModal(false)}
+            variant="contained"
+            sx={{
+              marginTop: '15px',
+              backgroundColor: pink[500],
+              '&:hover': { backgroundColor: pink[700] },
+            }}
+          >
+            Close
+          </Button>
+        </Box>
+      </Modal>
+    </Box>
   );
 };
 

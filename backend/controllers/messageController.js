@@ -97,4 +97,47 @@ async function getConversations(req, res) {
 	}
 }
 
-export { sendMessage, getMessages, getConversations };
+// Utility function to handle OpenAI API requests
+async function handleOpenAIRequest(req, res, promptType) {
+    try {
+        const { text, mood } = req.body; 
+        console.log(text, mood); 
+    
+        const prompt = promptType === "analyse"
+            ? `Analyze this message based on the mood "${mood}": "${text}"`
+            : `Suggest an alternative for this message with the mood "${mood}": "${text}"`;
+
+        // Make the API request to OpenAI
+        const response = await fetch("https://api.openai.com/v1/completions", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+            },
+			body: JSON.stringify({
+				model: "gpt-3.5-turbo", // updated model
+				prompt,
+				max_tokens: 100,
+			  }),
+        });
+
+        // Parse response from OpenAI
+        const data = await response.json();
+		console.log(data);
+        if (response.ok && data.choices?.[0]?.text) {
+            res.status(200).json({ result: data.choices[0].text.trim() });
+        } else {
+            throw new Error("Failed to fetch response from OpenAI");
+        }
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+}
+
+
+ async function analyseMessage(req, res) {
+    return handleOpenAIRequest(req, res, "analyse");
+}
+
+
+export { sendMessage, getMessages, getConversations, analyseMessage };

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Avatar, IconButton, Menu, MenuItem, Snackbar, CircularProgress } from '@mui/material';
+import { Avatar, IconButton, Menu, MenuItem, Snackbar, CircularProgress, Tabs, Tab, Box } from '@mui/material';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import ShareIcon from '@mui/icons-material/Share';
 import { pink } from '@mui/material/colors';
@@ -7,14 +7,15 @@ import { useRecoilValue } from 'recoil';
 import getUser from '../Atom/getUser';
 import { Link } from 'react-router-dom';
 
-const UserHeader = ({ user }) => {
+
+const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [snackbarMessage, setSnackbarMessage] = useState(''); 
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false); // New error snackbar
+  const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false); 
   const currentUser = useRecoilValue(getUser);
   const [following, setFollowing] = useState(user.followers.includes(currentUser?._id));
-  const [updating,SetUpdating] = useState(false);
+  const [updating, SetUpdating] = useState(false);
 
   const handleClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -38,7 +39,7 @@ const UserHeader = ({ user }) => {
 
   const handleFollowToggle = async () => {
     if(!currentUser){
-      setSnackbarMessage('You must be logged in to follow users.'); 
+      setSnackbarMessage('You must be logged in to follow users.');
       setSnackbarOpen(true);
       return;
     }
@@ -64,7 +65,6 @@ const UserHeader = ({ user }) => {
         setSnackbarMessage(`You are now following ${user.name}!`);
       }
       setFollowing(!following);
-      console.log(data)
     } catch (error) {
       console.error(error);
       setErrorSnackbarOpen(true);
@@ -76,49 +76,45 @@ const UserHeader = ({ user }) => {
 
   return (
     <div>
-      <div className='flex justify-between items-center mt-20 w-full'>
-  <div className='pt-10'>
-    <div className='text-3xl font-bold'>{user.name}</div>
-    <div className='flex gap-2 mt-2 items-center'>
-      <div className='text-xl font-bold'>{user.username}</div>
-      <div className='text-sm py-1 text-pink-700 font-bold bg-pink-400 px-1 rounded-lg'>
-        PixelPals.net
+      <div className="flex justify-between items-center mt-20 w-full">
+        <div className="pt-10">
+          <div className="text-3xl font-bold">{user.name}</div>
+          <div className="flex gap-2 mt-2 items-center">
+            <div className="text-xl font-bold">{user.username}</div>
+            <div className="text-sm py-1 text-pink-700 font-bold bg-pink-400 px-1 rounded-lg">
+              PixelPals.net
+            </div>
+          </div>
+        </div>
+        <div className="ml-4">
+          <Avatar src={user.profilePic} sx={{ width: 170, height: 170 }} />
+        </div>
       </div>
-    </div>
-  </div>
-  <div className='ml-4'>
-    <Avatar src={user.profilePic} sx={{ width: 170, height: 170  }} />
-  </div>
-</div>
 
-      <p className='py-5 w-[90%] font-bold'>{user.bio}</p>
+      <p className="py-5 w-[90%] font-bold">{user.bio}</p>
       {currentUser?._id === user?._id && (
-        <button className='text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300'>
+        <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
           <Link to="/update">Edit Profile</Link>
         </button>
       )}
 
-{currentUser?._id !== user?._id && (
+      {currentUser?._id !== user?._id && (
         <button
           onClick={handleFollowToggle}
           className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300 flex items-center justify-center"
-          disabled={updating} // Disable button while updating
+          disabled={updating}
         >
-          {updating ? (
-            <CircularProgress size={24} color="inherit" /> // Show spinner if updating
-          ) : (
-            following ? 'Unfollow' : 'Follow'
-          )}
+          {updating ? <CircularProgress size={24} color="inherit" /> : following ? 'Unfollow' : 'Follow'}
         </button>
       )}
 
-      <div className='flex justify-between'>
-        <div className='flex gap-2 text-pink-700 font-bold items-center'>
+      <div className="flex justify-between">
+        <div className="flex gap-2 text-pink-700 font-bold items-center">
           <div>{user.followers ? user.followers.length : 0} followers</div>
-          <span className='font-bold'>.</span>
+          <span className="font-bold">.</span>
           <div>instagram.com</div>
         </div>
-        <div className='flex gap-4'>
+        <div className="flex gap-4">
           <IconButton sx={{ color: pink[500] }}>
             <InstagramIcon />
           </IconButton>
@@ -133,6 +129,56 @@ const UserHeader = ({ user }) => {
         </div>
       </div>
 
+      <Box
+  sx={{
+    width: '100%',
+    borderBottom: 1,
+    borderColor: 'divider',
+    mt: 3,
+    display: 'flex',
+    justifyContent: 'center',
+  }}
+>
+
+<Tabs
+  value={tabIndex} // Use tabIndex to track the active tab
+  onChange={(event, newValue) => setTabIndex(newValue)} // Update tabIndex when the tab changes
+  aria-label="User content tabs"
+  centered
+  sx={{
+    '.MuiTabs-indicator': {
+      backgroundColor: 'pink', // Pink color for the underline
+    },
+  }}
+>
+  <Tab
+    label="Posts"
+    sx={{
+      color: 'gray', // Default tab color
+      '&.Mui-selected': {
+        color: 'pink', // Pink color for the selected tab
+        fontWeight: 'bold',
+      },
+      textTransform: 'none', // Keeps the label text as is
+      fontSize: '16px',
+    }}
+  />
+  <Tab
+    label="Followers"
+    sx={{
+      color: 'gray', // Default tab color
+      '&.Mui-selected': {
+        color: 'pink', // Pink color for the selected tab
+        fontWeight: 'bold',
+      },
+      textTransform: 'none', // Keeps the label text as is
+      fontSize: '16px',
+    }}
+  />
+</Tabs>
+</Box>
+
+      
       <Snackbar
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         open={snackbarOpen}
@@ -166,15 +212,6 @@ const UserHeader = ({ user }) => {
           },
         }}
       />
-
-      <div className='flex justify-evenly mt-8 font-bold text-xl'>
-        <div className='w-[50%] border-b-2 text-center'>
-          <div>Posts</div>
-        </div>
-        <div className='w-[50%] border-b-2 border-gray-500 text-center'>
-          <div className='text-gray-500'>Replies</div>
-        </div>
-      </div>
     </div>
   );
 };
