@@ -55,7 +55,7 @@ const MessageInput = ({ setMessages }) => {
     setAnchorEl(null);
   
     // Ensure message is available and not empty
-    if (!message.trim()) {
+    if (!message) {
       alert('Please enter a message before selecting a mood.');
       return;
     }
@@ -69,7 +69,8 @@ const MessageInput = ({ setMessages }) => {
       });
   
       const data = await response.json();
-      setSuggestion(data.alternativeText);  // Update the suggestion with response
+      
+      setSuggestion(data.suggestion);  // Update the suggestion with response
       setSuggestionModalOpen(true);  // Show suggestion modal for user review
     } catch (error) {
       console.error('Error getting suggestion:', error);
@@ -229,8 +230,8 @@ const MessageInput = ({ setMessages }) => {
             maxWidth: '400px',
           }}
         >
-          <Typography variant="subtitle1">Suggested Alternative:</Typography>
-          <Typography variant="body1" sx={{ mt: 2, mb: 2 }}>
+          <Typography variant="subtitle1" sx={{ mt: 2, color: 'black', fontWeight: 'bold' }}>Suggested Alternative:</Typography>
+          <Typography variant="body1" sx={{ mt: 2, mb: 2, color: 'black', fontWeight: 'bold'  }}>
             {suggestion}
           </Typography>
           <Button
