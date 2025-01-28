@@ -58,7 +58,7 @@ const SuggestedUser = ({ user }) => {
 
   return (
     <>
-      <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+      <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center" >
         {/* Left side */}
         <Stack direction="row" spacing={2} component={Link} to={`/${user.username}`} alignItems="center">
           <Avatar src={user.profilePic} />

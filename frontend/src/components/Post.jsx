@@ -56,8 +56,8 @@ const Post = ({ post }) => {
   if (!post) return null;
 
   return (
-    <div className='flex'>
-      <div className='mt-6 flex flex-col'>
+    <div className='flex font-parkinsans justify-center '>
+      <div className='mt-6 flex flex-col '>
         <Link to={`/${post.postedBy.username}`}>
           <Avatar
             src={post.postedBy.profilePic}

@@ -75,8 +75,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   };
 
   return (
-    <div>
-      <div className="flex justify-between items-center mt-20 w-full">
+    <div className='font-parkinsans'>
+      <div className="flex justify-between items-center mt-20 w-full ">
         <div className="pt-10">
           <div className="text-3xl font-bold">{user.name}</div>
           <div className="flex gap-2 mt-2 items-center">
@@ -129,16 +129,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         </div>
       </div>
 
-      <Box
-  sx={{
-    width: '100%',
-    borderBottom: 1,
-    borderColor: 'divider',
-    mt: 3,
-    display: 'flex',
-    justifyContent: 'center',
-  }}
->
+     
+
 
 <Tabs
   value={tabIndex} // Use tabIndex to track the active tab
@@ -176,7 +168,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     }}
   />
 </Tabs>
-</Box>
+
 
       
       <Snackbar

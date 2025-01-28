@@ -155,7 +155,7 @@ const CreatePost = () => {
   return (
     <>
       {/* Fixed position button */}
-      <div className="fixed bottom-10 right-32">
+      <div className="fixed bottom-10 right-32 font-parkinsans">
         <button
           className="flex items-center gap-2 bg-pink-700 text-white p-2 rounded-md glasseffect hover:bg-pink-600"
           onClick={handleClickOpen}

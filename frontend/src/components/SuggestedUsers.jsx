@@ -33,7 +33,7 @@ const SuggestedUsers = () => {
 
   return (
     <>
-      <h3 className="text-lg font-bold mb-4 text-center text-primary">Suggested Users</h3>
+      <h3 className="text-lg font-bold mb-4 text-center text-primary font-parkinsans">Suggested Users</h3>
       
       {loading ? (
         Array.from({ length: 5 }).map((_, index) => (

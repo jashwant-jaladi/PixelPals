@@ -8,7 +8,7 @@ import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import useGetUserProfile from '../hooks/useGetUserProfile';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Snackbar } from '@mui/material';
-import { formatDistanceToNow } from 'date-fns'; 
+import { formatDistanceToNow } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
@@ -17,7 +17,7 @@ import postAtom from '../Atom/postAtom';
 
 
 const PostPage = () => {
- 
+
   const { user, loading: loadingUser } = useGetUserProfile();
   const [post, setPost] = useRecoilState(postAtom)
   const { id } = useParams();
@@ -27,8 +27,8 @@ const PostPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
-  
-  
+
+
   const currentPost = post[0];
   useEffect(() => {
     const getPosts = async () => {
@@ -81,13 +81,13 @@ const PostPage = () => {
     }
   };
 
-  
+
   if (!currentPost) return null;
-	console.log("currentPost", currentPost);
+  console.log("currentPost", currentPost);
 
 
   return (
-    <div className='flex'>
+    <div className='flex font-parkinsans'>
       <div className='mt-6'>
         <Avatar src={user?.profilePic} sx={{ width: 60, height: 60 }} />
       </div>
@@ -110,30 +110,32 @@ const PostPage = () => {
           <img src={currentPost?.image} alt="post" className='mt-8' />
         </div>
         <Actions post={currentPost} />
-        {!currentUser && 
-        <div>
-          <hr className='my-3' />
-          <div className='flex justify-between items-center'>
-            <p className='font-bold'>👋 Login to like, post and comment on posts.</p>
-            <Link to={'/auth'}>
-              <Button sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white' }} variant='contained'>Login</Button>
-            </Link>
-          </div>
-        </div>}
+        {!currentUser &&
+          <div>
+            <hr className='my-3' />
+            <div className='flex justify-between items-center'>
+              <p className='font-bold'>👋 Login to like, post and comment on posts.</p>
+              <Link to={'/auth'}>
+                <Button sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white' }} variant='contained'>Login</Button>
+              </Link>
+            </div>
+          </div>}
         <hr className='my-3' />
 
-  
-        {currentPost.comments.map((comment) => (
-				<Comment
-					key={comment._id}
-					comment={comment}
-					lastReply={comment === currentPost?.comments[currentPost.comments.length - 1]._id}
-				/>
-			))}
+
+        {[...currentPost.comments].reverse().map((comment) => (
+          <Comment
+            key={comment._id}
+            comment={comment}
+            lastReply={comment._id === currentPost?.comments[0]._id}
+          />
+        ))}
+        
+			
 
 
 
-
+        <div className='mt-10'></div>
       </div>
       <Snackbar
         open={snackbarOpen}

@@ -3,7 +3,7 @@ import { Snackbar, CircularProgress, Typography, Box } from '@mui/material';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
 import Post from '../components/Post';
 import SuggestedUsers from '../components/SuggestedUsers';
-
+import SearchUsers from '../components/SearchUsers';
 const Homepage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,6 +80,7 @@ const Homepage = () => {
      
         <Box flex={3} p={2}  >
          <SuggestedUsers />
+         <SearchUsers/>
         </Box>
       </Box>
 

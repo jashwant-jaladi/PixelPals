@@ -10,7 +10,7 @@ const Message = ({ ownMessage, message }) => {
   const selectedConversation = useRecoilValue(conversationAtom);
 
   return (
-    <div className={`flex mb-4 p-3 ${ownMessage ? 'justify-end' : 'justify-start'}`}>
+    <div className={`flex mb-4 p-3 font-parkinsans ${ownMessage ? 'justify-end' : 'justify-start'}` }>
       {/* Avatar for the other user */}
       {!ownMessage && (
         <Avatar sx={{ width: 45, height: 45, mr: 2 }} src={selectedConversation.userProfilePic} />

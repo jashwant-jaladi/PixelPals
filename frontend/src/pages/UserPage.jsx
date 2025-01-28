@@ -7,7 +7,6 @@ import useGetUserProfile from '../hooks/useGetUserProfile';
 import { useRecoilState } from 'recoil';
 import postAtom from '../Atom/postAtom';
 
-
 const UserPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -17,7 +16,7 @@ const UserPage = () => {
   const [posts, setPosts] = useRecoilState(postAtom);
   const { username } = useParams();
   const { user, loading: loadingUser } = useGetUserProfile();
-  const [tabIndex, setTabIndex] = useState(0); // State to track selected tab
+  const [tabIndex, setTabIndex] = useState(0);
 
   const handleSnackbarClose = (event, reason) => {
     if (reason === 'clickaway') {
@@ -33,31 +32,18 @@ const UserPage = () => {
       }
       setFetchingData(true);
       try {
-        const [postsRes, commentsRes] = await Promise.all([
-          fetch(`/api/posts/user/${username}`),
-          fetch(`/api/comments/user/${username}`),
-        ]);
-
-        const postsData = await postsRes.json();
-        const commentsData = await commentsRes.json();
-
-        if (postsRes.ok) {
-          setPosts(postsData.posts || []);
+        const response = await fetch(`/api/posts/user/${username}`);
+        const data = await response.json();
+  
+        if (response.ok) {
+          setPosts(data.posts || []);
         } else {
-          setSnackbarMessage(postsData.error || 'Failed to fetch posts');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-        }
-
-        if (commentsRes.ok) {
-          setComments(commentsData.comments || []);
-        } else {
-          setSnackbarMessage(commentsData.error || 'Failed to fetch comments');
+          setSnackbarMessage(data.error || 'Failed to fetch posts');
           setSnackbarSeverity('error');
           setSnackbarOpen(true);
         }
       } catch (error) {
-        setSnackbarMessage(error.message);
+        setSnackbarMessage(error.message || 'An error occurred while fetching posts');
         setSnackbarSeverity('error');
         setSnackbarOpen(true);
         setPosts([]);
@@ -65,9 +51,10 @@ const UserPage = () => {
         setFetchingData(false);
       }
     };
-
+  
     fetchData();
-  }, [username, setPosts, setComments, user]);
+  }, [username, setPosts, user]);
+  
 
   return (
     <>
@@ -76,7 +63,7 @@ const UserPage = () => {
       ) : (
         <>
           <UserHeader user={user} setTabIndex={setTabIndex} tabIndex={tabIndex} />
-         
+          
           {fetchingData ? (
             <div className="flex justify-center mt-10">
               <CircularProgress />
@@ -94,17 +81,7 @@ const UserPage = () => {
                   )}
                 </>
               )}
-              {tabIndex === 1 && (
-                <>
-                  {comments.length === 0 ? (
-                    <div className="text-center text-pink-700 text-xl">
-                      No comments yet. Start interacting with posts!
-                    </div>
-                  ) : (
-                    comments.map((comment) => <Comment key={comment._id} comment={comment} />)
-                  )}
-                </>
-              )}
+             
             </div>
           )}
         </>
