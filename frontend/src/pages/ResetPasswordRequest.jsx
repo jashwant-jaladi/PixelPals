@@ -55,7 +55,7 @@ const ResetPasswordRequest = () => {
         sx={{
           mt: 8,
           p: 4,
-          bgcolor: 'background.paper',
+          border: '1px solid #ccc',
           borderRadius: 2,
           boxShadow: 3,
         }}

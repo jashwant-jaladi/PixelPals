@@ -2,10 +2,11 @@ import React from "react";
 import GroupIcon from "@mui/icons-material/Group";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 import ExploreIcon from "@mui/icons-material/Explore";
+import { Link } from "react-router-dom";
 
 const LearnMore = () => {
   return (
-    <div className="bg-[url('/public/pixel-bg.jpg')] h-full bg-cover flex flex-col items-center p-10">
+    <div className="bg-[url('/public/pixel-bg.jpg')] h-full bg-cover flex flex-col items-center p-10 font-parkinsans">
       {/* Hero Section */}
       <div className="text-center  py-10">
         <h1 className="text-5xl font-bold mb-5">Discover PixelPals</h1>
@@ -61,10 +62,10 @@ const LearnMore = () => {
         </p>
         <div className="flex justify-center">
           <button  className="p-3 pl-7 pr-7 border-2 border-pink-700 rounded-md glass  font-bold hover:bg-pink-700 hover:text-white transition duration-300 mx-3">
-            Sign Up
+            <Link to="/auth">Sign Up</Link>
           </button>
           <button className="p-3 pl-7 pr-7 border-2 border-pink-700 rounded-md glass  font-bold hover:bg-pink-700 hover:text-white transition duration-300 mx-3">
-            Login
+            <Link to="/auth">Login</Link>
           </button>
         </div>
       </div>

@@ -6,6 +6,7 @@ import Alert from '@mui/material/Alert';
 import getUser from '../Atom/getUser';
 import { Link } from 'react-router-dom';
 import InviteLink from './Invitelink';
+
 const Login = () => {
   const setUserAtom = useSetRecoilState(getUser);
   const setUserAuth = useSetRecoilState(userAuthState);
@@ -44,7 +45,6 @@ const Login = () => {
       localStorage.setItem('PixelPalsUser', JSON.stringify(data.user));
       setUserAtom(data.user);
 
-
       if (response.ok) {
         setUserAuth('home');
       } else {
@@ -66,82 +66,118 @@ const Login = () => {
 
   return (
     <>
-      <div className='bg-[url("public/pink-7761356_960_720.webp")] h-[100vh] bg-cover flex justify-center'>
-        <div className='flex w-[100%] justify-center'>
-          <div className='flex flex-col justify-center glasseffect w-[30%] h-[80vh] relative top-[10%] rounded-l-lg'>
-            <div className='flex flex-col justify-center items-center font-bold text-xl'>
-              <img src="/pixelpals-high-resolution-logo-black-transparent.png" alt="App-logo" width="350px" height="350px" className='relative bottom-[10%]' />
-              <h1 className='text-3xl font-bold text-center text-pink-700 pb-10'>Good to See You!</h1>
-              <form className='flex flex-col text-pink-700'>
-                <label htmlFor="email" className='pb-2'>Email</label>
+      <div className='min-h-screen bg-black flex items-center justify-center p-4 font-parkinsans '>
+        <div className='flex flex-col lg:flex-row w-full max-w-6xl bg-black rounded-lg shadow-2xl overflow-hidden border-2 border-purple-900'>
+          {/* Left Side - Login Form */}
+          <div className='w-full lg:w-1/2 p-8 flex flex-col justify-center items-center'>
+            <img
+              src="/pixelpals-high-resolution-logo-white-transparent.png"
+              alt="App-logo"
+              width="350px"
+              height="350px"
+              className='mb-8'
+            />
+            <h1 className='text-3xl font-bold text-center text-pink-700 mb-8'>Good to See You!</h1>
+            <form className='w-full max-w-md'>
+              <div className='mb-6'>
+                <label htmlFor="email" className='block text-pink-700 font-medium mb-2'>Email</label>
                 <input
                   type="email"
                   name="email"
                   id="email"
-                  className='mb-5 gradient-border-1'
+                  className='w-full px-4 py-2 border text-black border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500'
                   onChange={(e) => setInput({ ...input, email: e.target.value })}
                   value={input.email}
                 />
-                <label htmlFor="password" className='pb-2'>Password</label>
+              </div>
+              <div className='mb-6'>
+                <label htmlFor="password" className='block text-pink-700 font-medium mb-2'>Password</label>
                 <input
                   type="password"
                   name="password"
                   id="password"
-                  className='mb-5 gradient-border-1'
+                  className='w-full px-4 py-2 border text-black border-pink-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500'
                   onChange={(e) => setInput({ ...input, password: e.target.value })}
                   value={input.password}
                 />
-                <div className='flex justify-center w-[100%] h-[100%]'>
-                  <button type="submit" onClick={handleLogin} className='mt-3 p-3 pl-7 pr-7 border-2 border-pink-700 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Login</button>
-                  <button type="reset" className='mt-3 p-3 border-2 mx-6 border-pink-700 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'>Guest User</button>
-                </div>
-              </form>
-              <p className='text-center text-pink-700 mt-14'>Don't have an account? <a className='underline text-pink-500 hover:text-pink-900' onClick={() => setUserAuth('register')}>register</a></p>
-              <p className='text-center text-pink-700 mt-2'>Forgot password? <a className='underline text-pink-500 hover:text-pink-900' href="/reset-password">reset password</a></p>
+              </div>
+              <div className='flex flex-col space-y-4'>
+                <button
+                  type="submit"
+                  onClick={handleLogin}
+                  className='w-full bg-pink-600 text-white py-2 px-4 rounded-lg hover:bg-pink-700 transition duration-300'
+                >
+                  Login
+                </button>
+                <button
+                  type="reset"
+                  className='w-full bg-transparent border border-pink-600 text-pink-600 py-2 px-4 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300'
+                >
+                  Guest User
+                </button>
+              </div>
+            </form>
+            <div className='mt-8 text-center'>
+              <p className='text-pink-700'>
+                Don't have an account?{' '}
+                <button onClick={() => setUserAuth('register')} className='text-pink-500 hover:text-pink-900 underline'>
+                  Register
+                </button>
+              </p>
+              <p className='text-pink-700 mt-2'>
+                Forgot password?{' '}
+                <a href="/reset-password" className='text-pink-500 hover:text-pink-900 underline'>
+                  Reset password
+                </a>
+              </p>
             </div>
           </div>
 
-          <div className='relative flex flex-col justify-center items-center top-[10%] bg-[url("/ai-generated-8123097_640.webp")] h-[80vh] w-[35%] bg-cover bg-center bg-opacity-20 rounded-r-lg'>
-            <div className='absolute inset-0 bg-black opacity-60 rounded-r-lg'></div>
-            <div className='relative z-10 text-white text-center font-bold'>
-              <h3 className='text-4xl relative bottom-[30%]'>The new way to connect</h3>
-              <div className='text-left text-2xl leading-10 relative bottom-[20%] pl-12'>
-                Discover new people
-                <br />
-                Bond over new experiences
-                <br />
-                Share memories
-                <br />
-                Rediscover yourself
-              </div>
-              <p></p>
-              <div className='text-pink-700 pr-20'>
-                <button className='font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border text-pink-700 hover:bg-pink-700 hover:text-white transition duration-300'> <Link to="/learn-more">Learn more</Link></button>
-                <button
-                  onClick={() => setShowInviteDialog(true)}
-                  className='text-pink-700 font-bold px-2 py-2 m-2 rounded-md glasseffect gradient-border hover:bg-pink-700 hover:text-white transition duration-300'
-                >
-                  Invite others
-                </button>
-              </div>
+          {/* Right Side - App Features */}
+          <div className='w-full lg:w-1/2 bg-gradient-to-r from-pink-600 to-purple-600 p-8 flex flex-col justify-center items-center text-white relative'>
+            <div className='text-center'>
+              <h3 className='text-4xl font-bold mb-8'>The New Way to Connect</h3>
+              <ul className='text-left text-xl space-y-4'>
+                <li>Discover new people</li>
+                <li>Bond over new experiences</li>
+                <li>Share memories</li>
+                <li>Rediscover yourself</li>
+              </ul>
+            </div>
+            <div className='mt-8 flex space-x-4'>
+              <Link
+                to="/learn-more"
+                className='bg-white text-pink-600 font-bold px-6 py-2 rounded-lg hover:bg-pink-100 transition duration-300'
+              >
+                Learn More
+              </Link>
+              <button
+                onClick={() => setShowInviteDialog(true)}
+                className='bg-transparent border border-white text-white font-bold px-6 py-2 rounded-lg hover:bg-white hover:text-pink-600 transition duration-300'
+              >
+                Invite Others
+              </button>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Invite Dialog */}
       {showInviteDialog && (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-    <div className="relative p-6 bg-black rounded-lg shadow-lg">
-      <button
-        onClick={() => setShowInviteDialog(false)}
-        className="absolute -top-10 right-0 text-white bg-red-500 px-3 py-1 rounded-full"
-      >
-        Close
-      </button>
-      <InviteLink />
-    </div>
-  </div>
-  
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="relative p-6 bg-black rounded-lg shadow-lg border-2 border-white">
+            <button
+              onClick={() => setShowInviteDialog(false)}
+              className="absolute -top-10 right-0 text-white bg-red-500 px-3 py-1 rounded-full"
+            >
+              Close
+            </button>
+            <InviteLink />
+          </div>
+        </div>
       )}
+
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
