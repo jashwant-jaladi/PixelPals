@@ -1,14 +1,25 @@
 import React, { useEffect, useState } from 'react';
-import { Snackbar, CircularProgress, Typography, Box } from '@mui/material';
+import { Snackbar, CircularProgress, Typography, Box, Stack, Avatar,  Button } from '@mui/material';
+import { Link } from 'react-router-dom';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
 import Post from '../components/Post';
 import SuggestedUsers from '../components/SuggestedUsers';
 import SearchUsers from '../components/SearchUsers';
+import { pink } from '@mui/material/colors'; 
+import { useRecoilValue } from 'recoil';
+import getUser from '../Atom/getUser';
+
 const Homepage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
+  const [searchResult, setSearchResult] = useState(null); 
+  const [following, setFollowing] = useState(false);
+  const [updating, setUpdating] = useState(false); // Define the updating state
+
+  const currentUser = useRecoilValue(getUser);
+
 
   useEffect(() => {
     const getPosts = async () => {
@@ -19,7 +30,6 @@ const Homepage = () => {
   
         if (res.ok && Array.isArray(data.posts)) { // Check if data.posts is an array
           setPosts(data.posts);
-          console.log(data.posts);
         } else {
           throw new Error(data.error || 'Failed to fetch posts');
         }
@@ -33,10 +43,51 @@ const Homepage = () => {
   
     getPosts();
   }, []);
-  
+
+  const handleFollowUnfollow = async (user) => {
+    if (!currentUser) {
+      setSnackbarMessage('You must be logged in to follow users.');
+      setSnackbarOpen(true);
+      return;
+    }
+
+    setUpdating(true);
+    try {
+      const response = await fetch(`/api/users/follow/${user._id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      const data = await response.json();
+
+      if (data.error) {
+        setSnackbarMessage(data.error);
+        setSnackbarOpen(true);
+      }
+
+      if (following) {
+        setSnackbarMessage(`You have unfollowed ${user.username}.`);
+      } else {
+        setSnackbarMessage(`You are now following ${user.username}!`);
+      }
+
+      setFollowing(!following);
+    } catch (error) {
+      setSnackbarMessage('An error occurred while updating follow status.');
+      setSnackbarOpen(true);
+    } finally {
+      setUpdating(false);
+    }
+  };
 
   const handleSnackbarClose = () => {
     setSnackbarOpen(false);
+  };
+
+  const handleSearchResult = (user) => {
+    setSearchResult(user); // Set the search result in the Homepage state
+    setFollowing(user.followers.includes(currentUser._id)); // Check if the current user is following the searched user
   };
 
   return (
@@ -77,10 +128,50 @@ const Homepage = () => {
             ))}
         </Box>
 
-     
-        <Box flex={3} p={2}  >
-         <SuggestedUsers />
-         <SearchUsers/>
+        <Box flex={3} p={2}>
+          <SuggestedUsers />
+          <SearchUsers onSearchResult={handleSearchResult} /> 
+          
+          {/* Display search result if available */}
+          {searchResult && (
+            <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+              {/* Left side */}
+              <Stack direction="row" spacing={2} component={Link} to={`/${searchResult.username}`} alignItems="center">
+                <Avatar src={searchResult.profilePic} />
+                <Box>
+                  <Typography variant="body1" fontWeight="bold">
+                    {searchResult.username}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {searchResult.name}
+                  </Typography>
+                </Box>
+              </Stack>
+      
+              {/* Right side */}
+              <Button
+                size="small"
+                color="primary"
+                variant={following ? 'outlined' : 'contained'}
+                onClick={() => handleFollowUnfollow(searchResult)} // Pass the user to the follow function
+                disabled={updating}
+                sx={{
+                  minWidth: 80,
+                  backgroundColor: pink[500], 
+                  '&:hover': {
+                    backgroundColor: pink[700], 
+                  },
+                  '&:disabled': {
+                    backgroundColor: pink[100], 
+                  },
+                  color: 'black', 
+                  fontWeight: 'bold', 
+                }}
+              >
+                {following ? 'Unfollow' : 'Follow'}
+              </Button>
+            </Stack>
+          )}
         </Box>
       </Box>
 
