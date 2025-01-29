@@ -94,6 +94,30 @@ const followandUnfollowUser = async (req, res) => {
     }
 };
 
+
+const getFollowersAndFollowing = async (req, res) => {
+    try {
+        const { userId } = req.params;
+
+        const user = await User.findById(userId)
+            .populate("followers", "name profilePic username")
+            .populate("following", "name profilePic username");
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({
+            followers: user.followers,
+            following: user.following
+        });
+    } catch (err) {
+        console.error("Error fetching followers/following:", err);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
 const updateProfile = async (req, res) => {
     const { name, email, username, password, bio } = req.body;
     let { profilePic } = req.body;
@@ -325,4 +349,4 @@ const resetPassword = async (req, res) => {
 };
 
 
-export { signupUser, loginUser, logoutUser, followandUnfollowUser, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };
+export { signupUser, loginUser, logoutUser, followandUnfollowUser, getFollowersAndFollowing, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };

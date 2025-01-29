@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose, { model } from "mongoose";
 
 const userSchema = new mongoose.Schema({
     name: {
@@ -25,11 +25,13 @@ const userSchema = new mongoose.Schema({
         default: ""
     },
     followers: {
-        type: [String],
+        type: [mongoose.Schema.Types.ObjectId],
+        ref : "User",
         default: []
     },
     following: {
-        type: [String],
+        type: [mongoose.Schema.Types.ObjectId],
+        ref : "User",
         default: []
     },
     bio: {
