@@ -9,6 +9,7 @@ import {
   Menu,
   MenuItem,
   Typography,
+  CircularProgress
   
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
@@ -30,6 +31,7 @@ const MessageInput = ({ setMessages }) => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const [selectedMood, setSelectedMood] = React.useState(null);
   const [suggestion, setSuggestion] = React.useState('');
+  const [loading, setLoading] = React.useState(false);
 
   const selectedConversation = useRecoilValue(conversationAtom);
   const setConversations = useSetRecoilState(messageAtom);
@@ -37,10 +39,10 @@ const MessageInput = ({ setMessages }) => {
   const { socket } = useSocket();
 
   const moods = [
-    { id: 1, name: 'Happy', emoji: '😊', color: '#4CAF50' },
-    { id: 2, name: 'Sad', emoji: '😢', color: '#2196F3' },
-    { id: 3, name: 'Angry', emoji: '😠', color: '#F44336' },
-    { id: 4, name: 'Neutral', emoji: '😐', color: '#9E9E9E' },
+    { id: 1, name: 'Optimistic', emoji: '😊', color: '#4CAF50' },
+    { id: 2, name: 'Excited', emoji: '🤩', color: '#2196F3' },
+    { id: 3, name: 'Sarcastic', emoji: '💁', color: '#F44336' },
+    { id: 4, name: 'Formal', emoji: '😐', color: '#9E9E9E' },
   ];
 
   const handleMoodClick = (event) => {
@@ -59,6 +61,7 @@ const MessageInput = ({ setMessages }) => {
       alert('Please enter a message before selecting a mood.');
       return;
     }
+    setLoading(true);
     try {
       const response = await fetch('/api/messages/analyzeMood', {
         method: 'POST',
@@ -74,6 +77,8 @@ const MessageInput = ({ setMessages }) => {
       setSuggestionModalOpen(true);  // Show suggestion modal for user review
     } catch (error) {
       console.error('Error getting suggestion:', error);
+    }finally{
+      setLoading(false);
     }
   };
   
@@ -158,7 +163,7 @@ const MessageInput = ({ setMessages }) => {
               color: pink[500],
             }}
           >
-            <MoodIcon />
+            {loading ? <CircularProgress size={24} sx={{ color: pink[500] }} /> : <MoodIcon />}
           </IconButton>
 
           <Menu

@@ -103,7 +103,8 @@ async function getConversations(req, res) {
 
 async function generateCohereResponse(req, res) {
 	const { mood, text } = req.body;
-    const prompt = `rephrase the message with "${mood}" tone based on : "${text}"`;
+    const prompt = `rephrase the following sentence/question in ${mood} tone: ${text}`;
+;
 
 	try {
 		const response = await fetch('https://api.cohere.ai/generate', {

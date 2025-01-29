@@ -19,7 +19,6 @@ const FollowersFollowingDialog = ({
   following = [],
   selectedTab,
   setSelectedTab,
-  handleFollowToggle, // Accept the function as a prop
 }) => {
   const selectedList = useMemo(
     () => (selectedTab === "followers" ? followers : following),

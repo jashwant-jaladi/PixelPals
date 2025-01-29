@@ -33,7 +33,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
-  console.log(user);
+
 
   const handleCopyProfileUrl = () => {
     navigator.clipboard
@@ -201,7 +201,6 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         following={followingList}
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
-        handleFollowToggle={handleFollowToggle}
       />
     </div>
   );
