@@ -22,6 +22,7 @@ import LearnMore from './pages/LearnMore';
 import { Box } from '@mui/material';
 import ResetPasswordRequest from './pages/ResetPasswordRequest';
 import ResetPasswordAction from './pages/ResetPasswordAction';
+import ChatButton from './components/ChatIcon';
 
 const App = () => {
   const location = useLocation();
@@ -81,24 +82,7 @@ const App = () => {
               >
                 <CottageIcon />
               </Button>
-              <Button
-                variant="contained"
-                sx={{
-                  backgroundColor: 'rgba(176, 73, 174, 0.1)',
-                  color: '#ffffff',
-                  fontWeight: 'bold',
-                  borderRadius: '12px',
-                  border: '1px solid rgba(176, 73, 174, 0.69)',
-                  boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)',
-                  ":hover": {
-                    backgroundColor: 'rgba(176, 73, 174, 0.2)',
-                    boxShadow: '0 6px 35px rgba(0, 0, 0, 0.15)',
-                  },
-                }}
-                onClick={() => navigate('/chat')}
-              >
-                <ChatIcon />
-              </Button>
+            <ChatButton/>
               <Button
                 variant="contained"
                 sx={{

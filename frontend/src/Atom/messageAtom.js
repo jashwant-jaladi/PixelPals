@@ -15,3 +15,7 @@ export const conversationAtom = atom({
     }
 });
 
+export const unreadMessagesAtom = atom({
+    key: "unreadMessagesAtom",
+    default: 0, // Default count is 0
+  });

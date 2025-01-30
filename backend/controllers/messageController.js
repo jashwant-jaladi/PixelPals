@@ -131,5 +131,50 @@ async function generateCohereResponse(req, res) {
 	return generateCohereResponse(req, res);
   }
 
+  async function markMessageAsSeen(req, res) {
+	try {
+		const { messageId } = req.body;
+		const userId = req.user._id;
 
-export { sendMessage, getMessages, getConversations, analyseMessage };
+		const message = await Message.findById(messageId);
+		if (!message) {
+			return res.status(404).json({ error: "Message not found" });
+		}
+
+		// Ensure only the recipient can mark it as seen
+		const conversation = await Conversation.findById(message.conversationId);
+		if (!conversation.participants.includes(userId)) {
+			return res.status(403).json({ error: "Unauthorized" });
+		}
+
+		// Update the seen status
+		message.seen = true;
+		await message.save();
+
+		// Notify the sender in real time
+		const senderSocketId = getRecipientSocketId(message.sender);
+		if (senderSocketId) {
+			io.to(senderSocketId).emit("messageSeen", { messageId });
+		}
+
+		res.status(200).json({ success: true });
+	} catch (error) {
+		res.status(500).json({ error: error.message });
+	}
+}
+
+const messageSeenCount = async (req, res) => {
+	try {
+	  const { userId } = req.params;
+	  const unreadCount = await Message.countDocuments({
+		recipient: userId, 
+		seen: false,
+	  });
+	  res.json({ unreadCount });
+	} catch (error) {
+	  res.status(500).json({ error: "Failed to fetch unread messages count" });
+	}
+  }
+
+
+export { sendMessage, getMessages, getConversations, analyseMessage, markMessageAsSeen, messageSeenCount };
