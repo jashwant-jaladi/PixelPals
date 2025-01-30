@@ -7,7 +7,7 @@ import {
   Snackbar,
   CircularProgress,
   Tabs,
-  Tab,
+  Tab 
 } from "@mui/material";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import ShareIcon from "@mui/icons-material/Share";
@@ -147,18 +147,28 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       <p className="py-5 w-[90%] font-bold">{userData.bio}</p>
 
       {currentUser?._id === userData?._id ? (
-        <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
-          <Link to="/update">Edit Profile</Link>
-        </button>
-      ) : (
-        <button
-          onClick={handleFollowToggle}
-          className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300 flex items-center justify-center"
-          disabled={updating}
-        >
-          {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
-        </button>
-      )}
+  <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
+    <Link to="/update">Edit Profile</Link>
+  </button>
+) : (
+  <div className="flex gap-2">
+    <button
+      onClick={handleFollowToggle}
+      className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300 flex items-center justify-center"
+      disabled={updating}
+    >
+      {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
+    </button>
+
+    {/* Show Message button only if the current user is following the profile */}
+    {following && (
+      <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
+        <Link to={"/chat"}>Message</Link>
+      </button>
+    )}
+  </div>
+)}
+
 
       <div className="flex justify-between">
         <div
