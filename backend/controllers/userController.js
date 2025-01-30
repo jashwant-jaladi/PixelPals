@@ -117,6 +117,52 @@ const getFollowersAndFollowing = async (req, res) => {
     }
 };
 
+const followUnfollowDialog = async (req, res) => {
+  try {
+    const { userId } = req.body; // Get userId from the request body
+    const currentUser = req.user; // Authenticated user
+
+    if (userId === currentUser._id.toString()) {
+      return res.status(400).json({ message: "You cannot follow yourself" });
+    }
+
+    // Find the target user
+    const targetUser = await User.findById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isFollowing = targetUser.followers.includes(currentUser._id);
+
+    if (isFollowing) {
+      // Unfollow logic
+      await Promise.all([
+        User.findByIdAndUpdate(userId, { $pull: { followers: currentUser._id } }),
+        User.findByIdAndUpdate(currentUser._id, { $pull: { following: userId } }),
+      ]);
+
+      // Fetch updated target user
+      const updatedUser = await User.findById(userId);
+      return res.status(200).json({ message: "User unfollowed successfully", updatedUser });
+    } else {
+      // Follow logic
+      await Promise.all([
+        User.findByIdAndUpdate(userId, { $addToSet: { followers: currentUser._id } }),
+        User.findByIdAndUpdate(currentUser._id, { $addToSet: { following: userId } }),
+      ]);
+
+      // Fetch updated target user
+      const updatedUser = await User.findById(userId);
+      return res.status(200).json({ message: "User followed successfully", updatedUser });
+    }
+  } catch (err) {
+    console.error("Error in followAndUnfollowDialog:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+  
+
 
 const updateProfile = async (req, res) => {
     const { name, email, username, password, bio } = req.body;
@@ -349,4 +395,4 @@ const resetPassword = async (req, res) => {
 };
 
 
-export { signupUser, loginUser, logoutUser, followandUnfollowUser, getFollowersAndFollowing, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };
+export { signupUser, loginUser, logoutUser, followandUnfollowUser, getFollowersAndFollowing, followUnfollowDialog, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -15,15 +15,90 @@ const FollowersFollowingDialog = ({
   open,
   onClose,
   loading,
-  followers = [],
-  following = [],
+  setLoading,
+  setFollowersList,
+  setFollowingList,
+  followers,
+  following,
   selectedTab,
   setSelectedTab,
 }) => {
+  const [processingId, setProcessingId] = useState(null);
+
   const selectedList = useMemo(
     () => (selectedTab === "followers" ? followers : following),
     [selectedTab, followers, following]
   );
+
+  const isFollowingUser = (userId) => {
+    return following.some(user => user._id === userId);
+  };
+
+  const followUnfollowDialog = async (userId, isFollowing) => {
+    try {
+      // Update both lists simultaneously
+      setFollowersList((prevFollowers) =>
+        prevFollowers.map((user) =>
+          user._id === userId ? { ...user, isFollowing: !isFollowing } : user
+        )
+      );
+
+      // If unfollowing, remove from following list
+      if (isFollowing) {
+        setFollowingList((prevFollowing) =>
+          prevFollowing.filter((user) => user._id !== userId)
+        );
+      } else {
+        // If following, add to following list if not already present
+        const userToAdd = followers.find(user => user._id === userId);
+        if (userToAdd && !following.some(user => user._id === userId)) {
+          setFollowingList((prevFollowing) => [...prevFollowing, { ...userToAdd, isFollowing: true }]);
+        }
+      }
+
+      setProcessingId(userId);
+      setLoading(true);
+
+      const response = await fetch("/api/users/followUnfollowDialog", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Follow/unfollow failed");
+      }
+
+    } catch (error) {
+      console.error("Follow/unfollow error:", error);
+
+      // Rollback both lists in case of failure
+      setFollowersList((prevFollowers) =>
+        prevFollowers.map((user) =>
+          user._id === userId ? { ...user, isFollowing: isFollowing } : user
+        )
+      );
+
+      if (isFollowing) {
+        // Restore to following list if was previously following
+        const userToRestore = followers.find(user => user._id === userId);
+        if (userToRestore) {
+          setFollowingList((prevFollowing) => [...prevFollowing, { ...userToRestore, isFollowing: true }]);
+        }
+      } else {
+        // Remove from following list if was previously not following
+        setFollowingList((prevFollowing) =>
+          prevFollowing.filter((user) => user._id !== userId)
+        );
+      }
+    } finally {
+      setProcessingId(null);
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" scroll="paper">
@@ -39,7 +114,6 @@ const FollowersFollowingDialog = ({
         {selectedTab === "followers" ? "Followers" : "Following"}
       </DialogTitle>
 
-      {/* Tabs to toggle between Followers & Following */}
       <Tabs
         value={selectedTab}
         onChange={(event, newValue) => setSelectedTab(newValue)}
@@ -77,7 +151,7 @@ const FollowersFollowingDialog = ({
             {selectedList.map((user) => (
               <li
                 key={user._id}
-                className="flex items-center justify-between p-4 border-2 border-pink-500 bg-black rounded-lg"
+                className="flex items-center justify-between p-4 border-2 border-pink-500 bg-black rounded-lg mb-2"
               >
                 <div className="flex items-center gap-3">
                   <Avatar src={user.profilePic} alt={user.name} sx={{ width: 55, height: 55 }} />
@@ -90,13 +164,32 @@ const FollowersFollowingDialog = ({
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleFollowToggle(user._id, selectedTab === "following")}
-                  className="text-sm font-bold px-4 py-2 rounded-lg border-2 border-pink-500 text-pink-500 hover:bg-pink-700 hover:text-white transition-all duration-300 tracking-wide"
-                  style={{ fontFamily: "Parkinsans" }}
-                >
-                  {selectedTab === "following" ? "Unfollow" : "Follow"}
-                </button>
+                {selectedTab === "followers" && (
+                  <button
+                    onClick={() => followUnfollowDialog(user._id, isFollowingUser(user._id))}
+                    disabled={processingId === user._id}
+                    className="text-sm font-bold px-4 py-2 rounded-lg border-2 border-pink-500 text-pink-500 hover:bg-pink-700 hover:text-white transition-all duration-300 tracking-wide"
+                    style={{ fontFamily: "Parkinsans" }}
+                  >
+                    {processingId === user._id
+                      ? "Processing..."
+                      : isFollowingUser(user._id)
+                      ? "Unfollow"
+                      : "Follow"}
+                  </button>
+                )}
+                {selectedTab === "following" && (
+                  <button
+                    onClick={() => followUnfollowDialog(user._id, true)}
+                    disabled={processingId === user._id}
+                    className="text-sm font-bold px-4 py-2 rounded-lg border-2 border-pink-500 text-pink-500 hover:bg-pink-700 hover:text-white transition-all duration-300 tracking-wide"
+                    style={{ fontFamily: "Parkinsans" }}
+                  >
+                    {processingId === user._id
+                      ? "Processing..."
+                      : "Unfollow"}
+                  </button>
+                )}
               </li>
             ))}
           </ul>

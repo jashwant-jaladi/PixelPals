@@ -30,10 +30,10 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [followingList, setFollowingList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState("followers");
+  const [userData, setUserData] = useState(user);
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
-
 
   const handleCopyProfileUrl = () => {
     navigator.clipboard
@@ -56,7 +56,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`/api/users/follow/${user._id}`, {
+      const response = await fetch(`/api/users/follow/${userData._id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
       });
@@ -67,16 +67,27 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         return;
       }
 
+      // Update local state
+      const updatedFollowers = following
+        ? userData.followers.filter(id => id !== currentUser._id)
+        : [...userData.followers, currentUser._id];
+
+      setUserData(prev => ({
+        ...prev,
+        followers: updatedFollowers
+      }));
+
       if (following) {
-        user.followers.pop();
-        setSnackbarMessage(`You have unfollowed ${user.name}.`);
+        setSnackbarMessage(`You have unfollowed ${userData.name}.`);
       } else {
-        user.followers.push(currentUser._id);
-        setSnackbarMessage(`You are now following ${user.name}!`);
+        setSnackbarMessage(`You are now following ${userData.name}!`);
       }
 
       setFollowing(!following);
       setSnackbarOpen(true);
+      
+      // Refresh followers list
+      await fetchFollowersAndFollowing();
     } catch (error) {
       console.error("Follow/unfollow error:", error);
       setErrorSnackbarOpen(true);
@@ -88,7 +99,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const fetchFollowersAndFollowing = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/users/follow-unfollow/${user._id}`, {
+      const response = await fetch(`/api/users/follow-unfollow/${userData._id}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -96,30 +107,46 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       
       setFollowersList(data.followers);
       setFollowingList(data.following);
+      
+      // Update the userData state with new follower counts
+      setUserData(prev => ({
+        ...prev,
+        followers: data.followers.map(f => f._id),
+        following: data.following.map(f => f._id)
+      }));
+      
+      // Update following state based on current user's status
+      setFollowing(data.followers.some(f => f._id === currentUser?._id));
     } catch (error) {
       console.error("Error fetching followers:", error);
     }
     setLoading(false);
   };
 
+  const handleDialogClose = () => {
+    setFollowersDialogOpen(false);
+    // Refresh the followers list when dialog closes
+    fetchFollowersAndFollowing();
+  };
+
   return (
     <div className="font-parkinsans">
       <div className="flex justify-between items-center mt-20 w-full">
         <div className="pt-10">
-          <div className="text-3xl font-bold">{user.name}</div>
+          <div className="text-3xl font-bold">{userData.name}</div>
           <div className="flex gap-2 mt-2 items-center">
-            <div className="text-xl font-bold">@{user.username}</div>
+            <div className="text-xl font-bold">@{userData.username}</div>
             <div className="text-sm py-1 text-pink-700 font-bold bg-pink-400 px-1 rounded-lg">
               PixelPals.net
             </div>
           </div>
         </div>
-        <Avatar src={user.profilePic} sx={{ width: 170, height: 170 }} />
+        <Avatar src={userData.profilePic} sx={{ width: 170, height: 170 }} />
       </div>
 
-      <p className="py-5 w-[90%] font-bold">{user.bio}</p>
+      <p className="py-5 w-[90%] font-bold">{userData.bio}</p>
 
-      {currentUser?._id === user?._id ? (
+      {currentUser?._id === userData?._id ? (
         <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
           <Link to="/update">Edit Profile</Link>
         </button>
@@ -141,9 +168,9 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
             setFollowersDialogOpen(true);
           }}
         >
-          <div>{user.followers.length} followers</div>
+          <div>{userData.followers.length} followers</div>
           <span className="font-bold">.</span>
-          <div>{user.following.length} following</div>
+          <div>{userData.following.length} following</div>
         </div>
 
         <div className="flex gap-4">
@@ -195,13 +222,21 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
       <FollowersFollowingDialog
         open={followersDialogOpen}
-        onClose={() => setFollowersDialogOpen(false)}
-        loading={loading}
-        followers={followersList}  
+        onClose={handleDialogClose}
+        setLoading={setLoading}
+        setFollowersList={setFollowersList}
+        setFollowingList={setFollowingList}
+        followers={followersList}
         following={followingList}
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
+        onFollowToggle={async () => {
+          // Refresh the followers list whenever a follow/unfollow action happens in the dialog
+          await fetchFollowersAndFollowing();
+        }}
       />
+
+      
     </div>
   );
 };
