@@ -314,6 +314,34 @@ const freezeAccount = async (req, res) => {
     }
 };
 
+const privateAccount = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        // Step 1: Fetch the current user
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Step 2: Toggle the private field
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { private: !user.private }, // Use the fetched user's private field
+            { new: true }
+        );
+
+        // Step 3: Return the response
+        res.status(200).json({
+            message: "Private mode toggled successfully",
+            success: true,
+            private: updatedUser.private // Optionally return the updated private status
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 const transporter = nodemailer.createTransport({
     service: 'Gmail', // Use your email service provider
     auth: {
@@ -395,4 +423,4 @@ const resetPassword = async (req, res) => {
 };
 
 
-export { signupUser, loginUser, logoutUser, followandUnfollowUser, getFollowersAndFollowing, followUnfollowDialog, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };
+export { signupUser, loginUser, logoutUser, followandUnfollowUser, privateAccount, getFollowersAndFollowing, followUnfollowDialog, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };

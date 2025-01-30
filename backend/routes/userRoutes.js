@@ -1,5 +1,5 @@
 import express from "express";
-import { signupUser, loginUser, logoutUser, followandUnfollowUser, updateProfile, getUserProfile, getFollowersAndFollowing, followUnfollowDialog,  getSuggestedUsers, freezeAccount, resetLink, resetPassword } from "../controllers/userController.js";
+import { signupUser, loginUser, logoutUser, followandUnfollowUser, updateProfile,privateAccount, getUserProfile, getFollowersAndFollowing, followUnfollowDialog,  getSuggestedUsers, freezeAccount, resetLink, resetPassword } from "../controllers/userController.js";
 import protectRoute from "../middleware/protectRoute.js";
 
 const Router = express.Router();
@@ -16,4 +16,5 @@ Router.put("/update/:id", protectRoute, updateProfile)
 Router.put("/freeze", protectRoute, freezeAccount)
 Router.post("/reset-link", resetLink)
 Router.post("/reset-password/:id", resetPassword)
+Router.put("/private", protectRoute, privateAccount)
 export default Router
