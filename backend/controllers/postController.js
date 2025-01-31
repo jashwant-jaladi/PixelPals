@@ -2,6 +2,7 @@
 import Post from "../models/postModel.js";
 import User from "../models/userModel.js";
 import {v2 as cloudinary} from "cloudinary";
+import Notification from "../models/notificationModel.js";
 
 const createPost = async (req, res) => {
     try {
@@ -88,30 +89,46 @@ const deletePost = async (req, res) => {
 }
 
 const likeAndUnlikePost = async (req, res) => {
-    try{
+    try {
         const postId = req.params.id;
+        const userId = req.user._id;
         const post = await Post.findById(postId);
+
         if (!post) {
             return res.status(404).json({ error: "Post not found" });
         }
-        if (post.likes.includes(req.user._id)) {
-            await post.updateOne({ $pull: { likes: req.user._id } });
+
+        if (post.likes.includes(userId)) {
+            await post.updateOne({ $pull: { likes: userId } });
             return res.status(200).json({ message: "Post unliked successfully" });
         }
-        await post.updateOne({ $push: { likes: req.user._id } });
+
+        await post.updateOne({ $push: { likes: userId } });
+
+        // Send notification only if the liker is not the post owner
+        if (post.postedBy.toString() !== userId.toString()) {
+            await Notification.create({
+                recipient: post.postedBy,
+                sender: userId,
+                type: "like",
+                post: postId,
+                message: "liked your post",
+            });
+        }
+
         res.status(200).json({ message: "Post liked successfully" });
+    } catch (err) {
+        console.error("Error liking/unliking post:", err);
+        res.status(500).json({ error: err.message });
     }
-    catch(err){
-        res.status(404).json({ error: err.message });
-    }
-}
+};
 
 const commentPost = async (req, res) => {
     try {
         const postId = req.params.id;
         const { text } = req.body;
         const userId = req.user._id;
-        const profilePic = req.user.profilePic; // Ensure this is correctly populated
+        const profilePic = req.user.profilePic; 
         const username = req.user.username;
 
         if (!text) {
@@ -126,12 +143,23 @@ const commentPost = async (req, res) => {
         const comment = {
             text,
             userId,
-            profilePic, 
+            profilePic,
             username
         };
 
         post.comments.push(comment);
         await post.save();
+
+        // Send notification only if commenter is not the post owner
+        if (post.postedBy.toString() !== userId.toString()) {
+            await Notification.create({
+                recipient: post.postedBy,
+                sender: userId,
+                type: "comment",
+                post: postId,
+                message: "commented on your post",
+            });
+        }
 
         res.status(200).json(comment);
     } catch (err) {
@@ -139,6 +167,7 @@ const commentPost = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
+
 
 
 const getFeedPosts = async (req, res) => {
@@ -179,4 +208,42 @@ const getUserPosts = async (req, res) => {
     }
 }
 
-export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts, getUserPosts };
+
+const getNotifications = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const notifications = await Notification.find({ recipient: userId, isRead: false }) // Fetch only unread notifications
+            .sort({ createdAt: -1 })
+            .populate("sender", "username profilePic");
+
+        res.status(200).json(notifications);
+    } catch (error) {
+        console.error("Error fetching notifications:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+const markNotificationAsRead = async (req, res) => {
+    try {
+        const { notificationId } = req.params;
+
+        const updatedNotification = await Notification.findByIdAndUpdate(
+            notificationId,
+            { isRead: true },
+            { new: true } 
+        );
+
+        if (!updatedNotification) {
+            return res.status(404).json({ message: "Notification not found" });
+        }
+
+        res.status(200).json({ message: "Notification marked as read" });
+    } catch (error) {
+        console.error("Error marking notification as read:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+
+
+export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts, getUserPosts, getNotifications, markNotificationAsRead };

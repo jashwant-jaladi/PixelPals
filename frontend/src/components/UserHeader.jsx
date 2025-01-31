@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Avatar,
   IconButton,
@@ -16,6 +16,8 @@ import { useRecoilValue } from "recoil";
 import getUser from "../Atom/getUser";
 import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
+import Notifications from "./Notifications";
+import {Badge} from "@mui/material";
 
 const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const currentUser = useRecoilValue(getUser);
@@ -31,6 +33,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [loading, setLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState("followers");
   const [userData, setUserData] = useState(user);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -128,6 +131,21 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     // Refresh the followers list when dialog closes
     fetchFollowersAndFollowing();
   };
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch("/api/posts/notifications");
+        if (!response.ok) throw new Error("Failed to fetch notifications");
+        const data = await response.json();
+        setNotificationCount(data.length); // Set the notification count initially
+      } catch (error) {
+        console.error("Error fetching notifications", error);
+      }
+    };
+
+    fetchNotifications(); // Call the function when the page loads
+  }, []);
+
 
   return (
     <div className="font-parkinsans">
@@ -205,9 +223,17 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         }}
       >
         <Tab label="Posts" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
-        <Tab label="Followers" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
+        <Tab
+    label={
+      <Badge color="error" variant="dot" invisible={notificationCount === 0} >
+        Notifications
+      </Badge>
+    }
+    sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }}
+  />
+        <Tab label="Follow Requests" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
       </Tabs>
-
+      {tabIndex === 1 && <Notifications setNotificationCount={setNotificationCount} />}
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={snackbarOpen}

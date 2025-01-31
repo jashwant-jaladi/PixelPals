@@ -157,7 +157,6 @@ const Actions = ({ post}) => {
           </Button>
           <Button sx={{ color: pink[500], border: '1px solid pink' }} onClick={handleOpenDialog}><CommentIcon /></Button>
           <Button sx={{ color: pink[500], border: '1px solid pink' }}><ShareIcon /></Button>
-          <Button sx={{ color: pink[500], border: '1px solid pink' }}><RepeatIcon /></Button>
         </div>
         <div className='flex gap-3 font-bold text-gray-500 items-center'>
           <p>{post.comments?.length || 0} replies</p>
