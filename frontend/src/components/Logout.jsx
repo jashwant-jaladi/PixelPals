@@ -1,3 +1,4 @@
+// src/components/Logout.js
 import React from 'react';
 import { Button } from '@mui/material';
 import { useSetRecoilState } from 'recoil';
@@ -5,7 +6,7 @@ import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import userAuthState from '../Atom/authAtom';
 import LogoutIcon from '@mui/icons-material/Logout';
 import getUser from '../Atom/getUser';
-
+import { logoutUser } from '../apis/userApi'; // Import the logout function from api.js
 
 const Logout = () => {
   const setUserAtom = useSetRecoilState(getUser);
@@ -14,19 +15,7 @@ const Logout = () => {
 
   const logout = async () => {
     try {
-      const response = await fetch('/api/users/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const data = await response.json();
-
-      if (data.error) {
-        alert(data.error);
-        return;
-      }
+      const data = await logoutUser(); // Use the logoutUser function
 
       // Clear user data
       localStorage.removeItem('PixelPalsUser');
@@ -36,7 +25,7 @@ const Logout = () => {
       // Redirect to the login page
       navigate('/auth');
     } catch (error) {
-      console.log(error);
+      console.error('Error:', error);
     }
   };
 

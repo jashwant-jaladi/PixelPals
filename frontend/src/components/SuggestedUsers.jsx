@@ -1,34 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import SuggestedUser from './SuggestedUser';
-import { Box, Divider } from '@mui/material';
+import { Box, Divider, Alert } from '@mui/material';
+import { fetchSuggestedUsers } from '../apis/userApi'; // Import the API function
 
 const SuggestedUsers = () => {
   const [loading, setLoading] = useState(true);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
-
-  useEffect(()=>{
-  const getSuggestedUsers = async () => {
-    try {
-    const response = await fetch("/api/users/suggested")
-    const data = await response.json()
-    if (data.error) {
-      console.log(data.error)
-    } else {
-      setSuggestedUsers(data)
-    }
-    } catch (error) {
-      console.log(error)
-    }
-  }
-    getSuggestedUsers()
-  },[])
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    // Simulate loading state
-    setTimeout(() => {
-      setLoading(false); // Simulate a successful data fetch
-    }, 2000);
+    const getSuggestedUsers = async () => {
+      try {
+        const users = await fetchSuggestedUsers();
+        setSuggestedUsers(users);
+      } catch (error) {
+        setError(error.message); // Display the error message
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getSuggestedUsers();
   }, []);
 
   return (
@@ -71,10 +64,11 @@ const SuggestedUsers = () => {
             />
           </Box>
         ))
+      ) : error ? (
+        <Alert severity="error">{error}</Alert>
       ) : (
-    
         <div className="flex flex-col gap-4">
-        {suggestedUsers.map((user) => <SuggestedUser key={user._id} user={user} />)}
+          {suggestedUsers.map((user) => <SuggestedUser key={user._id} user={user} />)}
         </div>
       )}
 

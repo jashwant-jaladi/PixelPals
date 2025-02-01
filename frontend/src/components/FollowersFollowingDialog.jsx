@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { pink } from "@mui/material/colors";
 import { Avatar } from "@mui/material";
+import { followUnfollowUserDialog } from "../apis/followApi"; // Import the API service
 
 const FollowersFollowingDialog = ({
   open,
@@ -59,18 +60,8 @@ const FollowersFollowingDialog = ({
       setProcessingId(userId);
       setLoading(true);
 
-      const response = await fetch("/api/users/followUnfollowDialog", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Follow/unfollow failed");
-      }
+      // Use the imported API service function
+      await followUnfollowUserDialog(userId);
 
     } catch (error) {
       console.error("Follow/unfollow error:", error);

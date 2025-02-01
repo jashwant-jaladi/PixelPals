@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { searchUser } from '../apis/userApi';
 
 const useGetUserProfile = () => {
   const { username } = useParams();
@@ -10,9 +11,7 @@ const useGetUserProfile = () => {
   useEffect(() => {
     const getUser = async () => {
       try {
-        const res = await fetch(`/api/users/profile/${username}`);
-        const data = await res.json();
-
+        const data = await searchUser(username);
         if(data.error)
         {
           snackbarMessage(data.error);

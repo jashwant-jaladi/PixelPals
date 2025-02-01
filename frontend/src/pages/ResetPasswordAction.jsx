@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Container,
   Box,
@@ -9,8 +9,8 @@ import {
   Alert,
 } from '@mui/material';
 import { pink } from '@mui/material/colors';
-import {  useParams } from 'react-router-dom'; 
-import { useNavigate } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { resetPassword } from '../apis/userApi'; // Import the API function
 
 const ResetPasswordAction = () => {
   const [password, setPassword] = useState('');
@@ -19,9 +19,8 @@ const ResetPasswordAction = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  // Get the user id from the URL parameters
   const { id } = useParams(); // id will be extracted from the URL
-    console.log(id)
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -34,25 +33,14 @@ const ResetPasswordAction = () => {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/users/reset-password/${id}`, { // Pass id in URL
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password }), // Only send password since id is in the URL
-      });
+      const result = await resetPassword(id, password); // Call the resetPassword function
 
-      const result = await response.json();
-      if (response.ok) {
-        setMessage('Your password has been reset successfully.');
-        setPassword('');
-        setConfirmPassword('');
-        navigate('/auth');
-      } else {
-        setError(result.error || 'Something went wrong. Please try again.');
-      }
+      setMessage('Your password has been reset successfully.');
+      setPassword('');
+      setConfirmPassword('');
+      navigate('/auth');
     } catch (error) {
-      setError('Failed to reset password. Please try again.');
+      setError(error.message);
     } finally {
       setLoading(false);
     }

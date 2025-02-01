@@ -1,9 +1,11 @@
+// src/components/SearchUsers.js
 import React, { useState } from 'react';
-import { TextField, Button, InputAdornment, Typography,  } from '@mui/material';
+import { TextField, Button, InputAdornment, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { pink } from '@mui/material/colors';
 import { useRecoilValue } from 'recoil';
 import getUser from '../Atom/getUser';
+import { searchUser } from '../apis/userApi'; // Import the searchUser function from api.js
 
 const SearchUsers = ({ onSearchResult }) => {
   const [searchText, setSearchText] = useState('');
@@ -14,9 +16,8 @@ const SearchUsers = ({ onSearchResult }) => {
     e.preventDefault();
     setSearchingUser(true);
     try {
-      const res = await fetch(`/api/users/profile/${searchText}`);
-      const searchedUser = await res.json();
-      
+      const searchedUser = await searchUser(searchText); // Use the searchUser function
+
       if (searchedUser.error) {
         console.log(searchedUser.error);
         return;

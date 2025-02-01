@@ -1,42 +1,35 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom"; 
-import getUser from "../Atom/getUser";
 import { useRecoilValue } from "recoil";
+import getUser from "../Atom/getUser";
+import { fetchNotifications, markNotificationAsRead } from "../apis/postApi"; // Import utility functions
 
 const Notifications = () => {
     const [notifications, setNotifications] = useState([]);
     const currentUser = useRecoilValue(getUser);
 
     useEffect(() => {
-        const fetchNotifications = async () => {
+        const loadNotifications = async () => {
             try {
-                const response = await fetch("/api/posts/notifications");
-                if (!response.ok) throw new Error("Failed to fetch notifications");
-                const data = await response.json();
+                const data = await fetchNotifications();
                 setNotifications(data);
             } catch (error) {
                 console.error("Error fetching notifications", error);
             }
         };
 
-        fetchNotifications();
+        loadNotifications();
     }, []);
 
-    const markAsRead = async (notificationId) => {
+    const handleMarkAsRead = async (notificationId) => {
         try {
-            const response = await fetch(`/api/posts/mark-notification-as-read/${notificationId}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-            });
-
-            if (!response.ok) throw new Error("Failed to mark as read");
-
-            setNotifications((prev) => prev.filter((notif) => notif._id !== notificationId));
+            const removedNotificationId = await markNotificationAsRead(notificationId);
+            setNotifications((prev) => prev.filter((notif) => notif._id !== removedNotificationId));
         } catch (error) {
             console.error("Error marking notification as read", error);
         }
     };
-    console.log(notifications)
+
     return (
         <div className="w-full mt-6 p-4 bg-inherit rounded-lg text-white">
             {notifications.length === 0 ? (
@@ -66,7 +59,7 @@ const Notifications = () => {
                                 </Link>
                             </div>
                             <button
-                                onClick={() => markAsRead(notif._id)}
+                                onClick={() => handleMarkAsRead(notif._id)}
                                 className="text-sm text-red-400 hover:text-red-600"
                             >
                                 Dismiss

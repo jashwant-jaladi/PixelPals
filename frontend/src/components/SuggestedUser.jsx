@@ -1,10 +1,13 @@
+// src/components/SuggestedUser.js
 import React, { useState } from 'react';
 import { Avatar, Box, Button, Typography, Stack } from '@mui/material';
 import { Link } from 'react-router-dom';
-import getUser from '../Atom/getUser';
 import { useRecoilValue } from 'recoil';
+import getUser from '../Atom/getUser';
 import Snackbar from '@mui/material/Snackbar';
 import { pink } from '@mui/material/colors';
+import { followUser } from '../apis/followApi'; // Import the followUser function from api.js
+
 const SuggestedUser = ({ user }) => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -22,13 +25,7 @@ const SuggestedUser = ({ user }) => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`/api/users/follow/${user._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const data = await response.json();
+      const data = await followUser(user._id); // Use the followUser function
 
       if (data.error) {
         setErrorSnackbarOpen(true);

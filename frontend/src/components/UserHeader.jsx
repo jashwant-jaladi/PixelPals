@@ -1,14 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  Avatar,
-  IconButton,
-  Menu,
-  MenuItem,
-  Snackbar,
-  CircularProgress,
-  Tabs,
-  Tab 
-} from "@mui/material";
+import { Avatar, IconButton, Menu, MenuItem, Snackbar, CircularProgress, Tabs, Tab, Badge } from "@mui/material";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import ShareIcon from "@mui/icons-material/Share";
 import { pink } from "@mui/material/colors";
@@ -17,7 +8,7 @@ import getUser from "../Atom/getUser";
 import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
 import Notifications from "./Notifications";
-import {Badge} from "@mui/material";
+import { followUser, fetchFollowersAndFollowing } from "../apis/followApi"; // Import API logic
 
 const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const currentUser = useRecoilValue(getUser);
@@ -59,78 +50,47 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`/api/users/follow/${userData._id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await response.json();
-
-      if (data.error) {
-        setErrorSnackbarOpen(true);
-        return;
-      }
-
-      // Update local state
-      const updatedFollowers = following
-        ? userData.followers.filter(id => id !== currentUser._id)
-        : [...userData.followers, currentUser._id];
-
-      setUserData(prev => ({
+      const { updatedFollowers } = await followUser(userData._id, currentUser._id, following);
+      setUserData((prev) => ({
         ...prev,
-        followers: updatedFollowers
+        followers: updatedFollowers,
       }));
 
-      if (following) {
-        setSnackbarMessage(`You have unfollowed ${userData.name}.`);
-      } else {
-        setSnackbarMessage(`You are now following ${userData.name}!`);
-      }
-
       setFollowing(!following);
+      setSnackbarMessage(following ? `You have unfollowed ${userData.name}.` : `You are now following ${userData.name}!`);
       setSnackbarOpen(true);
       
-      // Refresh followers list
-      await fetchFollowersAndFollowing();
+      await fetchFollowersAndUpdateLists();
     } catch (error) {
-      console.error("Follow/unfollow error:", error);
       setErrorSnackbarOpen(true);
     } finally {
       setUpdating(false);
     }
   };
 
-  const fetchFollowersAndFollowing = async () => {
+  const fetchFollowersAndUpdateLists = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/users/follow-unfollow/${userData._id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      const data = await response.json();
-      
-      setFollowersList(data.followers);
-      setFollowingList(data.following);
-      
-      // Update the userData state with new follower counts
-      setUserData(prev => ({
+      const { followers, following } = await fetchFollowersAndFollowing(userData._id);
+      setFollowersList(followers);
+      setFollowingList(following);
+      setUserData((prev) => ({
         ...prev,
-        followers: data.followers.map(f => f._id),
-        following: data.following.map(f => f._id)
+        followers: followers.map((f) => f._id),
+        following: following.map((f) => f._id),
       }));
-      
-      // Update following state based on current user's status
-      setFollowing(data.followers.some(f => f._id === currentUser?._id));
     } catch (error) {
       console.error("Error fetching followers:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleDialogClose = () => {
     setFollowersDialogOpen(false);
-    // Refresh the followers list when dialog closes
-    fetchFollowersAndFollowing();
+    fetchFollowersAndUpdateLists();
   };
+
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
@@ -145,7 +105,6 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
     fetchNotifications(); // Call the function when the page loads
   }, []);
-
 
   return (
     <div className="font-parkinsans">
@@ -165,34 +124,32 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       <p className="py-5 w-[90%] font-bold">{userData.bio}</p>
 
       {currentUser?._id === userData?._id ? (
-  <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
-    <Link to="/update">Edit Profile</Link>
-  </button>
-) : (
-  <div className="flex gap-2">
-    <button
-      onClick={handleFollowToggle}
-      className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300 flex items-center justify-center"
-      disabled={updating}
-    >
-      {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
-    </button>
+        <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
+          <Link to="/update">Edit Profile</Link>
+        </button>
+      ) : (
+        <div className="flex gap-2">
+          <button
+            onClick={handleFollowToggle}
+            className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300 flex items-center justify-center"
+            disabled={updating}
+          >
+            {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
+          </button>
 
-    {/* Show Message button only if the current user is following the profile */}
-    {following && (
-      <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
-        <Link to={"/chat"}>Message</Link>
-      </button>
-    )}
-  </div>
-)}
-
+          {following && (
+            <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
+              <Link to={"/chat"}>Message</Link>
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="flex justify-between">
         <div
           className="flex gap-2 text-pink-700 font-bold items-center cursor-pointer"
           onClick={() => {
-            fetchFollowersAndFollowing();
+            fetchFollowersAndUpdateLists();
             setFollowersDialogOpen(true);
           }}
         >
@@ -224,16 +181,18 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       >
         <Tab label="Posts" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
         <Tab
-    label={
-      <Badge color="error" variant="dot" invisible={notificationCount === 0} >
-        Notifications
-      </Badge>
-    }
-    sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }}
-  />
+          label={
+            <Badge color="error" variant="dot" invisible={notificationCount === 0}>
+              Notifications
+            </Badge>
+          }
+          sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }}
+        />
         <Tab label="Follow Requests" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
       </Tabs>
+
       {tabIndex === 1 && <Notifications setNotificationCount={setNotificationCount} />}
+
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
         open={snackbarOpen}
@@ -267,12 +226,9 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
         onFollowToggle={async () => {
-          // Refresh the followers list whenever a follow/unfollow action happens in the dialog
-          await fetchFollowersAndFollowing();
+          await fetchFollowersAndUpdateLists();
         }}
       />
-
-      
     </div>
   );
 };

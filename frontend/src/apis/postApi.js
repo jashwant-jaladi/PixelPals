@@ -114,3 +114,28 @@ export const fetchPosts = async (username, user) => {
     }
   };
   
+  // utils/api.js
+export const fetchNotifications = async () => {
+  try {
+    const response = await fetch("/api/posts/notifications");
+    if (!response.ok) throw new Error("Failed to fetch notifications");
+    return await response.json();
+  } catch (error) {
+    throw new Error(error.message || "Error fetching notifications");
+  }
+};
+
+export const markNotificationAsRead = async (notificationId) => {
+  try {
+    const response = await fetch(`/api/posts/mark-notification-as-read/${notificationId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+    });
+
+    if (!response.ok) throw new Error("Failed to mark as read");
+
+    return notificationId;
+  } catch (error) {
+    throw new Error(error.message || "Error marking notification as read");
+  }
+};

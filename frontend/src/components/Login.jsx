@@ -1,19 +1,18 @@
+// src/components/Login.js
 import React, { useState } from 'react';
 import { useSetRecoilState } from 'recoil';
 import userAuthState from '../Atom/authAtom';
+import getUser from '../Atom/getUser';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import getUser from '../Atom/getUser';
 import { Link } from 'react-router-dom';
 import InviteLink from './Invitelink';
+import { loginUser } from '../apis/userApi'; // Import the login function from api.js
 
 const Login = () => {
   const setUserAtom = useSetRecoilState(getUser);
   const setUserAuth = useSetRecoilState(userAuthState);
-  const [input, setInput] = useState({
-    email: '',
-    password: ''
-  });
+  const [input, setInput] = useState({ email: '', password: '' });
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
@@ -30,31 +29,16 @@ const Login = () => {
     }
 
     try {
-      const response = await fetch('/api/users/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          email: input.email,
-          password: input.password
-        })
-      });
+      const data = await loginUser(input.email, input.password); // Use the loginUser function
 
-      const data = await response.json();
-      localStorage.setItem('PixelPalsUser', JSON.stringify(data.user));
-      setUserAtom(data.user);
-
-      if (response.ok) {
+      if (data) {
+        localStorage.setItem('PixelPalsUser', JSON.stringify(data.user));
+        setUserAtom(data.user);
         setUserAuth('home');
-      } else {
-        setSnackbarMessage(data.message || 'Login failed. Please check your credentials.');
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
       }
     } catch (error) {
       console.error('Error:', error);
-      setSnackbarMessage('An unexpected error occurred. Please try again later.');
+      setSnackbarMessage(error.message || 'An unexpected error occurred. Please try again later.');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
@@ -66,7 +50,7 @@ const Login = () => {
 
   return (
     <>
-      <div className='min-h-screen bg-black flex items-center justify-center p-4 font-parkinsans '>
+      <div className='min-h-screen bg-black flex items-center justify-center p-4 font-parkinsans'>
         <div className='flex flex-col lg:flex-row w-full max-w-6xl bg-black rounded-lg shadow-2xl overflow-hidden border-2 border-purple-900'>
           {/* Left Side - Login Form */}
           <div className='w-full lg:w-1/2 p-8 flex flex-col justify-center items-center'>

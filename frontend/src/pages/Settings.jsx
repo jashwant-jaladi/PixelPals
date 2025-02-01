@@ -17,6 +17,11 @@ import {
 import { useSetRecoilState, useRecoilValue } from "recoil";
 import getUser from "../Atom/getUser";
 import { useNavigate } from "react-router-dom";
+import {
+  toggleAccountPrivacy,
+  deactivateAccount,
+  logoutUser,
+} from "../apis/userApi"; // Import the utility functions
 
 const Settings = () => {
   const [isModalOpen, setModalOpen] = useState(false);
@@ -39,12 +44,8 @@ const Settings = () => {
     if (!window.confirm("Are you sure you want to freeze your account?")) return;
 
     try {
-      const res = await fetch("/api/users/freeze", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-      });
+      const data = await deactivateAccount();
 
-      const data = await res.json();
       if (data.error) {
         setSnackbarMessage("Error: " + data.error);
         setSnackbarSeverity("error");
@@ -69,16 +70,8 @@ const Settings = () => {
   const handleTogglePrivacy = async () => {
     try {
       const newPrivateState = !isPrivate;
-      
-      // Make the API call first
-      const response = await fetch("/api/users/private", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ private: newPrivateState }),
-      });
+      const data = await toggleAccountPrivacy(newPrivateState);
 
-      const data = await response.json();
-      
       if (data.error) {
         setSnackbarMessage("Error: " + data.error);
         setSnackbarSeverity("error");
@@ -86,19 +79,15 @@ const Settings = () => {
         return;
       }
 
-      // Only update state if the API call was successful
       setIsPrivate(newPrivateState);
-      
-      // Update the Recoil atom with the new user data
-      setUserAtom(prev => ({ ...prev, private: newPrivateState }));
-      
-      // Update localStorage if you're storing user data there
+      setUserAtom((prev) => ({ ...prev, private: newPrivateState }));
+
       const storedUser = JSON.parse(localStorage.getItem("PixelPalsUser") || "{}");
       localStorage.setItem("PixelPalsUser", JSON.stringify({
         ...storedUser,
-        private: newPrivateState
+        private: newPrivateState,
       }));
-      
+
       setSnackbarMessage(
         `Your account is now ${newPrivateState ? "Private" : "Public"}.`
       );
@@ -114,12 +103,8 @@ const Settings = () => {
 
   const logout = async () => {
     try {
-      const response = await fetch("/api/users/logout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
+      const data = await logoutUser();
 
-      const data = await response.json();
       if (data.error) {
         setSnackbarMessage("Error: " + data.error);
         setSnackbarSeverity("error");

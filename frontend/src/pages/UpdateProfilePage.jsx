@@ -4,6 +4,8 @@ import { pink } from '@mui/material/colors';
 import { useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 import { useNavigate } from 'react-router-dom';
+import { updateProfileAPI } from '../apis/userApi';  // Import the API logic
+
 const UpdateProfilePage = () => {
   const [user, setUser] = useRecoilState(getUser);
   const [updating, setUpdating] = useState(false);
@@ -21,8 +23,8 @@ const UpdateProfilePage = () => {
     message: '',
     severity: 'success'
   });
-const navigate = useNavigate();
-
+  
+  const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
   const handleUpdate = async (e) => {
@@ -31,22 +33,7 @@ const navigate = useNavigate();
     setSnackbar({ open: false, message: '', severity: 'success' });
 
     try {
-      const response = await fetch(`/api/users/update/${user._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          name: input.name,
-          username: input.username,
-          bio: input.bio,
-          email: input.email,
-          profilePic: input.profilePic,
-          password: input.password || undefined // Only send password if it's not empty
-        })
-      });
-
-      const data = await response.json();
+      const data = await updateProfileAPI(user._id, input);
 
       if (data.error) {
         setSnackbar({
@@ -104,8 +91,6 @@ const navigate = useNavigate();
       });
     }
   };
-
-
 
   return (
     <div className='flex items-center justify-center min-h-screen font-bold'>
@@ -183,7 +168,6 @@ const navigate = useNavigate();
             />
           </div>
           <div className='flex gap-4'>
-            
             {updating?<CircularProgress sx={{ color: pink[500] }} />:<Button type='submit' variant='contained' color='success' className='w-full' sx={{ fontWeight: 'bold' }}>Update</Button>}
             <Button variant='outlined' color='error' className='w-full' onClick={() => navigate(-1)}>Cancel</Button>
           </div>

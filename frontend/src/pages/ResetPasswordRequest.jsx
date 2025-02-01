@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { pink } from '@mui/material/colors';
 import { useNavigate } from 'react-router-dom';
+import { requestResetPasswordLink } from '../apis/userApi'; // Import the API function
 
 const ResetPasswordRequest = () => {
   const [email, setEmail] = useState('');
@@ -17,33 +18,21 @@ const ResetPasswordRequest = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     setMessage('');
     try {
-      const response = await fetch('/api/users/reset-link', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        setMessage('A reset password link has been sent to your email.');
-        setEmail('');
-        setTimeout(() => {
-          navigate('/auth');
-        }, 2000);
-        
-      } else {
-        setError(result.error || 'Something went wrong. Please try again.');
-      }
+      const result = await requestResetPasswordLink(email); // Call the API function
+      setMessage('A reset password link has been sent to your email.');
+      setEmail('');
+      setTimeout(() => {
+        navigate('/auth');
+      }, 2000);
     } catch (error) {
-      setError('Failed to send request. Please try again.');
+      setError(error.message);
     } finally {
       setLoading(false);
     }
