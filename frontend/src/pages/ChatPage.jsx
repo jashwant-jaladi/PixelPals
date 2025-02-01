@@ -7,6 +7,8 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import { conversationAtom, messageAtom } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
 import { useSocket } from '../context/socketContext';
+import { fetchConversations } from '../apis/messageApi';
+import { searchUser } from '../apis/userApi';
 
 const ChatPage = () => {
   const [searchText, setSearchText] = useState('');
@@ -22,15 +24,10 @@ const ChatPage = () => {
   const { socket, onlineUsers } = useSocket();
 
   useEffect(() => {
-    // Fetch conversations on mount
-    const fetchConversations = async () => {
+    const fetchConversationsData = async () => {
       try {
-        const res = await fetch('/api/messages/conversations');
-        const data = await res.json();
+        const data = await fetchConversations();
         setMessages(data);
-        if (data.error) {
-          showToast('Error', data.error, 'error');
-        }
       } catch (error) {
         showToast('Error', error.message, 'error');
       } finally {
@@ -38,9 +35,8 @@ const ChatPage = () => {
       }
     };
 
-    fetchConversations();
+    fetchConversationsData();
 
-    // Load selected conversation from localStorage
     const savedConversation = localStorage.getItem('selectedConversation');
     if (savedConversation) {
       setSelectedConversation(JSON.parse(savedConversation));
@@ -48,7 +44,6 @@ const ChatPage = () => {
   }, []);
 
   useEffect(() => {
-    // Save selected conversation to localStorage whenever it changes
     if (selectedConversation) {
       localStorage.setItem('selectedConversation', JSON.stringify(selectedConversation));
     } else {
@@ -66,12 +61,7 @@ const ChatPage = () => {
     e.preventDefault();
     setSearchingUser(true);
     try {
-      const res = await fetch(`/api/users/profile/${searchText}`);
-      const searchedUser = await res.json();
-      if (searchedUser.error) {
-        showToast('Error', searchedUser.error, 'error');
-        return;
-      }
+      const searchedUser = await searchUser(searchText);
 
       if (searchedUser._id === currentUser._id) {
         showToast('Error', 'You cannot message yourself', 'error');

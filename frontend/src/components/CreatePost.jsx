@@ -16,6 +16,7 @@ import getUser from '../Atom/getUser';
 import { pink } from '@mui/material/colors';
 import postAtom from '../Atom/postAtom';
 import { useRecoilState } from 'recoil';
+import { createPost } from '../apis/postApi';
 
 const BootstrapDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialogContent-root': { padding: theme.spacing(2) },
@@ -90,65 +91,39 @@ const CreatePost = () => {
 
       reader.onload = async () => {
         const base64Image = reader.result;
-        try {
-          const res = await fetch("/api/posts/create", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              postedBy: user._id,
-              caption: postText,
-              image: base64Image,
-            }),
-          });
-          const data = await res.json();
-          if (res.status === 201) {
-            setSnackbarMessage("Post created successfully!");
-            setPost([data, ...post]);
-            setSnackbarSeverity("success");
-            setText("");
-            setImagePreview(null);
-            setOpen(false);
-            window.location.reload();
-          } else {
-            setSnackbarMessage(data.error || "Failed to create post.");
-            setSnackbarSeverity("error");
-          }
-        } catch (error) {
-          setSnackbarMessage("An error occurred. Please try again.");
-          setSnackbarSeverity("error");
-        } finally {
-          setSnackbarOpen(true);
-        }
-      };
-    } else {
-      try {
-        const res = await fetch("/api/posts/create", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            postedBy: user._id,
-            caption: postText,
-            image: null,
-          }),
-        });
-        const data = await res.json();
-        if (res.status === 201) {
+        const { success, post, error } = await createPost(user._id, postText, base64Image);
+
+        if (success) {
           setSnackbarMessage("Post created successfully!");
+          setPost([post, ...post]);
           setSnackbarSeverity("success");
           setText("");
           setImagePreview(null);
           setOpen(false);
           window.location.reload();
         } else {
-          setSnackbarMessage(data.error || "Failed to create post.");
+          setSnackbarMessage(error);
           setSnackbarSeverity("error");
         }
-      } catch (error) {
-        setSnackbarMessage("An error occurred. Please try again.");
-        setSnackbarSeverity("error");
-      } finally {
+
         setSnackbarOpen(true);
+      };
+    } else {
+      const { success, post, error } = await createPost(user._id, postText, null);
+
+      if (success) {
+        setSnackbarMessage("Post created successfully!");
+        setSnackbarSeverity("success");
+        setText("");
+        setImagePreview(null);
+        setOpen(false);
+        window.location.reload();
+      } else {
+        setSnackbarMessage(error);
+        setSnackbarSeverity("error");
       }
+
+      setSnackbarOpen(true);
     }
   };
 

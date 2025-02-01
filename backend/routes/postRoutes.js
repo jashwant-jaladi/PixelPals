@@ -6,7 +6,6 @@ const PostRouter = express.Router();
 
 PostRouter.get("/feed",protectRoute, getFeedPosts);
 PostRouter.post("/create",protectRoute, createPost);
-
 PostRouter.get("/user/:username", getUserPosts);
 PostRouter.delete("/:id",protectRoute, deletePost);
 PostRouter.put("/like/:id", protectRoute, likeAndUnlikePost);

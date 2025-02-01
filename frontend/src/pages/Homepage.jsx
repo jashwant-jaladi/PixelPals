@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Snackbar, CircularProgress, Typography, Box, Stack, Avatar,  Button } from '@mui/material';
+import { Snackbar, CircularProgress, Typography, Box, Stack, Avatar, Button } from '@mui/material';
 import { Link } from 'react-router-dom';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
 import Post from '../components/Post';
@@ -8,6 +8,8 @@ import SearchUsers from '../components/SearchUsers';
 import { pink } from '@mui/material/colors'; 
 import { useRecoilValue } from 'recoil';
 import getUser from '../Atom/getUser';
+import { getFeedPosts } from '../apis/postApi';
+import { followUser } from '../apis/followApi';
 
 const Homepage = () => {
   const [posts, setPosts] = useState([]);
@@ -16,23 +18,16 @@ const Homepage = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [searchResult, setSearchResult] = useState(null); 
   const [following, setFollowing] = useState(false);
-  const [updating, setUpdating] = useState(false); // Define the updating state
+  const [updating, setUpdating] = useState(false);
 
   const currentUser = useRecoilValue(getUser);
-
 
   useEffect(() => {
     const getPosts = async () => {
       setLoading(true);
       try {
-        const res = await fetch('/api/posts/feed');
-        const data = await res.json();
-  
-        if (res.ok && Array.isArray(data.posts)) { // Check if data.posts is an array
-          setPosts(data.posts);
-        } else {
-          throw new Error(data.error || 'Failed to fetch posts');
-        }
+        const data = await getFeedPosts();
+        setPosts(data);
       } catch (error) {
         setSnackbarMessage(error.message);
         setSnackbarOpen(true);
@@ -40,7 +35,6 @@ const Homepage = () => {
         setLoading(false);
       }
     };
-  
     getPosts();
   }, []);
 
@@ -53,25 +47,8 @@ const Homepage = () => {
 
     setUpdating(true);
     try {
-      const response = await fetch(`/api/users/follow/${user._id}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      const data = await response.json();
-
-      if (data.error) {
-        setSnackbarMessage(data.error);
-        setSnackbarOpen(true);
-      }
-
-      if (following) {
-        setSnackbarMessage(`You have unfollowed ${user.username}.`);
-      } else {
-        setSnackbarMessage(`You are now following ${user.username}!`);
-      }
-
+      await followUser(user._id);
+      setSnackbarMessage(following ? `You have unfollowed ${user.username}.` : `You are now following ${user.username}!`);
       setFollowing(!following);
     } catch (error) {
       setSnackbarMessage('An error occurred while updating follow status.');
@@ -86,14 +63,13 @@ const Homepage = () => {
   };
 
   const handleSearchResult = (user) => {
-    setSearchResult(user); // Set the search result in the Homepage state
-    setFollowing(user.followers.includes(currentUser._id)); // Check if the current user is following the searched user
+    setSearchResult(user);
+    setFollowing(user.followers.includes(currentUser._id));
   };
 
   return (
     <>
       <Box display="flex" justifyContent="space-between" flexWrap="wrap">
-        {/* Posts Section (70% width) */}
         <Box flex={7} mr={2}>
           {loading && (
             <CircularProgress
@@ -105,8 +81,8 @@ const Homepage = () => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              height: '100vh', // Full height of the viewport
-              flexDirection: 'column', // Aligns items vertically
+              height: '100vh',
+              flexDirection: 'column',
               textAlign: 'center',
             }}>
               <SentimentDissatisfiedIcon style={{ fontSize: '50px', color: '#e91e63' }} />
@@ -132,10 +108,8 @@ const Homepage = () => {
           <SuggestedUsers />
           <SearchUsers onSearchResult={handleSearchResult} /> 
           
-          {/* Display search result if available */}
           {searchResult && (
             <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
-              {/* Left side */}
               <Stack direction="row" spacing={2} component={Link} to={`/${searchResult.username}`} alignItems="center">
                 <Avatar src={searchResult.profilePic} />
                 <Box>
@@ -148,12 +122,11 @@ const Homepage = () => {
                 </Box>
               </Stack>
       
-              {/* Right side */}
               <Button
                 size="small"
                 color="primary"
                 variant={following ? 'outlined' : 'contained'}
-                onClick={() => handleFollowUnfollow(searchResult)} // Pass the user to the follow function
+                onClick={() => handleFollowUnfollow(searchResult)}
                 disabled={updating}
                 sx={{
                   minWidth: 80,

@@ -1,4 +1,4 @@
-import { atom, useRecoilState, useRecoilValue } from 'recoil';
+// Post.js
 import React, { useState } from 'react';
 import { Avatar, Snackbar, Alert } from '@mui/material';
 import Actions from './Actions';
@@ -9,7 +9,8 @@ import { formatDistanceToNow } from 'date-fns';
 import getUser from '../Atom/getUser';
 import DeleteIcon from '@mui/icons-material/Delete';
 import postAtom from '../Atom/postAtom';
-
+import { useRecoilState, useRecoilValue } from 'recoil';
+import { deletePost } from '../apis/postApi'
 
 const Post = ({ post }) => {
   const navigate = useNavigate();
@@ -17,31 +18,20 @@ const Post = ({ post }) => {
   const [posts, setPosts] = useRecoilState(postAtom);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // Default severity
+  const [snackbarSeverity, setSnackbarSeverity] = useState('success');
 
   const handleDeletePost = async (e) => {
     try {
       e.preventDefault();
       if (!window.confirm('Are you sure you want to delete this post?')) return;
-      const res = await fetch(`/api/posts/${post._id}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (data.error) {
-        setSnackbarMessage(data.error);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-        return;
-      } else {
-        setSnackbarMessage('Post deleted successfully');
-        setPosts(posts.filter((p) => p._id !== post._id));
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-      }
+      const data = await deletePost(post._id); 
+      setSnackbarMessage('Post deleted successfully');
+      setPosts(posts.filter((p) => p._id !== post._id));
+      setSnackbarSeverity('success');
     } catch (error) {
-      console.error(error);
-      setSnackbarMessage('Failed to delete post');
+      setSnackbarMessage(error.message || 'Failed to delete post');
       setSnackbarSeverity('error');
+    } finally {
       setSnackbarOpen(true);
     }
   };
@@ -57,6 +47,7 @@ const Post = ({ post }) => {
 
   return (
     <div className='flex font-parkinsans justify-center '>
+      {/* Post content here */}
       <div className='mt-6 flex flex-col '>
         <Link to={`/${post.postedBy.username}`}>
           <Avatar
@@ -65,9 +56,11 @@ const Post = ({ post }) => {
             sx={{ width: 60, height: 60 }}
           />
         </Link>
+        {/* Divider */}
         <div className='border-l-2 mt-2 flex-1 border-gray-500 m-auto flex justify-center'></div>
         <div className='flex flex-col mt-2 mx-auto'>
           <div className='flex flex-col items-center'>
+            {/* Comment section */}
             {post.comments.length === 0 && (
               <span role="img" aria-label="boring" style={{ fontSize: 25 }}>
                 🥱
@@ -110,6 +103,7 @@ const Post = ({ post }) => {
         </div>
       </div>
       <div className='pl-5'>
+        {/* Post header */}
         <div className='flex justify-between w-[100%] mt-10 font-bold'>
           <div className='flex gap-2'>
             <Link to={`/${post.postedBy.username}`} className='flex items-center'>
@@ -127,20 +121,23 @@ const Post = ({ post }) => {
             )}
           </div>
         </div>
+        {/* Post content */}
         <Link to={`/${post.postedBy.username}/${post._id}`}>
-        <p className='mt-5 font-bold'>{post.caption}</p>
-        <div className='flex justify-start'>
-          <img
-            src={post.image}
-            alt="post content"
-            width={600}
-            height={500}
-            className='mt-8'
-          />
-        </div>
+          <p className='mt-5 font-bold'>{post.caption}</p>
+          <div className='flex justify-start'>
+            <img
+              src={post.image}
+              alt="post content"
+              width={600}
+              height={500}
+              className='mt-8'
+            />
+          </div>
         </Link>
+        {/* Actions */}
         <Actions post={post} />
       </div>
+      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from 'react';
-import { Snackbar, CircularProgress, Alert, Box } from '@mui/material';
+// UserPage.js
+import React, { useState, useEffect } from 'react';
+import { Snackbar, CircularProgress, Alert } from '@mui/material';
 import UserHeader from '../components/UserHeader';
 import Post from '../components/Post';
 import { useParams } from 'react-router-dom';
 import useGetUserProfile from '../hooks/useGetUserProfile';
 import { useRecoilState } from 'recoil';
 import postAtom from '../Atom/postAtom';
+import { fetchPosts } from '../apis/postApi'
 
 const UserPage = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -27,26 +29,11 @@ const UserPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (!user) return;
-      
-      // Don't fetch posts for private accounts
-      if (user.private) {
-        setPosts([]);
-        return;
-      }
 
       setFetchingPosts(true);
       try {
-        const response = await fetch(`/api/posts/user/${username}`);
-        const data = await response.json();
-
-        if (response.ok) {
-          setPosts(data.posts || []);
-        } else {
-          setSnackbarMessage(data.error || 'Failed to fetch posts');
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          setPosts([]);
-        }
+        const fetchedPosts = await fetchPosts(username, user);
+        setPosts(fetchedPosts);
       } catch (error) {
         setSnackbarMessage(error.message || 'An error occurred while fetching posts');
         setSnackbarSeverity('error');
@@ -73,7 +60,7 @@ const UserPage = () => {
       <UserHeader user={user} setTabIndex={setTabIndex} tabIndex={tabIndex} />
       
       <div className="mt-5">
-        {tabIndex === 0  && (
+        {tabIndex === 0 && (
           <>
             {user.private ? (
               <div className="text-center text-xl mt-10 font-parkinsans text-pink-700">
@@ -92,7 +79,6 @@ const UserPage = () => {
             )}
           </>
         )}
-        
       </div>
 
       <Snackbar

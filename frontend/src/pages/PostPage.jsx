@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Avatar, Button } from '@mui/material';
 import { pink } from '@mui/material/colors';
-import Comment from '../components/Comment'; // Import the updated Comment component
+import Comment from '../components/Comment';
 import Actions from '../components/Actions';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -14,12 +14,11 @@ import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 import DeleteIcon from '@mui/icons-material/Delete';
 import postAtom from '../Atom/postAtom';
-
+import { fetchPost, deletePost } from '../apis/postApi';  // Import the utility functions
 
 const PostPage = () => {
-
   const { user, loading: loadingUser } = useGetUserProfile();
-  const [post, setPost] = useRecoilState(postAtom)
+  const [post, setPost] = useRecoilState(postAtom);
   const { id } = useParams();
   const currentUser = useRecoilValue(getUser);
   const navigate = useNavigate();
@@ -28,22 +27,14 @@ const PostPage = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
 
-
   const currentPost = post[0];
+
   useEffect(() => {
     const getPosts = async () => {
       setPost([]);
       try {
-        const res = await fetch(`/api/posts/${id}`);
-        const data = await res.json();
-        if (data.error) {
-          setSnackbarMessage(data.error);
-          setSnackbarSeverity('error');
-          setSnackbarOpen(true);
-          return;
-        }
-        setPost([data]);
-        console.log(data)
+        const fetchedPost = await fetchPost(id);
+        setPost([fetchedPost]);
       } catch (err) {
         setSnackbarMessage(err.message);
         setSnackbarSeverity('error');
@@ -58,33 +49,19 @@ const PostPage = () => {
     if (!window.confirm('Are you sure you want to delete this post?')) return;
 
     try {
-      const res = await fetch(`/api/posts/${currentPost._id}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (data.error) {
-        setSnackbarMessage(data.error);
-        setSnackbarSeverity('error');
-        setSnackbarOpen(true);
-        return;
-      } else {
-        setSnackbarMessage('Post deleted successfully');
-        setSnackbarSeverity('success');
-        setSnackbarOpen(true);
-        navigate('/');
-      }
+      await deletePost(currentPost._id);
+      setSnackbarMessage('Post deleted successfully');
+      setSnackbarSeverity('success');
+      setSnackbarOpen(true);
+      navigate('/');
     } catch (error) {
-      console.error(error);
       setSnackbarMessage('Failed to delete post');
       setSnackbarSeverity('error');
       setSnackbarOpen(true);
     }
   };
 
-
   if (!currentPost) return null;
-  console.log("currentPost", currentPost);
-
 
   return (
     <div className='flex font-parkinsans'>
@@ -98,7 +75,9 @@ const PostPage = () => {
             <VerifiedIcon color='primary' />
           </div>
           <div className='flex gap-3'>
-            <div className='text-sm text-gray-500'>{currentPost.createdAt && formatDistanceToNow(new Date(currentPost.createdAt))} ago</div>
+            <div className='text-sm text-gray-500'>
+              {currentPost.createdAt && formatDistanceToNow(new Date(currentPost.createdAt))} ago
+            </div>
             <MoreHorizIcon />
             {currentUser?._id === user?._id && (
               <DeleteIcon sx={{ color: 'red', cursor: 'pointer' }} onClick={handleDeletePost} />
@@ -110,40 +89,27 @@ const PostPage = () => {
           <img src={currentPost?.image} alt="post" className='mt-8' />
         </div>
         <Actions post={currentPost} />
-        {!currentUser &&
+        {!currentUser && (
           <div>
             <hr className='my-3' />
             <div className='flex justify-between items-center'>
               <p className='font-bold'>👋 Login to like, post and comment on posts.</p>
               <Link to={'/auth'}>
-                <Button sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white' }} variant='contained'>Login</Button>
+                <Button sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white' }} variant='contained'>
+                  Login
+                </Button>
               </Link>
             </div>
-          </div>}
+          </div>
+        )}
         <hr className='my-3' />
 
-
         {[...currentPost.comments].reverse().map((comment) => (
-          <Comment
-            key={comment._id}
-            comment={comment}
-            lastReply={comment._id === currentPost?.comments[0]._id}
-          />
+          <Comment key={comment._id} comment={comment} lastReply={comment._id === currentPost?.comments[0]._id} />
         ))}
-        
-			
-
-
-
         <div className='mt-10'></div>
       </div>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        message={snackbarMessage}
-        severity={snackbarSeverity}
-      />
+      <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)} message={snackbarMessage} severity={snackbarSeverity} />
     </div>
   );
 };

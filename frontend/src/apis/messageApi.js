@@ -93,3 +93,16 @@ export const sendMessage = async (message, recipientId, img) => {
     }
   };
   
+  export const fetchConversations = async () => {
+    try {
+      const res = await fetch('/api/messages/conversations');
+      const data = await res.json();
+      if (res.ok) {
+        return data;
+      } else {
+        throw new Error(data.error || 'Failed to fetch conversations');
+      }
+    } catch (error) {
+      throw new Error(error.message || 'An error occurred while fetching conversations');
+    }
+  };
