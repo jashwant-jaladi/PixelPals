@@ -3,58 +3,42 @@ import { useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
 import { unreadMessagesAtom } from "../Atom/messageAtom";
 import getUser from "../Atom/getUser";
-import { io } from "socket.io-client"; // WebSocket for real-time updates
+import { io } from "socket.io-client";
 import Badge from "@mui/material/Badge";
 import ChatIcon from "@mui/icons-material/Chat";
 import { Button } from "@mui/material";
+import { fetchUnreadCount, markAllMessagesAsSeen } from "../apis/messageApi";
 
 const ChatButton = () => {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useRecoilState(unreadMessagesAtom);
   const user = useRecoilValue(getUser);
 
-  // Fetch unread messages on component mount
   useEffect(() => {
-    if (user) {
-      const fetchUnreadCount = async () => {
-        try {
-          const response = await fetch(`/api/messages/message-seen-count/${user._id}`, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-              }
-          });
-          const data = await response.json();
-          setUnreadCount(data.unreadCount);
-        } catch (error) {
-          console.error("Error fetching unread messages:", error);
-        }
-      };
+    if (!user) return;
 
-      fetchUnreadCount();
+    const initializeUnreadCount = async () => {
+      const count = await fetchUnreadCount(user._id);
+      setUnreadCount(count);
+    };
 
-      // Setup WebSocket for real-time updates
-      const socket = io("http://localhost:4000"); // Replace with your backend URL
+    initializeUnreadCount();
 
-      socket.on("newMessage", (message) => {
-        if (message.recipient === user._id) {
-          setUnreadCount((prev) => prev + 1);
-        }
-      });
+    const socket = io("http://localhost:4000"); 
 
-      return () => socket.disconnect();
-    }
+    socket.on("newMessage", (message) => {
+      if (message.recipient === user._id) {
+        setUnreadCount((prev) => prev + 1);
+      }
+    });
+
+    return () => socket.disconnect();
   }, [user, setUnreadCount]);
 
-  // Handle chat navigation and mark messages as seen
   const handleChatClick = async () => {
     navigate("/chat");
     setUnreadCount(0);
-    
-    await fetch("/api/messages/mark-all-seen", {
-      method: "PUT",
-      headers: { Authorization: `Bearer ${user.token}` },
-    });
+    await markAllMessagesAsSeen(user.token);
   };
 
   return (

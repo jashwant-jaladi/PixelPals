@@ -2,7 +2,7 @@ import Conversation from "../models/conversationModel.js";
 import Message from "../models/messageModel.js";
 import { v2 as cloudinary } from "cloudinary";
 import { getRecipientSocketId, io } from "../socket/socket.js";
-import {HfInference} from "@huggingface/inference";
+
 
 
 async function sendMessage(req, res) {

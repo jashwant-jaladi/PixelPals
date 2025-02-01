@@ -21,6 +21,7 @@ import { useRecoilValue, useSetRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 import { conversationAtom, messageAtom } from '../Atom/messageAtom';
 import { useSocket } from '../context/socketContext.jsx';
+import { analyzeMood, sendMessage } from '../apis/messageApi.js';
 
 const MessageInput = ({ setMessages }) => {
   const [message, setMessage] = React.useState('');
@@ -56,28 +57,19 @@ const MessageInput = ({ setMessages }) => {
     setSelectedMood(mood);
     setAnchorEl(null);
   
-    // Ensure message is available and not empty
     if (!message) {
       alert('Please enter a message before selecting a mood.');
       return;
     }
     setLoading(true);
-    try {
-      const response = await fetch('/api/messages/analyzeMood', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ mood: mood.name, text:message }),  // message state is passed here
-      });
   
-      const data = await response.json();
-      
-      setSuggestion(data.suggestion);  // Update the suggestion with response
-      setSuggestionModalOpen(true);  // Show suggestion modal for user review
+    try {
+      const data = await analyzeMood(mood.name, message); // Call API function
+      setSuggestion(data.suggestion);
+      setSuggestionModalOpen(true);
     } catch (error) {
       console.error('Error getting suggestion:', error);
-    }finally{
+    } finally {
       setLoading(false);
     }
   };
@@ -92,7 +84,7 @@ const MessageInput = ({ setMessages }) => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() && !selectedFile) return;
-
+  
     const imgData = selectedFile ? await convertToBase64(selectedFile) : null;
     const optimisticMessage = {
       _id: Date.now().toString(),
@@ -102,29 +94,14 @@ const MessageInput = ({ setMessages }) => {
       createdAt: new Date().toISOString(),
       seen: false,
     };
-
+  
     setMessages((prev) => [...prev, optimisticMessage]);
     setMessage('');
     setFilePreview(null);
-
+  
     try {
-      const res = await fetch('/api/messages/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message,
-          recipientId: selectedConversation.userId,
-          img: imgData,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-
-      setMessages((prev) =>
-        prev.map((msg) => (msg._id === optimisticMessage._id ? data : msg))
-      );
+      const data = await sendMessage(message, selectedConversation.userId, imgData); // Call API function
+      setMessages((prev) => prev.map((msg) => (msg._id === optimisticMessage._id ? data : msg)));
     } catch (error) {
       setMessages((prev) => prev.filter((msg) => msg._id !== optimisticMessage._id));
       console.error(error);

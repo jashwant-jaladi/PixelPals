@@ -11,4 +11,5 @@ router.post("/analyzeMood", protectRoute, analyseMessage);
 router.put("/mark-seen", protectRoute, markMessageAsSeen);
 router.get("/message-seen-count/:id", protectRoute, messageSeenCount);
 
+
 export default router;

@@ -4,34 +4,15 @@ import { useRecoilValue } from "recoil";
 import getUser from "../Atom/getUser";
 import { conversationAtom } from "../Atom/messageAtom";
 import CheckIcon from "@mui/icons-material/Check";
+import { markMessageAsSeen } from "../apis/messageApi"; 
 
 const Message = ({ ownMessage, message }) => {
   const currentUser = useRecoilValue(getUser);
   const selectedConversation = useRecoilValue(conversationAtom);
 
-  const markMessageAsSeen = async (messageId) => {
-    try {
-      const response = await fetch("/api/messages/mark-seen", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ messageId }),
-        credentials: "include", // Ensures cookies (if any) are sent with the request
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to mark message as seen");
-      }
-    } catch (error) {
-      console.error("Error marking message as seen:", error);
-    }
-  };
-
-  // Mark message as seen when the component renders
   useEffect(() => {
     if (!ownMessage && !message.seen) {
-      markMessageAsSeen(message._id);
+      markMessageAsSeen(message._id); // Use API function
     }
   }, [message._id, message.seen, ownMessage]);
 
@@ -41,7 +22,6 @@ const Message = ({ ownMessage, message }) => {
         ownMessage ? "justify-end" : "justify-start"
       }`}
     >
-      {/* Avatar for the other user */}
       {!ownMessage && (
         <Avatar
           sx={{ width: 45, height: 45, mr: 2 }}
@@ -64,7 +44,6 @@ const Message = ({ ownMessage, message }) => {
           <img src={message.img} alt="message" className="w-[500px] h-auto" />
         )}
 
-        {/* Seen checkmark for own messages */}
         {ownMessage && (
           <span className="inline-block mt-1">
             {message.seen ? (
