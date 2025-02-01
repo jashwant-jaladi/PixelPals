@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema({
     private: {
         type: Boolean,
         default: false
+    },
+    Requested: {
+        type: [mongoose.Schema.Types.ObjectId],
+        ref : "User",
+        default: []
     }
     
 }, {timestamps: true});

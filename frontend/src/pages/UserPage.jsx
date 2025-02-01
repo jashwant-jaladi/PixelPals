@@ -73,10 +73,10 @@ const UserPage = () => {
       <UserHeader user={user} setTabIndex={setTabIndex} tabIndex={tabIndex} />
       
       <div className="mt-5">
-        {tabIndex === 0 && (
+        {tabIndex === 0  && (
           <>
             {user.private ? (
-              <div className="text-center text-gray-500 text-xl mt-10">
+              <div className="text-center text-xl mt-10 font-parkinsans text-pink-700">
                 This account is private. Follow to see their posts.
               </div>
             ) : fetchingPosts ? (
@@ -92,6 +92,7 @@ const UserPage = () => {
             )}
           </>
         )}
+        
       </div>
 
       <Snackbar

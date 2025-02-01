@@ -422,5 +422,79 @@ const resetPassword = async (req, res) => {
     }
 };
 
+const requestFollow = async (req, res) => 
+    {
+        try {
+    const { userId } = req.body; // ID of the user sending the request
+    const requestedUser = await User.findById(req.params.id);
+    const sender = await User.findById(userId);
 
-export { signupUser, loginUser, logoutUser, followandUnfollowUser, privateAccount, getFollowersAndFollowing, followUnfollowDialog, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword };
+    if (!requestedUser || !sender) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    if (requestedUser.Requested.includes(userId)) {
+        return res.status(400).json({ message: "Request already sent" });
+    }
+
+    requestedUser.Requested.push(userId);
+    await requestedUser.save();
+
+    res.status(200).json({ message: "Follow request sent" });
+} catch (error) {
+    res.status(500).json({ error: "Server error" });
+}
+}
+
+const acceptFollow = async (req, res) => {
+    try {
+        const { userId } = req.body; // ID of the user being accepted
+        const currentUser = await User.findById(req.params.id);
+        const sender = await User.findById(userId);
+
+        if (!currentUser || !sender) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        if (!currentUser.Requested.includes(userId)) {
+            return res.status(400).json({ message: "No follow request from this user" });
+        }
+
+        // Remove from requested array
+        currentUser.Requested = currentUser.Requested.filter(id => id.toString() !== userId);
+        
+        // Add to followers list
+        currentUser.followers.push(userId);
+        sender.following.push(currentUser._id);
+
+        await currentUser.save();
+        await sender.save();
+
+        res.status(200).json({ message: "Follow request accepted" });
+    } catch (error) {
+        res.status(500).json({ error: "Server error" });
+    }
+}
+
+const rejectFollow = async (req, res) => {
+    
+        try {
+            const { userId } = req.body; // ID of the user being declined
+            const currentUser = await User.findById(req.params.id);
+    
+            if (!currentUser) {
+                return res.status(404).json({ message: "User not found" });
+            }
+    
+            // Remove from requested array
+            currentUser.Requested = currentUser.Requested.filter(id => id.toString() !== userId);
+            await currentUser.save();
+    
+            res.status(200).json({ message: "Follow request declined" });
+        } catch (error) {
+            res.status(500).json({ error: "Server error" });
+        }
+    }
+    
+
+export { signupUser, loginUser, logoutUser, followandUnfollowUser, privateAccount, getFollowersAndFollowing, followUnfollowDialog, updateProfile, getUserProfile, getSuggestedUsers, freezeAccount, resetLink, resetPassword, requestFollow, acceptFollow, rejectFollow };
