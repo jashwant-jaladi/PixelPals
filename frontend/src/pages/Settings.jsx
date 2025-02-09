@@ -19,7 +19,7 @@ import getUser from "../Atom/getUser";
 import { useNavigate } from "react-router-dom";
 import {
   toggleAccountPrivacy,
-  deactivateAccount,
+  deleteAccount,
   logoutUser,
 } from "../apis/userApi"; // Import the utility functions
 
@@ -41,21 +41,28 @@ const Settings = () => {
   }, [user]);
 
   const handleDeactivate = async () => {
-    if (!window.confirm("Are you sure you want to freeze your account?")) return;
-
+    if (!window.confirm("Are you sure you want to delete your account?")) return;
+  
     try {
-      const data = await deactivateAccount();
-
+      if (!user || !user._id) {
+        setSnackbarMessage("Error: User ID not found.");
+        setSnackbarSeverity("error");
+        setOpenSnackbar(true);
+        return;
+      }
+  
+      const data = await deleteAccount(user._id); // Pass user._id
+  
       if (data.error) {
         setSnackbarMessage("Error: " + data.error);
         setSnackbarSeverity("error");
         setOpenSnackbar(true);
         return;
       }
-
+  
       if (data.success) {
         await logout();
-        setSnackbarMessage("Your account has been frozen.");
+        setSnackbarMessage("Your account has been deleted.");
         setSnackbarSeverity("success");
         setOpenSnackbar(true);
         setModalOpen(false);
@@ -66,6 +73,7 @@ const Settings = () => {
       setOpenSnackbar(true);
     }
   };
+  
 
   const handleTogglePrivacy = async () => {
     try {
@@ -210,7 +218,7 @@ const Settings = () => {
               },
             }}
           >
-            Deactivate Account
+            Delete Account
           </Button>
         </CardContent>
       </Card>
@@ -218,11 +226,11 @@ const Settings = () => {
       {/* Deactivation Confirmation Dialog */}
       <Dialog open={isModalOpen} onClose={() => setModalOpen(false)}>
         <DialogTitle sx={{ fontWeight: "bold", color: "#e74c3c" }}>
-          Confirm Deactivation
+          Confirm Delete
         </DialogTitle>
         <DialogContent>
           <Typography color="textSecondary">
-            Are you sure you want to deactivate your account? This action is
+            Are you sure you want to delete your account? This action is
             permanent and cannot be undone.
           </Typography>
         </DialogContent>
@@ -231,7 +239,7 @@ const Settings = () => {
             Cancel
           </Button>
           <Button onClick={handleDeactivate} color="error" variant="contained">
-            Yes, Deactivate
+            Yes, Delete
           </Button>
         </DialogActions>
       </Dialog>

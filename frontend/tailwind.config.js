@@ -7,7 +7,6 @@ export default {
   theme: {
     extend: {    
       fontFamily: {
-      delius: ['Delius', 'sans-serif'],
       parkinsans: ['Parkinsans', 'sans-serif'],
     }},
   },

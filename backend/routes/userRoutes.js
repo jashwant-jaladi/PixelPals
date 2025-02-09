@@ -1,5 +1,5 @@
 import express from "express";
-import { signupUser, loginUser, logoutUser,  updateProfile,privateAccount,  getUserProfile,   getSuggestedUsers, freezeAccount, resetLink, resetPassword } from "../controllers/userController.js";
+import { signupUser, loginUser, logoutUser,  updateProfile,privateAccount,  getUserProfile,   getSuggestedUsers, deleteUser, resetLink, resetPassword } from "../controllers/userController.js";
 import protectRoute from "../middleware/protectRoute.js";
 
 const Router = express.Router();
@@ -10,7 +10,7 @@ Router.post("/login", loginUser);
 Router.post("/logout", logoutUser)
 Router.get("/suggested", protectRoute, getSuggestedUsers);
 Router.put("/update/:id", protectRoute, updateProfile)
-Router.put("/freeze", protectRoute, freezeAccount)
+Router.delete("/deleteUser", protectRoute, deleteUser)
 Router.post("/reset-link", resetLink)
 Router.post("/reset-password/:id", resetPassword)
 Router.put("/private", protectRoute, privateAccount)

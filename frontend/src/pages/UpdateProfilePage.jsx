@@ -93,7 +93,7 @@ const UpdateProfilePage = () => {
   };
 
   return (
-    <div className='flex items-center justify-center min-h-screen font-bold'>
+    <div className='flex items-center justify-center min-h-screen font-bold font-parkinsans'>
       <div className='border-2 border-pink-700 w-full max-w-md p-10 flex flex-col items-center glasseffect rounded-lg shadow-lg'>
         <h1 className='text-3xl font-semibold mb-4'>Update Profile</h1>
         <p className='mb-6'>Update your profile</p>

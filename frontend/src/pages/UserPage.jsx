@@ -71,7 +71,7 @@ const UserPage = () => {
                 <CircularProgress />
               </div>
             ) : posts.length === 0 ? (
-              <div className="text-center text-pink-700 text-xl">
+              <div className="text-center font-parkinsans text-pink-700 text-xl">
                 Looks like you didn't post anything yet, please create a post.
               </div>
             ) : (

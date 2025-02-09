@@ -165,11 +165,12 @@ export const toggleAccountPrivacy = async (newPrivateState) => {
   }
 };
 
-export const deactivateAccount = async () => {
+export const deleteAccount = async (userId) => {
   try {
-    const response = await fetch("/api/users/freeze", {
-      method: "PUT",
+    const response = await fetch("/api/users/deleteUser", {
+      method: "DELETE",
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId }), // Send userId in the request body
     });
 
     return await response.json();
@@ -177,6 +178,7 @@ export const deactivateAccount = async () => {
     throw new Error(error.message);
   }
 };
+
 
 // api/updateProfile.js
 export const updateProfileAPI = async (userId, input) => {
