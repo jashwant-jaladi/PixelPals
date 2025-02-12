@@ -9,7 +9,7 @@ import getUser from '../Atom/getUser';
 import { useSocket } from '../context/socketContext.jsx';
 import { fetchMessages } from '../apis/messageApi.js';
 
-const MessageContainer = () => {
+const MessageContainer = ({ isDeleted }) => {
   const selectedConversation = useRecoilValue(conversationAtom);
   const currentUser = useRecoilValue(getUser);
   const [loading, setLoading] = useState(true);
@@ -35,7 +35,7 @@ const MessageContainer = () => {
   useEffect(() => {
     const getMessages = async () => {
       setLoading(true);
-      const data = await fetchMessages(selectedConversation.userId); // Use API function
+      const data = await fetchMessages(selectedConversation.userId);
       setMessages(data);
       setLoading(false);
     };
@@ -47,9 +47,14 @@ const MessageContainer = () => {
     <div className="w-[100%] h-[100vh] flex flex-col border-2 border-pink-500 glass rounded-lg overflow-hidden">
       <div className="flex flex-col p-5">
         <div className="flex gap-5">
-          <Avatar sx={{ width: 50, height: 50 }} src={selectedConversation.userProfilePic} />
+          <Avatar
+            sx={{ width: 50, height: 50 }}
+            src={selectedConversation.userProfilePic || "/default-profile.png"} // Show default if deleted
+          />
           <div className="flex items-center">
-            <h3 className="font-bold pr-3 text-lg">{selectedConversation.username}</h3>
+            <h3 className="font-bold pr-3 text-lg">
+              {selectedConversation.username || "Deleted User"}
+            </h3>
             <VerifiedIcon color="primary" />
           </div>
         </div>
@@ -77,17 +82,23 @@ const MessageContainer = () => {
         )}
       </div>
 
-      {isTyping && (
+      {isTyping && !isDeleted && (
         <div className="flex justify-center p-2 text-gray-500">
           <span className="ml-2 text-pink-500">User is typing...</span>
         </div>
       )}
 
-      <div>
-        <MessageInput setMessages={setMessages} />
+      <div className="p-4 text-center">
+        {isDeleted ? (
+          <p className="text-red-500 font-semibold">User deleted, can't send messages.</p>
+        ) : (
+          <MessageInput setMessages={setMessages} />
+        )}
       </div>
     </div>
   );
 };
 
 export default MessageContainer;
+
+

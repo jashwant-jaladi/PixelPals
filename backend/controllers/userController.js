@@ -124,7 +124,7 @@ const updateProfile = async (req, res) => {
         user.bio = bio || user.bio;
 
         await user.save();
-        await post.updateMany(
+        await Post.updateMany(
             { "comments.userId": userId },
             {
                 $set: {
@@ -219,7 +219,11 @@ const deleteUser = async (req, res) => {
       await Post.deleteMany({ userId });
   
       // Step 4: Remove user from followers and following
-      await User.updateMany({}, { $pull: { followers: userId, following: userId } });
+      await User.updateMany(
+        { $or: [{ followers: userId }, { following: userId }] },
+        { $pull: { followers: userId, following: userId } }
+      );
+      
   
       res.status(200).json({ success: true, message: "User deleted successfully" });
     } catch (error) {

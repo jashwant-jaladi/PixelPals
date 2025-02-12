@@ -146,16 +146,35 @@ const ChatPage = () => {
             ))
           ) : (
             <div className="pt-5">
-              {messages.map((message) => (
-                <Conversation key={message._id} conversation={message} isOnline={onlineUsers.includes(message.participants[0]._id)} />
-              ))}
+             {messages.map((message) => {
+  const participant = message.participants[0] || {}; // Default empty object if user is deleted
+  const isDeleted = !participant._id; // If no ID, assume deleted
+  
+  return (
+    <Conversation
+      key={message._id}
+      conversation={{
+        ...message,
+        participants: [
+          {
+            _id: participant._id || "deleted",
+            username: participant.username || "Deleted User",
+            profilePic: participant.profilePic || "/default-profile.png", // Use a stock profile pic
+          },
+        ],
+      }}
+      isOnline={isDeleted ? false : onlineUsers.includes(participant._id)}
+    />
+  );
+})}
+
             </div>
           )}
         </div>
 
         <div className="w-[70%]">
           {selectedConversation && selectedConversation._id ? (
-            <MessageContainer />
+            <MessageContainer isDeleted={selectedConversation?.userId === "deleted"} />
           ) : (
             <div>
               <div className="flex justify-center">

@@ -1,6 +1,5 @@
-// src/components/SearchUsers.js
 import React, { useState } from 'react';
-import { TextField, Button, InputAdornment, Typography } from '@mui/material';
+import { TextField, Button, InputAdornment, Typography, Snackbar, Alert } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { pink } from '@mui/material/colors';
 import { useRecoilValue } from 'recoil';
@@ -10,28 +9,34 @@ import { searchUser } from '../apis/userApi'; // Import the searchUser function 
 const SearchUsers = ({ onSearchResult }) => {
   const [searchText, setSearchText] = useState('');
   const [searchingUser, setSearchingUser] = useState(false);
+  const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const currentUser = useRecoilValue(getUser);
 
   const handleSearch = async (e) => {
     e.preventDefault();
     setSearchingUser(true);
+
     try {
       const searchedUser = await searchUser(searchText); // Use the searchUser function
 
-      if (searchedUser.error) {
-        console.log(searchedUser.error);
+      if (!searchedUser || searchedUser.error) {
+        setSnackbarMessage('Account does not exist');
+        setOpenSnackbar(true);
         return;
       }
 
       if (searchedUser._id === currentUser._id) {
-        console.log('You cannot message yourself');
+        setSnackbarMessage('You cannot search yourself');
+        setOpenSnackbar(true);
         return;
       }
 
       // Pass the search result to the parent component (Homepage)
       onSearchResult(searchedUser);
     } catch (error) {
-      console.log(error);
+      setSnackbarMessage('Account does not exist');
+      setOpenSnackbar(true);
     } finally {
       setSearchingUser(false);
       setSearchText('');
@@ -80,6 +85,18 @@ const SearchUsers = ({ onSearchResult }) => {
       >
         Search
       </Button>
+
+      {/* Snackbar for alerts */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={3000}
+        onClose={() => setOpenSnackbar(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setOpenSnackbar(false)} severity="error" variant="filled">
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

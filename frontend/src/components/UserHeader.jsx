@@ -47,26 +47,29 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       setSnackbarOpen(true);
       return;
     }
-
+  
     setUpdating(true);
     try {
       const { updatedFollowers } = await followUser(userData._id, currentUser._id, following);
+      
       setUserData((prev) => ({
         ...prev,
-        followers: updatedFollowers,
+        followers: updatedFollowers.map((user) => user._id), // Ensure correct IDs
       }));
-
+  
       setFollowing(!following);
       setSnackbarMessage(following ? `You have unfollowed ${userData.name}.` : `You are now following ${userData.name}!`);
       setSnackbarOpen(true);
-      
-      await fetchFollowersAndUpdateLists();
+  
+      await fetchFollowersAndUpdateLists(); // Refresh follower count
     } catch (error) {
       setErrorSnackbarOpen(true);
+      console.error("Follow/Unfollow failed:", error);
     } finally {
       setUpdating(false);
     }
   };
+  
 
   const fetchFollowersAndUpdateLists = async () => {
     setLoading(true);
