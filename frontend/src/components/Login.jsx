@@ -8,8 +8,10 @@ import Alert from '@mui/material/Alert';
 import { Link } from 'react-router-dom';
 import InviteLink from './Invitelink';
 import { loginUser } from '../apis/userApi'; // Import the login function from api.js
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
+  const navigate = useNavigate();
   const setUserAtom = useSetRecoilState(getUser);
   const setUserAuth = useSetRecoilState(userAuthState);
   const [input, setInput] = useState({ email: '', password: '' });
@@ -108,12 +110,15 @@ const Login = () => {
                   Register
                 </button>
               </p>
-              <p className='text-pink-700 mt-2'>
-                Forgot password?{' '}
-                <a href="/reset-password" className='text-pink-500 hover:text-pink-900 underline'>
-                  Reset password
-                </a>
-              </p>
+              <p className="text-pink-700 mt-2">
+      Forgot password?{' '}
+      <span
+        className="text-pink-500 hover:text-pink-900 underline cursor-pointer"
+        onClick={() => navigate('/reset-password')}
+      >
+        Reset password
+      </span>
+    </p>
             </div>
           </div>
 

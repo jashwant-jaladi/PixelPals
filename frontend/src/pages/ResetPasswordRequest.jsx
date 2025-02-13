@@ -39,7 +39,7 @@ const ResetPasswordRequest = () => {
   };
 
   return (
-    <Container maxWidth="sm">
+    <Container maxWidth="sm" >
       <Box
         sx={{
           mt: 8,
@@ -47,12 +47,13 @@ const ResetPasswordRequest = () => {
           border: '1px solid #ccc',
           borderRadius: 2,
           boxShadow: 3,
+          
         }}
       >
-        <Typography variant="h4" component="h1" gutterBottom align="center">
+        <Typography variant="h4" component="h1" gutterBottom align="center" sx={{fontFamily: 'Parkinsans'}}>
           Reset Password
         </Typography>
-        <Typography variant="body1" color="textSecondary" align="center" gutterBottom>
+        <Typography variant="body1" color="textSecondary" align="center" gutterBottom sx={{fontFamily: 'Parkinsans'}}>
           Enter your email address below, and we'll send you a link to reset your password.
         </Typography>
         <form onSubmit={handleSubmit}>
@@ -89,9 +90,19 @@ const ResetPasswordRequest = () => {
               '&:hover': {
                 backgroundColor: pink[700],
               },
+              fontFamily: 'Parkinsans'
             }}
           >
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Send Reset Link'}
+          </Button>
+          <Button
+            fullWidth
+            variant="text"
+            sx={{ mt: 2, color: pink[700], textTransform: 'none', fontWeight: 'bold', fontFamily: 'Parkinsans' }}
+            onClick={() => navigate('/auth')}
+
+          >
+            Back to Login
           </Button>
         </form>
       </Box>

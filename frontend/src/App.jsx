@@ -13,7 +13,6 @@ import UpdateProfilePage from './pages/UpdateProfilePage';
 import CreatePost from './components/CreatePost';
 import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import CottageIcon from '@mui/icons-material/Cottage';
-import ChatIcon from '@mui/icons-material/Chat';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ChatPage from './pages/ChatPage';
 import Settings from './pages/Settings';

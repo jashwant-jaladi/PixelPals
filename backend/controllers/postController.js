@@ -52,7 +52,9 @@ const createPost = async (req, res) => {
 
 
 const getPost = async (req, res) => {
+    
     try {
+    
         const postId = req.params.id;
         const post = await Post.findById(postId).populate("postedBy");
         if (!post) {

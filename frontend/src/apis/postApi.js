@@ -88,6 +88,7 @@ export const fetchPosts = async (username, user) => {
   };
 
   export const fetchPost = async (id) => {
+      console.log('Fetching post', id);
     try {
       const res = await fetch(`/api/posts/${id}`);
       const data = await res.json();

@@ -80,14 +80,17 @@ export const registerUser = async (input) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Registration failed');
+      // Directly return the error message from the backend
+      return { error: data.message || 'Registration failed' };
     }
 
     return data;
   } catch (error) {
-    throw new Error(error.message || 'An unexpected error occurred');
+    console.error('Registration API error:', error);
+    return { error: 'Something went wrong. Please try again.' }; // Avoid throwing new Error
   }
 };
+
 
 // src/utils/api.js
 
@@ -106,9 +109,9 @@ export const fetchSuggestedUsers = async () => {
 
 // src/utils/api.js
 
-export const resetPassword = async (id, password) => {
+export const resetPassword = async (token, password) => {
   try {
-    const response = await fetch(`/api/users/reset-password/${id}`, {
+    const response = await fetch(`/api/users/reset-password/${token}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
