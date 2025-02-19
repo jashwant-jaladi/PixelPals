@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 
 const userSchema = new mongoose.Schema({
     name: { type: String, required: true },
@@ -15,6 +16,13 @@ const userSchema = new mongoose.Schema({
     resetPasswordExpires: { type: Date, default: null },
 
 }, { timestamps: true });
+
+userSchema.methods.generatePasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex"); // Generate random token
+  this.resetPasswordToken = crypto.createHash("sha256").update(resetToken).digest("hex"); // Hash token
+  this.resetPasswordExpires = Date.now() + 15 * 60 * 1000; // Token expires in 15 minutes
+  return resetToken; 
+};
 
 const User = mongoose.model('User', userSchema);
 

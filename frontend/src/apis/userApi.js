@@ -111,27 +111,35 @@ export const fetchSuggestedUsers = async () => {
 
 export const resetPassword = async (token, password) => {
   try {
+    if (!token) {
+      throw new Error("Invalid or missing token.");
+    }
+
     const response = await fetch(`/api/users/reset-password/${token}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ password }),
     });
 
     const result = await response.json();
+
     if (!response.ok) {
-      throw new Error(result.error || 'Something went wrong. Please try again.');
+      throw new Error(result.message || "Something went wrong. Please try again.");
     }
 
     return result;
   } catch (error) {
-    throw new Error('Failed to reset password. Please try again.');
+    console.error("Password Reset Error:", error.message); // Log for debugging
+    throw new Error(error.message || "Failed to reset password. Please try again.");
   }
 };
 
+
 // src/utils/api.js
 
+// Frontend function
 export const requestResetPasswordLink = async (email) => {
   try {
     const response = await fetch('/api/users/reset-link', {
@@ -141,14 +149,18 @@ export const requestResetPasswordLink = async (email) => {
       },
       body: JSON.stringify({ email }),
     });
-
+    
     const result = await response.json();
+    
     if (!response.ok) {
-      throw new Error(result.error || 'Something went wrong.');
+      // Look for error message in multiple possible properties
+      throw new Error(result.error || result.message || 'Something went wrong.');
     }
+    
     return result;
   } catch (error) {
-    throw new Error('Failed to send request. Please try again.');
+    // Preserve the original error message if it exists
+    throw error.message ? error : new Error('Failed to send request. Please try again.');
   }
 };
 

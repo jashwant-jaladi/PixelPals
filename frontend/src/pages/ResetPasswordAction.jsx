@@ -19,7 +19,7 @@ const ResetPasswordAction = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { id } = useParams(); // id will be extracted from the URL
+  const { token } = useParams(); // id will be extracted from the URL
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,12 +33,16 @@ const ResetPasswordAction = () => {
 
     setLoading(true);
     try {
-      const result = await resetPassword(id, password); // Call the resetPassword function
+      const result = await resetPassword(token, password); // Call the resetPassword function
 
       setMessage('Your password has been reset successfully.');
       setPassword('');
       setConfirmPassword('');
-      navigate('/auth');
+
+      // Delay navigation for 3 seconds after showing success message
+      setTimeout(() => {
+        navigate('/auth');
+      }, 3000);
     } catch (error) {
       setError(error.message);
     } finally {
@@ -55,12 +59,25 @@ const ResetPasswordAction = () => {
           bgcolor: 'background.paper',
           borderRadius: 2,
           boxShadow: 3,
+          fontFamily: 'Parkinsans, sans-serif', // Apply Parkinsans font globally
         }}
       >
-        <Typography variant="h4" component="h1" gutterBottom align="center">
+        <Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          align="center"
+          sx={{ fontFamily: 'Parkinsans, sans-serif', fontWeight: 600 }}
+        >
           Reset Your Password
         </Typography>
-        <Typography variant="body1" color="textSecondary" align="center" gutterBottom>
+        <Typography
+          variant="body1"
+          color="textSecondary"
+          align="center"
+          gutterBottom
+          sx={{ fontFamily: 'Parkinsans, sans-serif' }}
+        >
           Enter your new password below.
         </Typography>
         <form onSubmit={handleSubmit}>
@@ -73,6 +90,7 @@ const ResetPasswordAction = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              sx={{ fontFamily: 'Parkinsans, sans-serif' }}
             />
           </Box>
           <Box mb={2}>
@@ -84,15 +102,16 @@ const ResetPasswordAction = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
+              sx={{ fontFamily: 'Parkinsans, sans-serif' }}
             />
           </Box>
           {message && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {message}
+            <Alert severity="success" sx={{ mb: 2, fontFamily: 'Parkinsans, sans-serif' }}>
+              {message} Redirecting...
             </Alert>
           )}
           {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2, fontFamily: 'Parkinsans, sans-serif' }}>
               {error}
             </Alert>
           )}
@@ -105,6 +124,8 @@ const ResetPasswordAction = () => {
               py: 1.5,
               backgroundColor: pink[500],
               color: 'white',
+              fontFamily: 'Parkinsans, sans-serif',
+              fontWeight: 'bold',
               '&:hover': {
                 backgroundColor: pink[700],
               },

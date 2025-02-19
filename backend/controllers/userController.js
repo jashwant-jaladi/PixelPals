@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import nodemailer from "nodemailer";
 import bcrypt from "bcryptjs";
+import crypto from "crypto"
 import generateAndSetCookies from "../utils/helper/generateAndSetCookies.js";
 import { v2 as cloudinary } from "cloudinary";
 import Post from "../models/postModel.js";
@@ -275,70 +276,86 @@ const resetLink = async (req, res) => {
         // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(404).json({ error: "User not found" });
         }
 
-        // Construct reset URL (no tokens, using email as a query parameter)
-        const resetUrl = `${process.env.CLIENT_URL}/reset-action/${encodeURIComponent(
-            user.id
-        )}`;
+        // Generate reset token and update user record
+        const resetToken = user.generatePasswordResetToken(); 
+
+        // Save user after setting token (only one `.save()`)
+        await user.save({ validateBeforeSave: false });
+
+        // Construct reset URL
+        const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
         // Email content
         const mailOptions = {
-            from: `"PixelPals Support Team" <${process.env.EMAIL_USER}>`,
+            from: `"PixelPals Support" <${process.env.EMAIL_USER}>`,
             to: user.email,
-            subject: 'Password Reset Request',
+            subject: "Password Reset Request",
             html: `
-          <p>Hello ${user.name || 'User'},</p>
-          <p>You requested a password reset. Please click the link below to reset your password:</p>
-          <a href="${resetUrl}" style="text-decoration:none; color: #fff; background-color: #007bff; padding: 10px 15px; border-radius: 5px;">Reset Password</a>
-          <p>If you did not request this, please ignore this email.</p>
-          <p>Thank you,</p>
-          <p>Your App Team</p>
-        `,
+                <p>Hello ${user.name || "User"},</p>
+                <p>You requested a password reset. Click below to reset:</p>
+                <a href="${resetUrl}" style="text-decoration:none; color:#fff; background:#007bff; padding:10px 15px; border-radius:5px;">Reset Password</a>
+                <p>Link expires in 15 minutes. If you didn't request this, ignore this email.</p>
+                <p>Thank you,</p>
+                <p>PixelPals Team</p>
+            `,
         };
 
-        // Send email
+        // Send email (Ensure transporter is defined and working)
         await transporter.sendMail(mailOptions);
 
-        res.status(200).json({ message: 'Reset link sent successfully' });
+        res.status(200).json({ message: "Reset link sent successfully" });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: error.message });
+        console.error("Error in resetLink:", error);
+        res.status(500).json({ error: error.message || "Something went wrong." });
     }
 };
+
 
 
 const resetPassword = async (req, res) => {
     try {
+        const { token } = req.params;
+        console.log(token);
         const { password } = req.body;
-        const { id } = req.params;
-    
-        // Find user by id (if you're using id for user lookup)
-        const user = await User.findOne({ _id: id });
+
+        // Hash the provided token (because we store it hashed)
+        const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+
+        // Find user with matching reset token and valid expiration time
+        const user = await User.findOne({
+            resetPasswordToken: hashedToken,
+            resetPasswordExpires: { $gt: Date.now() }, // Ensure token is not expired
+        });
+
         if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            return res.status(400).json({ message: "Invalid or expired token" });
         }
 
-        // Validate the password strength (optional but recommended)
+        // Validate password length
         if (password.length < 6) {
-            return res.status(400).json({ message: 'Password is too short, minimum 6 characters.' });
+            return res.status(400).json({ message: "Password must be at least 6 characters" });
         }
 
-        // Hash the new password
+        // Hash and save the new password
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-        user.password = hashedPassword; // Update the user's password
+        user.password = await bcrypt.hash(password, salt);
 
-        // Save the updated user object
+        // Clear reset token fields (invalidate token)
+        user.resetPasswordToken = undefined;
+        user.resetPasswordExpires = undefined;
+
         await user.save();
 
-        res.status(200).json({ message: 'Password reset successfully' });
+        res.status(200).json({ message: "Password reset successfully" });
     } catch (error) {
-        console.error(error); // Log the error for debugging purposes
-        res.status(500).json({ error: error.message || 'Something went wrong.' });
+        console.error(error);
+        res.status(500).json({ error: error.message || "Something went wrong" });
     }
 };
+
 
 
 

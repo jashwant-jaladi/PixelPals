@@ -1,11 +1,13 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useSetRecoilState } from 'recoil';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import userAuthState from '../Atom/authAtom';
 import { Snackbar, Alert } from '@mui/material';
-import { registerUser } from '../apis/userApi'; 
+import { registerUser } from '../apis/userApi';
 
 const Register = () => {
   const setUserAuth = useSetRecoilState(userAuthState);
+  const navigate = useNavigate(); // Initialize useNavigate
   const [input, setInput] = useState({
     name: '',
     username: '',
@@ -46,29 +48,33 @@ const Register = () => {
     }
   
     try {
-      const response = await registerUser(input); // Calls your API
+      const response = await registerUser(input);
   
-      if (response.error || response.message) {
-        return showSnackbar(response.error || response.message, 'error');
+      if (response.error) {
+        return showSnackbar(response.error, 'error'); // Show backend error
       }
   
-      showSnackbar('Registration successful! Please log in.', 'success');
+      // Show success snackbar
+      showSnackbar(response.message, 'success');
   
-      setTimeout(() => setUserAuth('login'), 2000);
-    } catch (error) { 
+      // Reset form
+      setInput({
+        name: '',
+        username: '',
+        email: '',
+        password: '',
+        confirmpassword: '',
+      });
+  
+      // Redirect to login after 1 second
+      setTimeout(() => {
+        setUserAuth('login'); 
+      }, 2000);
+    } catch (error) {
       console.error('Error:', error);
-  
-      // Extract error message from API response properly
-      const errorMessage =
-        error.response?.data?.message || // If backend sends an error message
-        error.response?.data?.error || // Some APIs use 'error' key instead
-        error.message || // Default JavaScript error message
-        'An unexpected error occurred'; // Fallback
-  
-      showSnackbar(errorMessage, 'error');
+      showSnackbar('Something went wrong. Please try again.', 'error');
     }
   };
-  
   
   
 
@@ -79,7 +85,7 @@ const Register = () => {
           {/* Left Side */}
           <div className="w-full lg:w-1/2 bg-gradient-to-r from-pink-600 to-purple-600 p-8 flex flex-col justify-center items-center text-white">
             <h3 className="text-4xl font-bold mb-8 text-center">Join the Community</h3>
-            <ul className="text-left text-xl space-y-4 font-bold">
+            <ul className="text-center text-xl space-y-4 font-bold">
               <li>Connect with friends</li>
               <li>Share your moments</li>
               <li>Discover new experiences</li>
@@ -101,9 +107,8 @@ const Register = () => {
               width="300"
               height="300"
               className="mb-8"
-              
             />
-            <h1 className="text-3xl font-bold text-center text-pink-700 mb-8">Create Your Account</h1>
+            <h1 className="text-3xl font-bold text-center text-pink-700 mb-8 font-parkinsans">Create Your Account</h1>
             <form onSubmit={handleRegister} className="w-full max-w-md space-y-6">
               {[
                 { label: 'Full Name', name: 'name', type: 'text' },
@@ -113,7 +118,7 @@ const Register = () => {
                 { label: 'Confirm Password', name: 'confirmpassword', type: 'password' },
               ].map(({ label, name, type }) => (
                 <div key={name}>
-                  <label htmlFor={name} className="block text-pink-700 font-medium mb-2">
+                  <label htmlFor={name} className="block text-pink-700 font-medium mb-2 font-parkinsans">
                     {label}
                   </label>
                   <input

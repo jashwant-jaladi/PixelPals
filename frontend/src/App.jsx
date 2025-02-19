@@ -115,7 +115,7 @@ const App = () => {
             <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />
             <Route path='*' element={<NotFoundPage/>}/>
             <Route path="/reset-password" element={<ResetPasswordRequest />} />  
-            <Route path="/reset-action/:id" element={<ResetPasswordAction />} />
+            <Route path="/reset-password/:token" element={<ResetPasswordAction />} />
             <Route path="/learn-more" element={<LearnMore />} />
       
           </Routes>

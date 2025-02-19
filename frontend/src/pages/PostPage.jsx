@@ -33,6 +33,10 @@ const PostPage = () => {
     const getPosts = async () => {
       setPost([]);
       try {
+        if(id && id.length > 40) {
+         console.warn('invalid post format');
+         navigate("/");
+        }
         const fetchedPost = await fetchPost(id);
         setPost([fetchedPost]);
       } catch (err) {

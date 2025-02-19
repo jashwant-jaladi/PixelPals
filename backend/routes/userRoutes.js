@@ -12,7 +12,7 @@ Router.get("/suggested", protectRoute, getSuggestedUsers);
 Router.put("/update/:id", protectRoute, updateProfile)
 Router.delete("/deleteUser", protectRoute, deleteUser)
 Router.post("/reset-link", resetLink)
-Router.post("/reset-password/:id", resetPassword)
+Router.post("/reset-password/:token", resetPassword)
 Router.put("/private", protectRoute, privateAccount)
 
 export default Router

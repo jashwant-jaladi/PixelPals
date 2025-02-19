@@ -126,7 +126,7 @@ const Login = () => {
           <div className='w-full lg:w-1/2 bg-gradient-to-r from-pink-600 to-purple-600 p-8 flex flex-col justify-center items-center text-white relative'>
             <div className='text-center'>
               <h3 className='text-4xl font-bold mb-8'>The New Way to Connect</h3>
-              <ul className='text-left text-xl space-y-4'>
+              <ul className='text-center text-xl space-y-4'>
                 <li>Discover new people</li>
                 <li>Bond over new experiences</li>
                 <li>Share memories</li>
@@ -136,7 +136,7 @@ const Login = () => {
             <div className='mt-8 flex space-x-4'>
               <Link
                 to="/learn-more"
-                className='bg-white text-pink-600 font-bold px-6 py-2 rounded-lg hover:bg-pink-100 transition duration-300'
+                className='bg-white text-pink-600 text-center font-bold px-6 py-2 rounded-lg hover:bg-pink-100 transition duration-300'
               >
                 Learn More
               </Link>
