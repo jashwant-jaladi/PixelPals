@@ -39,10 +39,7 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
-        if (user.isFrozen) {
-            user.isFrozen = false;
-            await user.save();
-        }
+        if (!user) return res.status(400).json({ message: "User not found please signup" });
         if (user && (await bcrypt.compare(password, user.password))) {
             generateAndSetCookies(user._id, res);
             return res.status(201).json({ message: "Login successful", user });

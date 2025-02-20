@@ -34,20 +34,23 @@ const Logout = () => {
       <Button
         onClick={logout}
         variant="contained"
+        size='small'
         sx={{
           backgroundColor: 'rgba(176, 73, 174, 0.1)', // Matches glasseffect
           color: '#ffffff', // Text color
           fontWeight: 'bold',
-          borderRadius: '12px',
+          borderRadius: '8px',
           border: '1px solid rgba(176, 73, 174, 0.69)', // Border from glasseffect
           boxShadow: '0 4px 30px rgba(0, 0, 0, 0.1)', // Shadow from glasseffect
           ':hover': {
             backgroundColor: 'rgba(176, 73, 174, 0.2)', // Slightly darker for hover
             boxShadow: '0 6px 35px rgba(0, 0, 0, 0.15)',
           },
+          minWidth: '36px',
+          height: '36px',
         }}
       >
-        <LogoutIcon />
+        <LogoutIcon fontSize='small' />
       </Button>
     </div>
   );

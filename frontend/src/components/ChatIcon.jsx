@@ -55,11 +55,13 @@ const ChatButton = () => {
           backgroundColor: "rgba(176, 73, 174, 0.2)",
           boxShadow: "0 6px 35px rgba(0, 0, 0, 0.15)",
         },
+        minWidth: '36px',
+          height: '36px',
       }}
       onClick={handleChatClick}
     >
       <Badge badgeContent={unreadCount} color="error">
-        <ChatIcon />
+        <ChatIcon fontSize="small" />
       </Badge>
     </Button>
   );

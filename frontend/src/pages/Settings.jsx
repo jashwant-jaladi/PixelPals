@@ -24,13 +24,14 @@ import {
 } from "../apis/userApi"; // Import the utility functions
 
 const Settings = () => {
+  const setUserAtom = useSetRecoilState(getUser);
+  const user = useRecoilValue(getUser);
   const [isModalOpen, setModalOpen] = useState(false);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
-  const [isPrivate, setIsPrivate] = useState(false);
-  const setUserAtom = useSetRecoilState(getUser);
-  const user = useRecoilValue(getUser);
+  const [isPrivate, setIsPrivate] = useState(user?.private??false);
+  
   const navigate = useNavigate();
 
   // Initialize privacy setting from user data
