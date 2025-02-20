@@ -96,16 +96,31 @@ export const registerUser = async (input) => {
 
 export const fetchSuggestedUsers = async () => {
   try {
-    const response = await fetch("/api/users/suggested");
-    const data = await response.json();
-    if (data.error) {
-      throw new Error(data.error);
+    const token = localStorage.getItem("token"); // Get the token from localStorage
+
+    if (!token) {
+      throw new Error("Unauthorized: No token found.");
     }
+
+    const response = await fetch("/api/users/suggested", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Attach token
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch suggested users.");
+    }
+
+    const data = await response.json();
     return data;
   } catch (error) {
-    throw new Error('An error occurred while fetching users. Please try again later.');
+    throw new Error(error.message || "An error occurred while fetching users.");
   }
 };
+
 
 // src/utils/api.js
 

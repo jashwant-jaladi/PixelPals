@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import InviteLink from './Invitelink';
 import { loginUser } from '../apis/userApi'; // Import the login function from api.js
 import { useNavigate } from 'react-router-dom';
+import GuestLogin from './guestLogin';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -95,12 +96,7 @@ const Login = () => {
                 >
                   Login
                 </button>
-                <button
-                  type="reset"
-                  className='w-full bg-transparent border border-pink-600 text-pink-600 py-2 px-4 rounded-lg hover:bg-pink-600 hover:text-white transition duration-300'
-                >
-                  Guest User
-                </button>
+               <GuestLogin/>
               </div>
             </form>
             <div className='mt-8 text-center'>
