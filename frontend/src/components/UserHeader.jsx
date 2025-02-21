@@ -49,22 +49,40 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       setSnackbarOpen(true);
       return;
     }
-
+  
+    // Prevent multiple clicks
+    if (updating) return;
+    
     setUpdating(true);
+  
     try {
-      const { updatedFollowers } = await followUser(userData._id, currentUser._id, following);
-
+      const response = await followUser(userData._id);
+      
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update followers.");
+      }
+  
+      // Update local state with new followers from API response
       setUserData((prev) => ({
         ...prev,
-        followers: updatedFollowers.map((user) => user._id),
+        followers: response.updatedFollowers.map((user) => user._id)
       }));
-
-      setFollowing(!following);
-      setSnackbarMessage(following ? `You have unfollowed ${userData.name}.` : `You are now following ${userData.name}!`);
+  
+      // Update following state based on API response
+      setFollowing(response.isFollowing);
+      
+      // Show appropriate message
+      setSnackbarMessage(
+        response.isFollowing
+          ? `You are now following ${userData.name}!`
+          : `You have unfollowed ${userData.name}.`
+      );
       setSnackbarOpen(true);
-
+  
+      // Refresh followers list if needed
       await fetchFollowersAndUpdateLists();
     } catch (error) {
+      setSnackbarMessage(error.message || "An error occurred while updating follow status.");
       setErrorSnackbarOpen(true);
       console.error("Follow/Unfollow failed:", error);
     } finally {
@@ -137,14 +155,14 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         ) : (
           <>
             <button
+            className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
               onClick={handleFollowToggle}
-              className="btn flex items-center justify-center"
               disabled={updating}
             >
               {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
             </button>
             {following && (
-              <Link to="/chat" className="btn">Message</Link>
+              <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">Message</Link>
             )}
           </>
         )}
