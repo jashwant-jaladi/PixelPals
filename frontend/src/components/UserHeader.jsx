@@ -49,28 +49,28 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       setSnackbarOpen(true);
       return;
     }
-  
+
     // Prevent multiple clicks
     if (updating) return;
-    
+
     setUpdating(true);
-  
+
     try {
       const response = await followUser(userData._id);
-      
+
       if (!response.success) {
         throw new Error(response.message || "Failed to update followers.");
       }
-  
+
       // Update local state with new followers from API response
       setUserData((prev) => ({
         ...prev,
         followers: response.updatedFollowers.map((user) => user._id)
       }));
-  
+
       // Update following state based on API response
       setFollowing(response.isFollowing);
-      
+
       // Show appropriate message
       setSnackbarMessage(
         response.isFollowing
@@ -78,7 +78,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
           : `You have unfollowed ${userData.name}.`
       );
       setSnackbarOpen(true);
-  
+
       // Refresh followers list if needed
       await fetchFollowersAndUpdateLists();
     } catch (error) {
@@ -91,26 +91,43 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   };
 
   const fetchFollowersAndUpdateLists = async () => {
+    let isMounted = true;
     setLoading(true);
+  
     try {
-      const { followers, following } = await fetchFollowersAndFollowing(userData._id);
-      setFollowersList(followers);
-      setFollowingList(following);
-      setUserData((prev) => ({
-        ...prev,
-        followers: followers.map((f) => f._id),
-        following: following.map((f) => f._id),
-      }));
+      const { followers = [], following = [] } = await fetchFollowersAndFollowing(userData._id);
+      
+      if (isMounted) {
+        setFollowersList(followers);
+        setFollowingList(following);
+        setUserData((prev) => ({
+          ...prev,
+          followers: followers.map((f) => f._id),
+          following: following.map((f) => f._id),
+        }));
+      }
     } catch (error) {
       console.error("Error fetching followers:", error);
+      setSnackbarMessage("Failed to load followers. Please try again.");
+      setSnackbarOpen(true);
     } finally {
-      setLoading(false);
+      if (isMounted) setLoading(false);
     }
+  
+    return () => {
+      isMounted = false;
+    };
   };
+  
+  // Fetch followers data when dialog opens
+  useEffect(() => {
+    if (followersDialogOpen) {
+      fetchFollowersAndUpdateLists();
+    }
+  }, [followersDialogOpen]);
 
   const handleDialogClose = () => {
     setFollowersDialogOpen(false);
-    fetchFollowersAndUpdateLists();
   };
 
   useEffect(() => {
@@ -145,17 +162,17 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
       <div className="flex flex-col md:flex-row justify-center md:justify-start gap-2">
         {currentUser?._id === userData?._id ? (
-     <div className="flex items-center justify-center gap-4 flex-wrap">
-     <CreatePost />
-     <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
-       <Link to="/update">Edit Profile</Link>
-     </button>
-   </div>
-   
+          <div className="flex items-center justify-center gap-4 flex-wrap">
+            <CreatePost />
+            <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
+              <Link to="/update">Edit Profile</Link>
+            </button>
+          </div>
+
         ) : (
           <>
             <button
-            className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
+              className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
               onClick={handleFollowToggle}
               disabled={updating}
             >
@@ -176,7 +193,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         </div>
 
         <div className="flex gap-4 mt-3 md:mt-0">
-             <IconButton sx={{ color: pink[500] }}>
+          <IconButton sx={{ color: pink[500] }}>
             <InstagramIcon />
           </IconButton>
           <IconButton onClick={handleClick} sx={{ color: pink[500] }}>
@@ -189,65 +206,65 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       </div>
 
       <Tabs
-  value={tabIndex}
-  onChange={(event, newValue) => setTabIndex(newValue)}
-  variant="scrollable"
-  scrollButtons="auto"
-  sx={{
-    ".MuiTabs-indicator": { backgroundColor: "pink" },
-    width: "100%",
-    maxWidth: "100vw", // Ensures it doesn't exceed screen width
-    overflowX: "auto", // Enables scrolling if needed
-  }}
->
-  <Tab
-    label="Posts"
-    sx={{
-      color: "gray",
-      "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-      minWidth: "unset", // Allow tabs to shrink
-      padding: "6px 12px", // Smaller padding for small screens
-      fontSize: "14px", // Smaller font size for small screens
-      flexShrink: 0, // Prevents shrinking
-    }}
-  />
-  <Tab
-    label={
-      <Badge
-        color="error"
-        variant="dot"
-        invisible={notificationCount === 0}
+        value={tabIndex}
+        onChange={(event, newValue) => setTabIndex(newValue)}
+        variant="scrollable"
+        scrollButtons="auto"
         sx={{
-          "& .MuiBadge-badge": {
-            right: -5,
-            top: 5,
-          },
+          ".MuiTabs-indicator": { backgroundColor: "pink" },
+          width: "100%",
+          maxWidth: "100vw", // Ensures it doesn't exceed screen width
+          overflowX: "auto", // Enables scrolling if needed
         }}
       >
-        <span style={{ whiteSpace: "nowrap" }}>Notifications</span>
-      </Badge>
-    }
-    sx={{
-      color: "gray",
-      "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-      minWidth: "unset", // Allow tabs to shrink
-      padding: "6px 12px", // Smaller padding for small screens
-      fontSize: "14px", // Smaller font size for small screens
-      flexShrink: 0, // Prevents shrinking
-    }}
-  />
-  <Tab
-    label="Follow Requests"
-    sx={{
-      color: "gray",
-      "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-      minWidth: "unset", // Allow tabs to shrink
-      padding: "6px 12px", // Smaller padding for small screens
-      fontSize: "14px", // Smaller font size for small screens
-      flexShrink: 0, // Prevents shrinking
-    }}
-  />
-</Tabs>
+        <Tab
+          label="Posts"
+          sx={{
+            color: "gray",
+            "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+            minWidth: "unset", // Allow tabs to shrink
+            padding: "6px 12px", // Smaller padding for small screens
+            fontSize: "14px", // Smaller font size for small screens
+            flexShrink: 0, // Prevents shrinking
+          }}
+        />
+        <Tab
+          label={
+            <Badge
+              color="error"
+              variant="dot"
+              invisible={notificationCount === 0}
+              sx={{
+                "& .MuiBadge-badge": {
+                  right: -5,
+                  top: 5,
+                },
+              }}
+            >
+              <span style={{ whiteSpace: "nowrap" }}>Notifications</span>
+            </Badge>
+          }
+          sx={{
+            color: "gray",
+            "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+            minWidth: "unset", // Allow tabs to shrink
+            padding: "6px 12px", // Smaller padding for small screens
+            fontSize: "14px", // Smaller font size for small screens
+            flexShrink: 0, // Prevents shrinking
+          }}
+        />
+        <Tab
+          label="Follow Requests"
+          sx={{
+            color: "gray",
+            "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+            minWidth: "unset", // Allow tabs to shrink
+            padding: "6px 12px", // Smaller padding for small screens
+            fontSize: "14px", // Smaller font size for small screens
+            flexShrink: 0, // Prevents shrinking
+          }}
+        />
+      </Tabs>
 
       {tabIndex === 1 && <Notifications setNotificationCount={setNotificationCount} />}
 
@@ -276,10 +293,15 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       <FollowersFollowingDialog
         open={followersDialogOpen}
         onClose={handleDialogClose}
+        loading={loading}
+        setLoading={setLoading}
         followers={followersList}
         following={followingList}
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
+        setFollowersList={setFollowersList}
+        setFollowingList={setFollowingList}
+        currentUser={currentUser}
       />
     </div>
   );

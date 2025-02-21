@@ -156,8 +156,12 @@ const getFollowersAndFollowing = async (req, res) => {
 
 const followUnfollowDialog = async (req, res) => {
     try {
-        const { userId } = req.body; // Get userId from the request body
+        const { userId } = req.body; // Get target user ID from request body
         const currentUser = req.user; // Authenticated user
+
+        if (!currentUser) {
+            return res.status(401).json({ message: "Unauthorized: User not authenticated" });
+        }
 
         if (userId === currentUser._id.toString()) {
             return res.status(400).json({ message: "You cannot follow yourself" });
@@ -172,31 +176,36 @@ const followUnfollowDialog = async (req, res) => {
         const isFollowing = targetUser.followers.includes(currentUser._id);
 
         if (isFollowing) {
-            // Unfollow logic
-            await Promise.all([
-                User.findByIdAndUpdate(userId, { $pull: { followers: currentUser._id } }),
-                User.findByIdAndUpdate(currentUser._id, { $pull: { following: userId } }),
+            // 🔥 Unfollow logic - Use returnDocument: "after" to get updated user directly
+            const [updatedTargetUser, updatedCurrentUser] = await Promise.all([
+                User.findByIdAndUpdate(userId, { $pull: { followers: currentUser._id } }, { new: true }),
+                User.findByIdAndUpdate(currentUser._id, { $pull: { following: userId } }, { new: true }),
             ]);
 
-            // Fetch updated target user
-            const updatedUser = await User.findById(userId);
-            return res.status(200).json({ message: "User unfollowed successfully", updatedUser });
+            return res.status(200).json({
+                message: "User unfollowed successfully",
+                updatedFollowers: updatedTargetUser.followers,
+                updatedFollowing: updatedCurrentUser.following,
+            });
         } else {
-            // Follow logic
-            await Promise.all([
-                User.findByIdAndUpdate(userId, { $addToSet: { followers: currentUser._id } }),
-                User.findByIdAndUpdate(currentUser._id, { $addToSet: { following: userId } }),
+            // 🔥 Follow logic - Use returnDocument: "after" to get updated user directly
+            const [updatedTargetUser, updatedCurrentUser] = await Promise.all([
+                User.findByIdAndUpdate(userId, { $addToSet: { followers: currentUser._id } }, { new: true }),
+                User.findByIdAndUpdate(currentUser._id, { $addToSet: { following: userId } }, { new: true }),
             ]);
 
-            // Fetch updated target user
-            const updatedUser = await User.findById(userId);
-            return res.status(200).json({ message: "User followed successfully", updatedUser });
+            return res.status(200).json({
+                message: "User followed successfully",
+                updatedFollowers: updatedTargetUser.followers,
+                updatedFollowing: updatedCurrentUser.following,
+            });
         }
     } catch (err) {
         console.error("Error in followAndUnfollowDialog:", err);
         res.status(500).json({ message: "Internal server error" });
     }
 };
+
 
 
 export { requestFollow, acceptFollow, rejectFollow, followandUnfollowUser, getFollowersAndFollowing, followUnfollowDialog };
