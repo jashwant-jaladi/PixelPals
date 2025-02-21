@@ -129,17 +129,20 @@ const CreatePost = () => {
 
   return (
     <>
-      {/* Fixed position button */}
-      <div className="fixed bottom-10 right-32 font-parkinsans">
+      {/* Responsive button */}
+      <div className="font-parkinsans">
         <button
-          className="flex items-center gap-2 bg-pink-700 text-white p-2 rounded-md glasseffect hover:bg-pink-600"
+          className="flex items-center gap-2 bg-pink-700 text-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-600"
           onClick={handleClickOpen}
+
         >
-          <AddCircleOutlineIcon />
+
           <p className="font-bold">Create Post</p>
+
+
         </button>
       </div>
-      
+
       <React.Fragment>
         <BootstrapDialog
           onClose={handleClose}
@@ -232,7 +235,7 @@ const CreatePost = () => {
           </DialogActions>
         </BootstrapDialog>
       </React.Fragment>
-      
+
       {/* Snackbar for feedback */}
       <Snackbar open={snackbarOpen} autoHideDuration={4000} onClose={handleSnackbarClose}>
         <MuiAlert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
@@ -241,6 +244,6 @@ const CreatePost = () => {
       </Snackbar>
     </>
   );
-}  
+}
 
 export default CreatePost;

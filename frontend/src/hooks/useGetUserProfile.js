@@ -19,7 +19,7 @@ const useGetUserProfile = () => {
           setSnackbarOpen(true);
           return;
         }
-        if(data.isFrozen)
+        if(data.delete)
         {
           setUser(null)
           return;

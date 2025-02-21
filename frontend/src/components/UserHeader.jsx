@@ -8,7 +8,9 @@ import getUser from "../Atom/getUser";
 import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
 import Notifications from "./Notifications";
-import { followUser, fetchFollowersAndFollowing } from "../apis/followApi"; // Import API logic
+import { followUser, fetchFollowersAndFollowing } from "../apis/followApi";
+import CreatePost from "./CreatePost";
+
 
 const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const currentUser = useRecoilValue(getUser);
@@ -47,21 +49,21 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       setSnackbarOpen(true);
       return;
     }
-  
+
     setUpdating(true);
     try {
       const { updatedFollowers } = await followUser(userData._id, currentUser._id, following);
-      
+
       setUserData((prev) => ({
         ...prev,
-        followers: updatedFollowers.map((user) => user._id), // Ensure correct IDs
+        followers: updatedFollowers.map((user) => user._id),
       }));
-  
+
       setFollowing(!following);
       setSnackbarMessage(following ? `You have unfollowed ${userData.name}.` : `You are now following ${userData.name}!`);
       setSnackbarOpen(true);
-  
-      await fetchFollowersAndUpdateLists(); // Refresh follower count
+
+      await fetchFollowersAndUpdateLists();
     } catch (error) {
       setErrorSnackbarOpen(true);
       console.error("Follow/Unfollow failed:", error);
@@ -69,7 +71,6 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       setUpdating(false);
     }
   };
-  
 
   const fetchFollowersAndUpdateLists = async () => {
     setLoading(true);
@@ -100,69 +101,64 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         const response = await fetch("/api/posts/notifications");
         if (!response.ok) throw new Error("Failed to fetch notifications");
         const data = await response.json();
-        setNotificationCount(data.length); // Set the notification count initially
+        setNotificationCount(data.length);
       } catch (error) {
         console.error("Error fetching notifications", error);
       }
     };
 
-    fetchNotifications(); // Call the function when the page loads
+    fetchNotifications();
   }, []);
 
   return (
-    <div className="font-parkinsans">
-      <div className="flex justify-between items-center mt-20 w-full">
-        <div className="pt-10">
+    <div className="font-parkinsans px-4 sm:px-8 md:px-16 lg:px-10 xl:px-10">
+      <div className="flex flex-col md:flex-row items-center justify-between mt-10 w-full">
+        <div className="text-center md:text-left">
           <div className="text-3xl font-bold">{userData.name}</div>
-          <div className="flex gap-2 mt-2 items-center">
+          <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-2 items-center">
             <div className="text-xl font-bold">@{userData.username}</div>
-            <div className="text-sm py-1 text-pink-700 font-bold bg-pink-400 px-1 rounded-lg">
-              PixelPals.net
-            </div>
+            <div className="text-sm py-1 text-pink-700 font-bold bg-pink-400 px-2 rounded-lg">PixelPals.net</div>
           </div>
         </div>
-        <Avatar src={userData.profilePic} sx={{ width: 170, height: 170 }} />
+        <Avatar src={userData.profilePic} sx={{ width: { xs: 100, md: 140 }, height: { xs: 100, md: 140 } }} className="mt-4 md:mt-0" />
       </div>
 
-      <p className="py-5 w-[90%] font-bold">{userData.bio}</p>
+      <p className="py-4 text-center md:text-left max-w-3xl">{userData.bio}</p>
 
-      {currentUser?._id === userData?._id ? (
-        <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
-          <Link to="/update">Edit Profile</Link>
-        </button>
-      ) : (
-        <div className="flex gap-2">
-          <button
-            onClick={handleFollowToggle}
-            className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300 flex items-center justify-center"
-            disabled={updating}
-          >
-            {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
-          </button>
-
-          {following && (
-            <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
-              <Link to={"/chat"}>Message</Link>
+      <div className="flex flex-col md:flex-row justify-center md:justify-start gap-2">
+        {currentUser?._id === userData?._id ? (
+     <div className="flex items-center justify-center gap-4 flex-wrap">
+     <CreatePost />
+     <button className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
+       <Link to="/update">Edit Profile</Link>
+     </button>
+   </div>
+   
+        ) : (
+          <>
+            <button
+              onClick={handleFollowToggle}
+              className="btn flex items-center justify-center"
+              disabled={updating}
+            >
+              {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
             </button>
-          )}
-        </div>
-      )}
+            {following && (
+              <Link to="/chat" className="btn">Message</Link>
+            )}
+          </>
+        )}
+      </div>
 
-      <div className="flex justify-between">
-        <div
-          className="flex gap-2 text-pink-700 font-bold items-center cursor-pointer"
-          onClick={() => {
-            fetchFollowersAndUpdateLists();
-            setFollowersDialogOpen(true);
-          }}
-        >
-          <div>{userData.followers.length} followers</div>
+      <div className="flex flex-col md:flex-row justify-between items-center mt-4">
+        <div className="flex gap-2 text-pink-700 font-bold items-center cursor-pointer" onClick={() => setFollowersDialogOpen(true)}>
+          <span>{userData.followers.length} followers</span>
           <span className="font-bold">.</span>
-          <div>{userData.following.length} following</div>
+          <span>{userData.following.length} following</span>
         </div>
 
-        <div className="flex gap-4">
-          <IconButton sx={{ color: pink[500] }}>
+        <div className="flex gap-4 mt-3 md:mt-0">
+             <IconButton sx={{ color: pink[500] }}>
             <InstagramIcon />
           </IconButton>
           <IconButton onClick={handleClick} sx={{ color: pink[500] }}>
@@ -175,24 +171,65 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       </div>
 
       <Tabs
-        value={tabIndex}
-        onChange={(event, newValue) => setTabIndex(newValue)}
-        centered
+  value={tabIndex}
+  onChange={(event, newValue) => setTabIndex(newValue)}
+  variant="scrollable"
+  scrollButtons="auto"
+  sx={{
+    ".MuiTabs-indicator": { backgroundColor: "pink" },
+    width: "100%",
+    maxWidth: "100vw", // Ensures it doesn't exceed screen width
+    overflowX: "auto", // Enables scrolling if needed
+  }}
+>
+  <Tab
+    label="Posts"
+    sx={{
+      color: "gray",
+      "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+      minWidth: "unset", // Allow tabs to shrink
+      padding: "6px 12px", // Smaller padding for small screens
+      fontSize: "14px", // Smaller font size for small screens
+      flexShrink: 0, // Prevents shrinking
+    }}
+  />
+  <Tab
+    label={
+      <Badge
+        color="error"
+        variant="dot"
+        invisible={notificationCount === 0}
         sx={{
-          ".MuiTabs-indicator": { backgroundColor: "pink" },
+          "& .MuiBadge-badge": {
+            right: -5,
+            top: 5,
+          },
         }}
       >
-        <Tab label="Posts" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
-        <Tab
-          label={
-            <Badge color="error" variant="dot" invisible={notificationCount === 0}>
-              Notifications
-            </Badge>
-          }
-          sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }}
-        />
-        <Tab label="Follow Requests" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
-      </Tabs>
+        <span style={{ whiteSpace: "nowrap" }}>Notifications</span>
+      </Badge>
+    }
+    sx={{
+      color: "gray",
+      "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+      minWidth: "unset", // Allow tabs to shrink
+      padding: "6px 12px", // Smaller padding for small screens
+      fontSize: "14px", // Smaller font size for small screens
+      flexShrink: 0, // Prevents shrinking
+    }}
+  />
+  <Tab
+    label="Follow Requests"
+    sx={{
+      color: "gray",
+      "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+      minWidth: "unset", // Allow tabs to shrink
+      padding: "6px 12px", // Smaller padding for small screens
+      fontSize: "14px", // Smaller font size for small screens
+      flexShrink: 0, // Prevents shrinking
+    }}
+  />
+</Tabs>
 
       {tabIndex === 1 && <Notifications setNotificationCount={setNotificationCount} />}
 
@@ -221,16 +258,10 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       <FollowersFollowingDialog
         open={followersDialogOpen}
         onClose={handleDialogClose}
-        setLoading={setLoading}
-        setFollowersList={setFollowersList}
-        setFollowingList={setFollowingList}
         followers={followersList}
         following={followingList}
         selectedTab={selectedTab}
         setSelectedTab={setSelectedTab}
-        onFollowToggle={async () => {
-          await fetchFollowersAndUpdateLists();
-        }}
       />
     </div>
   );

@@ -114,7 +114,7 @@ const App = () => {
               <Route path="/auth" element={!user ? <AuthPage /> : <Navigate to="/" />} />
               <Route path="/" element={user ? <Homepage /> : <Navigate to="/auth" />} />
               <Route path="/update" element={user ? <UpdateProfilePage /> : <Navigate to="/auth" />} />
-              <Route path="/:username" element={user ? <><UserPage /> <CreatePost /></> : <NotFoundPage />} />
+              <Route path="/:username" element={user ? <><UserPage /></> : <NotFoundPage />} />
               <Route path="/:username/:id" element={<PostPage />} />
               <Route path="/chat" element={user ? <ChatPage /> : <Navigate to="/auth" />} />
               <Route path="/settings" element={user ? <Settings /> : <Navigate to="/auth" />} />

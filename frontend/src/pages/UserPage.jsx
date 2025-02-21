@@ -1,4 +1,4 @@
-// UserPage.js
+
 import React, { useState, useEffect } from 'react';
 import { Snackbar, CircularProgress, Alert } from '@mui/material';
 import UserHeader from '../components/UserHeader';
