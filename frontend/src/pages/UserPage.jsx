@@ -16,7 +16,7 @@ const UserPage = () => {
   const [fetchingPosts, setFetchingPosts] = useState(false);
   const [posts, setPosts] = useRecoilState(postAtom);
   const { username } = useParams();
-  const { user, loading: loadingUser } = useGetUserProfile();
+  const { user, loading: loadingUser } = useGetUserProfile(setSnackbarMessage, setSnackbarSeverity, setSnackbarOpen);
   const [tabIndex, setTabIndex] = useState(0);
 
   const handleSnackbarClose = (event, reason) => {
