@@ -77,60 +77,48 @@ const rejectFollow = async (req, res) => {
 }
 const followandUnfollowUser = async (req, res) => {
     try {
-      const { id } = req.params; // ID of the user to follow/unfollow
-      const currentUser = req.user; // Authenticated user from middleware
-  
-      if (id === currentUser._id.toString()) {
-        return res.status(400).json({ success: false, message: "You cannot follow yourself" });
-      }
-  
-      const targetUser = await User.findById(id);
-      if (!targetUser) {
-        return res.status(404).json({ success: false, message: "Target user not found" });
-      }
-  
-      const isFollowing = targetUser.followers.includes(currentUser._id);
-  
-      // Start a transaction session
-      const session = await User.startSession();
-      session.startTransaction();
-  
-      try {
-        if (isFollowing) {
-          // Unfollow
-          await User.updateOne({ _id: id }, { $pull: { followers: currentUser._id } }, { session });
-          await User.updateOne({ _id: currentUser._id }, { $pull: { following: id } }, { session });
-        } else {
-          // Follow
-          await User.updateOne({ _id: id }, { $addToSet: { followers: currentUser._id } }, { session });
-          await User.updateOne({ _id: currentUser._id }, { $addToSet: { following: id } }, { session });
+        const { id } = req.params; // ID of the user to follow/unfollow
+        const currentUser = req.user; // Authenticated user from middleware
+
+        if (id === currentUser._id.toString()) {
+            return res.status(400).json({ success: false, message: "You cannot follow yourself" });
         }
-  
-        // Get updated followers to return to client
-        const updatedTargetUser = await User.findById(id)
-          .populate('followers', 'name avatar')
-          .session(session);
-  
-        // Commit transaction
-        await session.commitTransaction();
-  
+
+        // Find target user
+        const targetUser = await User.findById(id);
+        if (!targetUser) {
+            return res.status(404).json({ success: false, message: "Target user not found" });
+        }
+
+        const isFollowing = targetUser.followers.includes(currentUser._id);
+
+        // 🔥 Optimized: Use Promise.all to update both users simultaneously
+        const [updatedTargetUser, updatedCurrentUser] = await Promise.all([
+            User.findByIdAndUpdate(
+                id,
+                isFollowing ? { $pull: { followers: currentUser._id } } : { $addToSet: { followers: currentUser._id } },
+                { new: true }
+            ),
+            User.findByIdAndUpdate(
+                currentUser._id,
+                isFollowing ? { $pull: { following: id } } : { $addToSet: { following: id } },
+                { new: true }
+            ),
+        ]);
+
         return res.status(200).json({
-          success: true,
-          message: isFollowing ? "User unfollowed successfully" : "User followed successfully",
-          isFollowing: !isFollowing,
-          updatedFollowers: updatedTargetUser.followers
+            success: true,
+            message: isFollowing ? "User unfollowed successfully" : "User followed successfully",
+            isFollowing: !isFollowing,
+            updatedFollowers: updatedTargetUser.followers
         });
-      } catch (error) {
-        await session.abortTransaction();
-        throw error; // Will be caught in the outer catch block
-      } finally {
-        session.endSession(); // Ensure session is always ended
-      }
+
     } catch (err) {
-      console.error("Error in followAndUnfollowUser:", err);
-      return res.status(500).json({ success: false, message: "Internal server error" });
+        console.error("Error in followAndUnfollowUser:", err);
+        return res.status(500).json({ success: false, message: "Internal server error" });
     }
-  };
+};
+
 
 const getFollowersAndFollowing = async (req, res) => {
     try {
@@ -154,58 +142,8 @@ const getFollowersAndFollowing = async (req, res) => {
     }
 };
 
-const followUnfollowDialog = async (req, res) => {
-    try {
-        const { userId } = req.body; // Get target user ID from request body
-        const currentUser = req.user; // Authenticated user
-
-        if (!currentUser) {
-            return res.status(401).json({ message: "Unauthorized: User not authenticated" });
-        }
-
-        if (userId === currentUser._id.toString()) {
-            return res.status(400).json({ message: "You cannot follow yourself" });
-        }
-
-        // Find the target user
-        const targetUser = await User.findById(userId);
-        if (!targetUser) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        const isFollowing = targetUser.followers.includes(currentUser._id);
-
-        if (isFollowing) {
-            // 🔥 Unfollow logic - Use returnDocument: "after" to get updated user directly
-            const [updatedTargetUser, updatedCurrentUser] = await Promise.all([
-                User.findByIdAndUpdate(userId, { $pull: { followers: currentUser._id } }, { new: true }),
-                User.findByIdAndUpdate(currentUser._id, { $pull: { following: userId } }, { new: true }),
-            ]);
-
-            return res.status(200).json({
-                message: "User unfollowed successfully",
-                updatedFollowers: updatedTargetUser.followers,
-                updatedFollowing: updatedCurrentUser.following,
-            });
-        } else {
-            // 🔥 Follow logic - Use returnDocument: "after" to get updated user directly
-            const [updatedTargetUser, updatedCurrentUser] = await Promise.all([
-                User.findByIdAndUpdate(userId, { $addToSet: { followers: currentUser._id } }, { new: true }),
-                User.findByIdAndUpdate(currentUser._id, { $addToSet: { following: userId } }, { new: true }),
-            ]);
-
-            return res.status(200).json({
-                message: "User followed successfully",
-                updatedFollowers: updatedTargetUser.followers,
-                updatedFollowing: updatedCurrentUser.following,
-            });
-        }
-    } catch (err) {
-        console.error("Error in followAndUnfollowDialog:", err);
-        res.status(500).json({ message: "Internal server error" });
-    }
-};
 
 
 
-export { requestFollow, acceptFollow, rejectFollow, followandUnfollowUser, getFollowersAndFollowing, followUnfollowDialog };
+
+export { requestFollow, acceptFollow, rejectFollow, followandUnfollowUser, getFollowersAndFollowing};

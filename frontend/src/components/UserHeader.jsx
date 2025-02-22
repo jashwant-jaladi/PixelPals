@@ -8,7 +8,7 @@ import getUser from "../Atom/getUser";
 import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
 import Notifications from "./Notifications";
-import { followUser, fetchFollowersAndFollowing } from "../apis/followApi";
+import { followUser, fetchFollowersAndFollowing, followUnfollowUserDialog } from "../apis/followApi";
 import CreatePost from "./CreatePost";
 
 
@@ -42,89 +42,90 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
   const handleErrorSnackbarClose = () => setErrorSnackbarOpen(false);
-
   const handleFollowToggle = async () => {
-    if (!currentUser) {
-      setSnackbarMessage("You must be logged in to follow users.");
-      setSnackbarOpen(true);
-      return;
-    }
-
-    // Prevent multiple clicks
-    if (updating) return;
-
-    setUpdating(true);
-
-    try {
-      const response = await followUser(userData._id);
-
-      if (!response.success) {
-        throw new Error(response.message || "Failed to update followers.");
-      }
-
-      // Update local state with new followers from API response
-      setUserData((prev) => ({
+    if (!currentUser || currentUser._id === userData._id) return;
+  
+    // Optimistically update UI
+    setUserData((prev) => {
+      const isCurrentlyFollowing = prev.followers.includes(currentUser._id);
+      return {
         ...prev,
-        followers: response.updatedFollowers.map((user) => user._id)
-      }));
-
-      // Update following state based on API response
+        followers: isCurrentlyFollowing
+          ? prev.followers.filter((id) => id !== currentUser._id)  // Remove follower
+          : [...prev.followers, currentUser._id],                 // Add follower
+      };
+    });
+  
+    try {
+      const response = await followUser(userData._id); // Call API
+  
+      if (!response.success) {
+        throw new Error(response.message || "Follow/unfollow action failed.");
+      }
+  
+      // (Optional) Update state based on actual API response
       setFollowing(response.isFollowing);
-
-      // Show appropriate message
-      setSnackbarMessage(
-        response.isFollowing
-          ? `You are now following ${userData.name}!`
-          : `You have unfollowed ${userData.name}.`
-      );
-      setSnackbarOpen(true);
-
-      // Refresh followers list if needed
-      await fetchFollowersAndUpdateLists();
     } catch (error) {
-      setSnackbarMessage(error.message || "An error occurred while updating follow status.");
+      // Revert UI if API request fails
+      setUserData((prev) => {
+        const isCurrentlyFollowing = prev.followers.includes(currentUser._id);
+        return {
+          ...prev,
+          followers: isCurrentlyFollowing
+            ? prev.followers.filter((id) => id !== currentUser._id)
+            : [...prev.followers, currentUser._id],
+        };
+      });
+  
+      setSnackbarMessage(error.message || "An error occurred.");
       setErrorSnackbarOpen(true);
-      console.error("Follow/Unfollow failed:", error);
-    } finally {
-      setUpdating(false);
     }
   };
+  
+  
 
   const fetchFollowersAndUpdateLists = async () => {
-    let isMounted = true;
     setLoading(true);
-  
+    
+    
     try {
       const { followers = [], following = [] } = await fetchFollowersAndFollowing(userData._id);
       
-      if (isMounted) {
-        setFollowersList(followers);
-        setFollowingList(following);
-        setUserData((prev) => ({
-          ...prev,
-          followers: followers.map((f) => f._id),
-          following: following.map((f) => f._id),
-        }));
+      // Update lists with complete data from backend
+      setFollowersList(followers);
+      setFollowingList(following);
+      
+      // Update user data with new follower/following IDs
+      setUserData(prev => ({
+        ...prev,
+        followers: followers.map(f => f._id),
+        following: following.map(f => f._id)
+      }));
+  
+      // Update following status based on current user's presence in followers
+      if (currentUser) {
+        setFollowing(followers.some(f => f._id === currentUser._id));
       }
     } catch (error) {
       console.error("Error fetching followers:", error);
       setSnackbarMessage("Failed to load followers. Please try again.");
       setSnackbarOpen(true);
     } finally {
-      if (isMounted) setLoading(false);
+      setLoading(false);
     }
-  
-    return () => {
-      isMounted = false;
-    };
   };
-  
+
   // Fetch followers data when dialog opens
   useEffect(() => {
     if (followersDialogOpen) {
       fetchFollowersAndUpdateLists();
     }
   }, [followersDialogOpen]);
+  
+
+
+  
+  
 
   const handleDialogClose = () => {
     setFollowersDialogOpen(false);
@@ -189,7 +190,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         <div className="flex gap-2 text-pink-700 font-bold items-center cursor-pointer" onClick={() => setFollowersDialogOpen(true)}>
           <span>{userData.followers.length} followers</span>
           <span className="font-bold">.</span>
-          <span>{userData.following.length} following</span>
+          <span>{userData.following.length} following</span> 
         </div>
 
         <div className="flex gap-4 mt-3 md:mt-0">
@@ -302,6 +303,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         setFollowersList={setFollowersList}
         setFollowingList={setFollowingList}
         currentUser={currentUser}
+        handleFollowToggle={handleFollowToggle}
       />
     </div>
   );
