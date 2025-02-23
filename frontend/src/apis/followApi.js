@@ -69,3 +69,57 @@ export const fetchFollowersAndFollowing = async (userId) => {
     throw new Error("Error fetching followers and following");
   }
 };
+
+
+// Send a follow request
+export const requestFollow = async (requestedUserId, token) => {
+    try {
+        const response = await fetch(`/api/followUsers/follow/${requestedUserId}/request`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error sending follow request:", error);
+        return { error: "Something went wrong" };
+    }
+};
+
+// Accept a follow request
+export const acceptFollow = async (senderUserId, token) => {
+    try {
+        const response = await fetch(`/api/followUsers/follow/${senderUserId}/accept`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error accepting follow request:", error);
+        return { error: "Something went wrong" };
+    }
+};
+
+// Reject a follow request
+export const rejectFollow = async (senderUserId, token) => {
+    try {
+        const response = await fetch(`/api/followUsers/follow/${senderUserId}/reject`, {
+            method: "DELETE",
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+
+        return await response.json();
+    } catch (error) {
+        console.error("Error rejecting follow request:", error);
+        return { error: "Something went wrong" };
+    }
+};

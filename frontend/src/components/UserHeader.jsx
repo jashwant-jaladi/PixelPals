@@ -26,10 +26,11 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [selectedTab, setSelectedTab] = useState("followers");
   const [userData, setUserData] = useState(user);
   const [notificationCount, setNotificationCount] = useState(0); // State for notification count
+  const [followRequested, setFollowRequested] = useState(false);
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
-
+  console.log(userData)
   const handleCopyProfileUrl = () => {
     navigator.clipboard
       .writeText(window.location.href)
@@ -45,42 +46,35 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const handleFollowToggle = async () => {
     if (!currentUser || currentUser._id === userData._id) return;
 
-    // Optimistically update UI
-    setUserData((prev) => {
-      const isCurrentlyFollowing = prev.followers.includes(currentUser._id);
-      return {
-        ...prev,
-        followers: isCurrentlyFollowing
-          ? prev.followers.filter((id) => id !== currentUser._id) // Remove follower
-          : [...prev.followers, currentUser._id], // Add follower
-      };
-    });
+    setUpdating(true);
 
     try {
-      const response = await followUser(userData._id); // Call API
-
-      if (!response.success) {
-        throw new Error(response.message || "Follow/unfollow action failed.");
-      }
-
-      // (Optional) Update state based on actual API response
-      setFollowing(response.isFollowing);
+        let response;
+        if (userData.private && !following) {
+            // If the user is private, send a follow request
+            response = await requestFollow(userData._id);
+            if (!response.success) throw new Error(response.message);
+            setFollowRequested(true); 
+            setSnackbarMessage("Follow request sent!");
+        } else {
+            // If user is public, follow/unfollow directly
+            response = await followUser(userData._id);
+            if (!response.success) throw new Error(response.message);
+            setFollowing(response.isFollowing);
+            setUserData((prev) => ({
+                ...prev,
+                followers: response.isFollowing
+                    ? [...prev.followers, currentUser._id]
+                    : prev.followers.filter((id) => id !== currentUser._id),
+            }));
+        }
     } catch (error) {
-      // Revert UI if API request fails
-      setUserData((prev) => {
-        const isCurrentlyFollowing = prev.followers.includes(currentUser._id);
-        return {
-          ...prev,
-          followers: isCurrentlyFollowing
-            ? prev.followers.filter((id) => id !== currentUser._id)
-            : [...prev.followers, currentUser._id],
-        };
-      });
-
-      setSnackbarMessage(error.message || "An error occurred.");
-      setErrorSnackbarOpen(true);
+        setSnackbarMessage(error.message || "An error occurred.");
+        setErrorSnackbarOpen(true);
+    } finally {
+        setUpdating(false);
     }
-  };
+};
 
   const fetchFollowersAndUpdateLists = async () => {
     setLoading(true);
@@ -165,12 +159,13 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         ) : (
           <>
             <button
-              className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
-              onClick={handleFollowToggle}
-              disabled={updating}
-            >
-              {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
-            </button>
+    className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
+    onClick={handleFollowToggle}
+    disabled={updating || followRequested}
+>
+    {updating ? <CircularProgress size={24} color="inherit" /> : followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
+</button>
+
             {following && (
               <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
                 Message

@@ -13,10 +13,15 @@ const requestFollow = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        if (requestedUser.Requested.includes(userId)) {
-            return res.status(400).json({ message: "Request already sent" });
+        if (userId === req.params.id) {
+            return res.status(400).json({ message: "You cannot follow yourself" });
         }
 
+        if (requestedUser.Requested.includes(userId)) {
+            return res.status(400).json({ message: "Follow request already sent" });
+        }
+
+        requestedUser.Requested = requestedUser.Requested || [];
         requestedUser.Requested.push(userId);
         await requestedUser.save();
 
@@ -24,7 +29,7 @@ const requestFollow = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
-}
+};
 
 const acceptFollow = async (req, res) => {
     try {
@@ -43,9 +48,13 @@ const acceptFollow = async (req, res) => {
         // Remove from requested array
         currentUser.Requested = currentUser.Requested.filter(id => id.toString() !== userId);
 
-        // Add to followers list
-        currentUser.followers.push(userId);
-        sender.following.push(currentUser._id);
+        // Prevent duplicate followers
+        if (!currentUser.followers.includes(userId)) {
+            currentUser.followers.push(userId);
+        }
+        if (!sender.following.includes(currentUser._id.toString())) {
+            sender.following.push(currentUser._id);
+        }
 
         await currentUser.save();
         await sender.save();
@@ -54,16 +63,19 @@ const acceptFollow = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
-}
+};
 
 const rejectFollow = async (req, res) => {
-
     try {
         const { userId } = req.body; // ID of the user being declined
         const currentUser = await User.findById(req.params.id);
 
         if (!currentUser) {
             return res.status(404).json({ message: "User not found" });
+        }
+
+        if (!currentUser.Requested.includes(userId)) {
+            return res.status(400).json({ message: "No follow request from this user" });
         }
 
         // Remove from requested array
@@ -74,7 +86,8 @@ const rejectFollow = async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Server error" });
     }
-}
+};
+
 const followandUnfollowUser = async (req, res) => {
     try {
         const { id } = req.params; // ID of the user to follow/unfollow
