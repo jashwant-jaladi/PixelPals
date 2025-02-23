@@ -8,9 +8,8 @@ import getUser from "../Atom/getUser";
 import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
 import Notifications from "./Notifications";
-import { followUser, fetchFollowersAndFollowing, followUnfollowUserDialog } from "../apis/followApi";
+import { followUser, fetchFollowersAndFollowing } from "../apis/followApi";
 import CreatePost from "./CreatePost";
-
 
 const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const currentUser = useRecoilValue(getUser);
@@ -26,7 +25,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [loading, setLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState("followers");
   const [userData, setUserData] = useState(user);
-  const [notificationCount, setNotificationCount] = useState(0);
+  const [notificationCount, setNotificationCount] = useState(0); // State for notification count
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -42,27 +41,28 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
   const handleSnackbarClose = () => setSnackbarOpen(false);
   const handleErrorSnackbarClose = () => setErrorSnackbarOpen(false);
+
   const handleFollowToggle = async () => {
     if (!currentUser || currentUser._id === userData._id) return;
-  
+
     // Optimistically update UI
     setUserData((prev) => {
       const isCurrentlyFollowing = prev.followers.includes(currentUser._id);
       return {
         ...prev,
         followers: isCurrentlyFollowing
-          ? prev.followers.filter((id) => id !== currentUser._id)  // Remove follower
-          : [...prev.followers, currentUser._id],                 // Add follower
+          ? prev.followers.filter((id) => id !== currentUser._id) // Remove follower
+          : [...prev.followers, currentUser._id], // Add follower
       };
     });
-  
+
     try {
       const response = await followUser(userData._id); // Call API
-  
+
       if (!response.success) {
         throw new Error(response.message || "Follow/unfollow action failed.");
       }
-  
+
       // (Optional) Update state based on actual API response
       setFollowing(response.isFollowing);
     } catch (error) {
@@ -76,35 +76,32 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
             : [...prev.followers, currentUser._id],
         };
       });
-  
+
       setSnackbarMessage(error.message || "An error occurred.");
       setErrorSnackbarOpen(true);
     }
   };
-  
-  
 
   const fetchFollowersAndUpdateLists = async () => {
     setLoading(true);
-    
-    
+
     try {
       const { followers = [], following = [] } = await fetchFollowersAndFollowing(userData._id);
-      
+
       // Update lists with complete data from backend
       setFollowersList(followers);
       setFollowingList(following);
-      
+
       // Update user data with new follower/following IDs
-      setUserData(prev => ({
+      setUserData((prev) => ({
         ...prev,
-        followers: followers.map(f => f._id),
-        following: following.map(f => f._id)
+        followers: followers.map((f) => f._id),
+        following: following.map((f) => f._id),
       }));
-  
+
       // Update following status based on current user's presence in followers
       if (currentUser) {
-        setFollowing(followers.some(f => f._id === currentUser._id));
+        setFollowing(followers.some((f) => f._id === currentUser._id));
       }
     } catch (error) {
       console.error("Error fetching followers:", error);
@@ -121,23 +118,19 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       fetchFollowersAndUpdateLists();
     }
   }, [followersDialogOpen]);
-  
-
-
-  
-  
 
   const handleDialogClose = () => {
     setFollowersDialogOpen(false);
   };
 
+  // Fetch notifications count
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
         const response = await fetch("/api/posts/notifications");
         if (!response.ok) throw new Error("Failed to fetch notifications");
         const data = await response.json();
-        setNotificationCount(data.length);
+        setNotificationCount(data.length); // Update notification count
       } catch (error) {
         console.error("Error fetching notifications", error);
       }
@@ -169,7 +162,6 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
               <Link to="/update">Edit Profile</Link>
             </button>
           </div>
-
         ) : (
           <>
             <button
@@ -180,7 +172,9 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
               {updating ? <CircularProgress size={24} color="inherit" /> : following ? "Unfollow" : "Follow"}
             </button>
             {following && (
-              <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">Message</Link>
+              <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
+                Message
+              </Link>
             )}
           </>
         )}
@@ -190,7 +184,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         <div className="flex gap-2 text-pink-700 font-bold items-center cursor-pointer" onClick={() => setFollowersDialogOpen(true)}>
           <span>{userData.followers.length} followers</span>
           <span className="font-bold">.</span>
-          <span>{userData.following.length} following</span> 
+          <span>{userData.following.length} following</span>
         </div>
 
         <div className="flex gap-4 mt-3 md:mt-0">
@@ -229,31 +223,43 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
             flexShrink: 0, // Prevents shrinking
           }}
         />
-        <Tab
-          label={
-            <Badge
-              color="error"
-              variant="dot"
-              invisible={notificationCount === 0}
-              sx={{
-                "& .MuiBadge-badge": {
-                  right: -5,
-                  top: 5,
-                },
-              }}
-            >
-              <span style={{ whiteSpace: "nowrap" }}>Notifications</span>
-            </Badge>
-          }
-          sx={{
-            color: "gray",
-            "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-            minWidth: "unset", // Allow tabs to shrink
-            padding: "6px 12px", // Smaller padding for small screens
-            fontSize: "14px", // Smaller font size for small screens
-            flexShrink: 0, // Prevents shrinking
-          }}
-        />
+       <Tab
+  label={
+    <Badge
+      color="error"
+      badgeContent={notificationCount}
+      invisible={notificationCount === 0}
+      sx={{
+        "& .MuiBadge-badge": {
+          fontSize: "10px", // Reduce badge text size
+          minWidth: "16px", // Reduce badge width
+          height: "16px", // Reduce badge height
+          right: 1,
+          top: -7, // Shift upwards
+          padding: "2px 4px", // Ensure proper padding
+        },
+      }}
+    >
+      <span style={{ whiteSpace: "nowrap", display: "flex", alignItems: "center" }}>
+        Notifications
+      </span>
+    </Badge>
+  }
+  sx={{
+    color: "gray",
+    "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+    minWidth: "unset", // Allow tabs to shrink
+    padding: "6px 12px", // Smaller padding for small screens
+    fontSize: "14px", // Smaller font size for small screens
+    flexShrink: 0, // Prevents shrinking
+    display: "flex",
+    alignItems: "center", // Ensures badge aligns well with text
+    position: "relative",
+  }}
+/>
+
+
+
         <Tab
           label="Follow Requests"
           sx={{
@@ -267,7 +273,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         />
       </Tabs>
 
-      {tabIndex === 1 && <Notifications setNotificationCount={setNotificationCount} />}
+      {tabIndex === 1 && <Notifications onNotificationUpdate={setNotificationCount} />}
+
 
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -309,4 +316,4 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   );
 };
 
-export default UserHeader;
+export default UserHeader;  
