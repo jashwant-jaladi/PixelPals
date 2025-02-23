@@ -1,9 +1,9 @@
 import React from 'react';
 import { Avatar } from '@mui/material';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { formatDistanceToNow } from 'date-fns';
 
-const Comment = ({ comment, lastReply }) => {
+const Comment = ({ comment, currentUser, postId, handleDeleteComment }) => {
   return (
     <div className='p-4 border-b border-gray-700'>
       <div className='flex items-center'>
@@ -18,14 +18,18 @@ const Comment = ({ comment, lastReply }) => {
             <div className='text-sm text-gray-500 font-bold'>
               {comment.createdAt && formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
             </div>
-            <MoreHorizIcon className='text-gray-500 cursor-pointer' />
+            {comment.userId.includes(currentUser?._id) && ( 
+              <DeleteIcon 
+                className="text-red-500 cursor-pointer"
+                onClick={() => handleDeleteComment(postId, comment._id)}
+              />
+            )}
           </div>
         </div>
       </div>
       <div className='flex flex-col pl-12 pt-3'>
         <div className='text-sm text-white font-bold'>{comment.text}</div>
       </div>
-    
     </div>
   );
 };

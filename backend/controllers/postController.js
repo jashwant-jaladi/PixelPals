@@ -246,6 +246,27 @@ const markNotificationAsRead = async (req, res) => {
     }
 };
 
+const deleteComment = async (req, res) => {
+    try {
+        const { postId, commentId } = req.params;
+
+        // Find the post
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        // Check if the comment exists in the post
+        const commentExists = post.comments.some((comment) => comment._id.toString() === commentId);
+        if (!commentExists) return res.status(404).json({ error: "Comment not found" });
+
+        // Remove the comment
+        await Post.findByIdAndUpdate(postId, { $pull: { comments: { _id: commentId } } });
+
+        res.status(200).json({ message: "Comment deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting comment:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
 
 
-export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost, getFeedPosts, getUserPosts, getNotifications, markNotificationAsRead };
+export { createPost, getPost, deletePost, likeAndUnlikePost, commentPost,deleteComment, getFeedPosts, getUserPosts, getNotifications, markNotificationAsRead };

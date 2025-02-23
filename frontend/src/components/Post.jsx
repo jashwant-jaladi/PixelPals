@@ -1,6 +1,6 @@
 // Post.js
 import React, { useState } from 'react';
-import { Avatar, Snackbar, Alert } from '@mui/material';
+import { Avatar, Snackbar, Alert, CircularProgress } from '@mui/material';
 import Actions from './Actions';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
@@ -10,7 +10,7 @@ import getUser from '../Atom/getUser';
 import DeleteIcon from '@mui/icons-material/Delete';
 import postAtom from '../Atom/postAtom';
 import { useRecoilState, useRecoilValue } from 'recoil';
-import { deletePost } from '../apis/postApi'
+import { deletePost } from '../apis/postApi';
 
 const Post = ({ post }) => {
   const navigate = useNavigate();
@@ -19,11 +19,13 @@ const Post = ({ post }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleDeletePost = async (e) => {
     try {
       e.preventDefault();
       if (!window.confirm('Are you sure you want to delete this post?')) return;
+      setIsDeleting(true);
       const data = await deletePost(post._id); 
       setSnackbarMessage('Post deleted successfully');
       setPosts(posts.filter((p) => p._id !== post._id));
@@ -33,6 +35,7 @@ const Post = ({ post }) => {
       setSnackbarSeverity('error');
     } finally {
       setSnackbarOpen(true);
+      setIsDeleting(false);
     }
   };
 
@@ -47,7 +50,6 @@ const Post = ({ post }) => {
 
   return (
     <div className='flex font-parkinsans justify-center '>
-      {/* Post content here */}
       <div className='mt-6 flex flex-col '>
         <Link to={`/${post.postedBy.username}`}>
           <Avatar
@@ -56,11 +58,9 @@ const Post = ({ post }) => {
             sx={{ width: 60, height: 60 }}
           />
         </Link>
-        {/* Divider */}
         <div className='border-l-2 mt-2 flex-1 border-gray-500 m-auto flex justify-center'></div>
         <div className='flex flex-col mt-2 mx-auto'>
           <div className='flex flex-col items-center'>
-            {/* Comment section */}
             {post.comments.length === 0 && (
               <span role="img" aria-label="boring" style={{ fontSize: 25 }}>
                 🥱
@@ -103,7 +103,6 @@ const Post = ({ post }) => {
         </div>
       </div>
       <div className='pl-5'>
-        {/* Post header */}
         <div className='flex justify-between w-[100%] mt-10 font-bold'>
           <div className='flex gap-2'>
             <Link to={`/${post.postedBy.username}`} className='flex items-center'>
@@ -117,11 +116,14 @@ const Post = ({ post }) => {
             </div>
             <MoreHorizIcon />
             {currentUser?._id === post.postedBy._id && (
-              <DeleteIcon sx={{ color: 'red', cursor: 'pointer' }} onClick={handleDeletePost} />
+              isDeleting ? (
+                <CircularProgress size={20} sx={{ color: 'red' }} />
+              ) : (
+                <DeleteIcon sx={{ color: 'red', cursor: 'pointer' }} onClick={handleDeletePost} />
+              )
             )}
           </div>
         </div>
-        {/* Post content */}
         <Link to={`/${post.postedBy.username}/${post._id}`}>
           <p className='mt-5 font-bold'>{post.caption}</p>
           <div className='flex justify-start'>
@@ -134,10 +136,8 @@ const Post = ({ post }) => {
             />
           </div>
         </Link>
-        {/* Actions */}
         <Actions post={post} />
       </div>
-      {/* Snackbar */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}

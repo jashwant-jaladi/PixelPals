@@ -35,6 +35,7 @@ const CreatePost = () => {
   const [open, setOpen] = React.useState(false);
   const [postText, setText] = React.useState('');
   const [imagePreview, setImagePreview] = React.useState(null);
+  const [loading, setLoading] = React.useState(false);
   const [remainingchars, setRemainingchars] = React.useState(MaxCHAR);
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [snackbarMessage, setSnackbarMessage] = React.useState('');
@@ -85,17 +86,21 @@ const CreatePost = () => {
   };
 
   const handleCreatePost = async () => {
+    if (loading) return; // Prevent multiple submissions
+    setLoading(true);
+  
     const reader = new FileReader();
+    
     if (fileInputRef.current.files[0]) {
       reader.readAsDataURL(fileInputRef.current.files[0]);
-
+  
       reader.onload = async () => {
         const base64Image = reader.result;
         const { success, post, error } = await createPost(user._id, postText, base64Image);
-
+  
         if (success) {
           setSnackbarMessage("Post created successfully!");
-          setPost([post, ...post]);
+          setPost((prevPosts) => [post, ...prevPosts]); // Use functional update
           setSnackbarSeverity("success");
           setText("");
           setImagePreview(null);
@@ -105,12 +110,13 @@ const CreatePost = () => {
           setSnackbarMessage(error);
           setSnackbarSeverity("error");
         }
-
+  
+        setLoading(false);
         setSnackbarOpen(true);
       };
     } else {
       const { success, post, error } = await createPost(user._id, postText, null);
-
+  
       if (success) {
         setSnackbarMessage("Post created successfully!");
         setSnackbarSeverity("success");
@@ -122,10 +128,12 @@ const CreatePost = () => {
         setSnackbarMessage(error);
         setSnackbarSeverity("error");
       }
-
+  
+      setLoading(false);
       setSnackbarOpen(true);
     }
   };
+  
 
   return (
     <>
@@ -224,14 +232,15 @@ const CreatePost = () => {
             )}
           </DialogContent>
           <DialogActions>
-            <Button
-              autoFocus
-              onClick={handleCreatePost}
-              disabled={!postText.trim()}
-              sx={{ color: pink[500], border: '1px solid pink', fontWeight: 'bold' }}
-            >
-              Post
-            </Button>
+          <Button
+  autoFocus
+  onClick={handleCreatePost}
+  disabled={loading || !postText.trim()}
+  sx={{ color: pink[500], border: '1px solid pink', fontWeight: 'bold' }}
+>
+  {loading ? "Posting..." : "Post"}
+</Button>
+
           </DialogActions>
         </BootstrapDialog>
       </React.Fragment>

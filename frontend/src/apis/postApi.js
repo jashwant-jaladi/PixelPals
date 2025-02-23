@@ -140,3 +140,17 @@ export const markNotificationAsRead = async (notificationId) => {
     throw new Error(error.message || "Error marking notification as read");
   }
 };
+
+export const deleteComment = async (postId, commentId) => {
+  try {
+    const response = await fetch(`/api/posts/comment/${postId}/${commentId}`, {
+      method: "DELETE",
+    });
+
+    if (!response.ok) throw new Error("Failed to delete comment");
+
+    return commentId;
+  } catch (error) {
+    throw new Error(error.message || "Error deleting comment");
+  }
+}
