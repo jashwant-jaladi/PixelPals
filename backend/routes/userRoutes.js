@@ -1,10 +1,11 @@
 import express from "express";
-import { signupUser, loginUser, logoutUser,  updateProfile,privateAccount,  getUserProfile,   getSuggestedUsers, deleteUser, resetLink, resetPassword, guestLogin } from "../controllers/userController.js";
+import { signupUser, loginUser, logoutUser,  updateProfile,privateAccount,  getUserProfile,   getSuggestedUsers, deleteUser, resetLink, resetPassword, guestLogin, fetchUserById } from "../controllers/userController.js";
 import protectRoute from "../middleware/protectRoute.js";
 
 const Router = express.Router();
 
 Router.get("/profile/:username", getUserProfile)
+Router.get("/:id", protectRoute, fetchUserById)
 Router.post("/signup", signupUser);
 Router.post("/login", loginUser);
 Router.post("/logout", logoutUser)

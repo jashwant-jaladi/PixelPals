@@ -234,3 +234,23 @@ export const updateProfileAPI = async (userId, input) => {
     throw new Error('An error occurred while updating the profile.');
   }
 };
+
+export const fetchUserById = async (userId) => {
+  try {
+      const response = await fetch(`/api/users/${userId}`, {
+          method: "GET",
+          headers: {
+              "Content-Type": "application/json",
+          },
+      });
+
+      if (!response.ok) {
+          throw new Error("Failed to fetch user");
+      }
+
+      return await response.json();
+  } catch (error) {
+      console.error("Error fetching user by ID:", error);
+      return { error: "Something went wrong" };
+  }
+};

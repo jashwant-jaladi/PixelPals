@@ -72,54 +72,81 @@ export const fetchFollowersAndFollowing = async (userId) => {
 
 
 // Send a follow request
-export const requestFollow = async (requestedUserId, token) => {
-    try {
-        const response = await fetch(`/api/followUsers/follow/${requestedUserId}/request`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-        });
+export const requestFollow = async (requestedUserId, currentUserId) => {
+  try {
+      console.log("Sending follow request to:", requestedUserId, "from user:", currentUserId);
 
-        return await response.json();
-    } catch (error) {
-        console.error("Error sending follow request:", error);
-        return { error: "Something went wrong" };
-    }
+      const response = await fetch(`/api/followUsers/follow/${requestedUserId}/request`, {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ userId: currentUserId }) 
+      });
+
+      const data = await response.json();
+
+      console.log("Response received:", data);
+
+      if (!response.ok) throw new Error(data.message || "Request failed");
+      return data;
+  } catch (error) {
+      console.error("Error sending follow request:", error);
+      return { error: error?.message || error?.response?.data?.message || "Unknown error occurred" };
+  }
 };
+
 
 // Accept a follow request
-export const acceptFollow = async (senderUserId, token) => {
-    try {
-        const response = await fetch(`/api/followUsers/follow/${senderUserId}/accept`, {
-            method: "PUT",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-            },
-        });
+export const acceptFollow = async (currentUserId, senderUserId) => {
+  try {
+      const response = await fetch(`/api/followUsers/follow/${currentUserId}/accept`, {
+          method: "PUT",
+          headers: {
+              "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userId: senderUserId }), // Send userId in body
+      });
 
-        return await response.json();
-    } catch (error) {
-        console.error("Error accepting follow request:", error);
-        return { error: "Something went wrong" };
-    }
+      return await response.json();
+  } catch (error) {
+      console.error("Error accepting follow request:", error);
+      return { error: "Something went wrong" };
+  }
 };
 
-// Reject a follow request
-export const rejectFollow = async (senderUserId, token) => {
-    try {
-        const response = await fetch(`/api/followUsers/follow/${senderUserId}/reject`, {
-            method: "DELETE",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        return await response.json();
-    } catch (error) {
-        console.error("Error rejecting follow request:", error);
-        return { error: "Something went wrong" };
+export const rejectFollow = async (currentUserId, senderUserId) => {
+  try {
+    if (!currentUserId || !senderUserId) {
+      return { error: "Missing required user IDs" };
     }
+
+    const response = await fetch(`/api/followUsers/follow/${currentUserId}/reject`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ userId: senderUserId }),
+    });
+
+    const data = await response.json();
+    
+    // If we get a 400 with "No follow request" message, handle it gracefully
+    // This just means the request was already handled, so we can consider it successful
+    if (!response.ok) {
+      if (response.status === 400 && data.message && data.message.includes("No follow request")) {
+        console.log("Request already handled:", data.message);
+        return { message: "Request already handled" };
+      }
+      
+      return { 
+        error: data.message || `Server error: ${response.status}`
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error rejecting follow request:", error);
+    return { error: "Something went wrong" };
+  }
 };

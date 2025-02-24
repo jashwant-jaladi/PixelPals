@@ -9,7 +9,9 @@ import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
 import Notifications from "./Notifications";
 import { followUser, fetchFollowersAndFollowing } from "../apis/followApi";
+import { requestFollow } from "../apis/followApi";
 import CreatePost from "./CreatePost";
+import FollowRequest from "./FollowRequest";
 
 const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const currentUser = useRecoilValue(getUser);
@@ -30,7 +32,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
-  console.log(userData)
+ 
   const handleCopyProfileUrl = () => {
     navigator.clipboard
       .writeText(window.location.href)
@@ -43,6 +45,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const handleSnackbarClose = () => setSnackbarOpen(false);
   const handleErrorSnackbarClose = () => setErrorSnackbarOpen(false);
 
+
   const handleFollowToggle = async () => {
     if (!currentUser || currentUser._id === userData._id) return;
 
@@ -51,15 +54,15 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     try {
         let response;
         if (userData.private && !following) {
-            // If the user is private, send a follow request
-            response = await requestFollow(userData._id);
-            if (!response.success) throw new Error(response.message);
-            setFollowRequested(true); 
+            response = await requestFollow(userData._id, currentUser._id);
+            if (response.error) throw new Error(response.error);
+
+            setFollowRequested(true);
             setSnackbarMessage("Follow request sent!");
         } else {
-            // If user is public, follow/unfollow directly
             response = await followUser(userData._id);
-            if (!response.success) throw new Error(response.message);
+            if (response.error) throw new Error(response.error);
+
             setFollowing(response.isFollowing);
             setUserData((prev) => ({
                 ...prev,
@@ -75,6 +78,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         setUpdating(false);
     }
 };
+
 
   const fetchFollowersAndUpdateLists = async () => {
     setLoading(true);
@@ -269,6 +273,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       </Tabs>
 
       {tabIndex === 1 && <Notifications onNotificationUpdate={setNotificationCount} />}
+      {tabIndex === 2 && <FollowRequest currentUser={currentUser} />}
 
 
       <Snackbar

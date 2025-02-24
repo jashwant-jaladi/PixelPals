@@ -24,7 +24,7 @@ const ChatButton = () => {
 
     initializeUnreadCount();
 
-    const socket = io("http://localhost:4000"); 
+    const socket = io("/"); 
 
     socket.on("newMessage", (message) => {
       if (message.recipient === user._id) {
