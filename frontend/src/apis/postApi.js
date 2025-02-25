@@ -68,10 +68,7 @@ export const deletePost = async (postId) => {
 export const fetchPosts = async (username, user) => {
     if (!user) return [];
   
-    // Don't fetch posts for private accounts
-    if (user.private) {
-      return [];
-    }
+ 
   
     try {
       const response = await fetch(`/api/posts/user/${username}`);
