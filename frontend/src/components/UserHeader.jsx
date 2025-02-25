@@ -3,7 +3,7 @@ import { Avatar, IconButton, Menu, MenuItem, Snackbar, CircularProgress, Tabs, T
 import InstagramIcon from "@mui/icons-material/Instagram";
 import ShareIcon from "@mui/icons-material/Share";
 import { pink } from "@mui/material/colors";
-import { useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import getUser from "../Atom/getUser";
 import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
@@ -14,7 +14,7 @@ import CreatePost from "./CreatePost";
 import FollowRequest from "./FollowRequest";
 
 const UserHeader = ({ user, setTabIndex, tabIndex }) => {
-  const currentUser = useRecoilValue(getUser);
+  const [currentUser, setCurrentUser] = useRecoilState(getUser);
   const [anchorEl, setAnchorEl] = useState(null);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -27,12 +27,13 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [loading, setLoading] = useState(false);
   const [selectedTab, setSelectedTab] = useState("followers");
   const [userData, setUserData] = useState(user);
-  const [notificationCount, setNotificationCount] = useState(0); // State for notification count
+  const [notificationCount, setNotificationCount] = useState(0);
   const [followRequested, setFollowRequested] = useState(false);
+  const [followRequestCount, setFollowRequestCount] = useState(currentUser?.Requested?.length || 0);
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
- 
+
   const handleCopyProfileUrl = () => {
     navigator.clipboard
       .writeText(window.location.href)
@@ -45,40 +46,38 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const handleSnackbarClose = () => setSnackbarOpen(false);
   const handleErrorSnackbarClose = () => setErrorSnackbarOpen(false);
 
-
   const handleFollowToggle = async () => {
     if (!currentUser || currentUser._id === userData._id) return;
 
     setUpdating(true);
 
     try {
-        let response;
-        if (userData.private && !following) {
-            response = await requestFollow(userData._id, currentUser._id);
-            if (response.error) throw new Error(response.error);
+      let response;
+      if (userData.private && !following) {
+        response = await requestFollow(userData._id, currentUser._id);
+        if (response.error) throw new Error(response.error);
 
-            setFollowRequested(true);
-            setSnackbarMessage("Follow request sent!");
-        } else {
-            response = await followUser(userData._id);
-            if (response.error) throw new Error(response.error);
+        setFollowRequested(true);
+        setSnackbarMessage("Follow request sent!");
+      } else {
+        response = await followUser(userData._id);
+        if (response.error) throw new Error(response.error);
 
-            setFollowing(response.isFollowing);
-            setUserData((prev) => ({
-                ...prev,
-                followers: response.isFollowing
-                    ? [...prev.followers, currentUser._id]
-                    : prev.followers.filter((id) => id !== currentUser._id),
-            }));
-        }
+        setFollowing(response.isFollowing);
+        setUserData((prev) => ({
+          ...prev,
+          followers: response.isFollowing
+            ? [...prev.followers, currentUser._id]
+            : prev.followers.filter((id) => id !== currentUser._id),
+        }));
+      }
     } catch (error) {
-        setSnackbarMessage(error.message || "An error occurred.");
-        setErrorSnackbarOpen(true);
+      setSnackbarMessage(error.message || "An error occurred.");
+      setErrorSnackbarOpen(true);
     } finally {
-        setUpdating(false);
+      setUpdating(false);
     }
-};
-
+  };
 
   const fetchFollowersAndUpdateLists = async () => {
     setLoading(true);
@@ -86,18 +85,15 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     try {
       const { followers = [], following = [] } = await fetchFollowersAndFollowing(userData._id);
 
-      // Update lists with complete data from backend
       setFollowersList(followers);
       setFollowingList(following);
 
-      // Update user data with new follower/following IDs
       setUserData((prev) => ({
         ...prev,
         followers: followers.map((f) => f._id),
         following: following.map((f) => f._id),
       }));
 
-      // Update following status based on current user's presence in followers
       if (currentUser) {
         setFollowing(followers.some((f) => f._id === currentUser._id));
       }
@@ -110,7 +106,6 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     }
   };
 
-  // Fetch followers data when dialog opens
   useEffect(() => {
     if (followersDialogOpen) {
       fetchFollowersAndUpdateLists();
@@ -121,21 +116,11 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     setFollowersDialogOpen(false);
   };
 
-  // Fetch notifications count
   useEffect(() => {
-    const fetchNotifications = async () => {
-      try {
-        const response = await fetch("/api/posts/notifications");
-        if (!response.ok) throw new Error("Failed to fetch notifications");
-        const data = await response.json();
-        setNotificationCount(data.length); // Update notification count
-      } catch (error) {
-        console.error("Error fetching notifications", error);
-      }
-    };
-
-    fetchNotifications();
-  }, []);
+    if (currentUser?.Requested) {
+      setFollowRequestCount(currentUser.Requested.length);
+    }
+  }, [currentUser]);
 
   return (
     <div className="font-parkinsans px-4 sm:px-8 md:px-16 lg:px-10 xl:px-10">
@@ -163,12 +148,12 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         ) : (
           <>
             <button
-    className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
-    onClick={handleFollowToggle}
-    disabled={updating || followRequested}
->
-    {updating ? <CircularProgress size={24} color="inherit" /> : followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
-</button>
+              className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
+              onClick={handleFollowToggle}
+              disabled={updating || followRequested}
+            >
+              {updating ? <CircularProgress size={24} color="inherit" /> : followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
+            </button>
 
             {following && (
               <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
@@ -207,8 +192,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         sx={{
           ".MuiTabs-indicator": { backgroundColor: "pink" },
           width: "100%",
-          maxWidth: "100vw", // Ensures it doesn't exceed screen width
-          overflowX: "auto", // Enables scrolling if needed
+          maxWidth: "100vw",
+          overflowX: "auto",
         }}
       >
         <Tab
@@ -216,65 +201,85 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
           sx={{
             color: "gray",
             "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-            minWidth: "unset", // Allow tabs to shrink
-            padding: "6px 12px", // Smaller padding for small screens
-            fontSize: "14px", // Smaller font size for small screens
-            flexShrink: 0, // Prevents shrinking
+            minWidth: "unset",
+            padding: "6px 12px",
+            fontSize: "14px",
+            flexShrink: 0,
           }}
         />
-       <Tab
-  label={
-    <Badge
-      color="error"
-      badgeContent={notificationCount}
-      invisible={notificationCount === 0}
-      sx={{
-        "& .MuiBadge-badge": {
-          fontSize: "10px", // Reduce badge text size
-          minWidth: "16px", // Reduce badge width
-          height: "16px", // Reduce badge height
-          right: 1,
-          top: -7, // Shift upwards
-          padding: "2px 4px", // Ensure proper padding
-        },
-      }}
-    >
-      <span style={{ whiteSpace: "nowrap", display: "flex", alignItems: "center" }}>
-        Notifications
-      </span>
-    </Badge>
-  }
-  sx={{
-    color: "gray",
-    "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-    minWidth: "unset", // Allow tabs to shrink
-    padding: "6px 12px", // Smaller padding for small screens
-    fontSize: "14px", // Smaller font size for small screens
-    flexShrink: 0, // Prevents shrinking
-    display: "flex",
-    alignItems: "center", // Ensures badge aligns well with text
-    position: "relative",
-  }}
-/>
-
-
 
         <Tab
-          label="Follow Requests"
+          label={
+            <Badge
+              color="error"
+              badgeContent={notificationCount}
+              invisible={notificationCount === 0}
+              sx={{
+                "& .MuiBadge-badge": {
+                  fontSize: "10px",
+                  minWidth: "16px",
+                  height: "16px",
+                  right: 1,
+                  top: -7,
+                  padding: "2px 4px",
+                },
+              }}
+            >
+              <span style={{ whiteSpace: "nowrap", display: "flex", alignItems: "center" }}>
+                Notifications
+              </span>
+            </Badge>
+          }
           sx={{
             color: "gray",
             "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-            minWidth: "unset", // Allow tabs to shrink
-            padding: "6px 12px", // Smaller padding for small screens
-            fontSize: "14px", // Smaller font size for small screens
-            flexShrink: 0, // Prevents shrinking
+            minWidth: "unset",
+            padding: "6px 12px",
+            fontSize: "14px",
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            position: "relative",
+          }}
+        />
+        <Tab
+          label={
+            <Badge
+              color="error"
+              badgeContent={followRequestCount}
+              invisible={followRequestCount === 0}
+              sx={{
+                "& .MuiBadge-badge": {
+                  fontSize: "10px",
+                  minWidth: "16px",
+                  height: "16px",
+                  right: 1,
+                  top: -7,
+                  padding: "2px 4px",
+                },
+              }}
+            >
+              <span style={{ whiteSpace: "nowrap", display: "flex", alignItems: "center" }}>
+                Follow Requests
+              </span>
+            </Badge>
+          }
+          sx={{
+            color: "gray",
+            "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+            minWidth: "unset",
+            padding: "6px 12px",
+            fontSize: "14px",
+            flexShrink: 0,
+            display: "flex",
+            alignItems: "center",
+            position: "relative",
           }}
         />
       </Tabs>
 
-      {tabIndex === 1 && <Notifications onNotificationUpdate={setNotificationCount} />}
-      {tabIndex === 2 && <FollowRequest currentUser={currentUser} />}
-
+      {tabIndex === 1 && <Notifications onNotificationUpdate={setNotificationCount} userData={userData} />}
+      {tabIndex === 2 && <FollowRequest currentUser={currentUser} setCurrentUser={setCurrentUser} userData={userData} setFollowRequestCount={setFollowRequestCount} />}
 
       <Snackbar
         anchorOrigin={{ vertical: "top", horizontal: "right" }}
@@ -316,4 +321,4 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   );
 };
 
-export default UserHeader;  
+export default UserHeader;

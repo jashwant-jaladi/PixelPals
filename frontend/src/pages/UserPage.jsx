@@ -5,11 +5,13 @@ import UserHeader from '../components/UserHeader';
 import Post from '../components/Post';
 import { useParams } from 'react-router-dom';
 import useGetUserProfile from '../hooks/useGetUserProfile';
-import { useRecoilState } from 'recoil';
+import { useRecoilState, useRecoilValue } from 'recoil';
 import postAtom from '../Atom/postAtom';
 import { fetchPosts } from '../apis/postApi'
+import getUser from '../Atom/getUser';
 
 const UserPage = () => {
+  const currentUser = useRecoilValue(getUser);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
@@ -58,11 +60,11 @@ const UserPage = () => {
   return (
     <>
       <UserHeader user={user} setTabIndex={setTabIndex} tabIndex={tabIndex} />
-      
+
       <div className="mt-5">
         {tabIndex === 0 && (
           <>
-            {user.private ? (
+            {user.private && currentUser._id !== user._id ? (
               <div className="text-center text-xl mt-10 font-parkinsans text-pink-700">
                 This account is private. Follow to see their posts.
               </div>
@@ -70,13 +72,17 @@ const UserPage = () => {
               <div className="flex justify-center mt-10">
                 <CircularProgress />
               </div>
-            ) : posts.length === 0 ? (
+            ) :posts.length === 0 ? (
               <div className="text-center font-parkinsans text-pink-700 text-xl">
-                Looks like you didn't post anything yet, please create a post.
+                {currentUser._id === user._id
+                  ? "Looks like you didn't post anything yet, please create a post."
+                  : `Looks like ${user.name} hasn't posted anything yet.`}
               </div>
             ) : (
               posts.map((post) => <Post key={post._id} post={post} />)
             )}
+            
+
           </>
         )}
       </div>
@@ -87,9 +93,9 @@ const UserPage = () => {
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
-        <Alert 
-          onClose={handleSnackbarClose} 
-          severity={snackbarSeverity} 
+        <Alert
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
           sx={{ width: '100%' }}
         >
           {snackbarMessage}

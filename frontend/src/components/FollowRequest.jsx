@@ -3,7 +3,7 @@ import { Avatar, Button, Box, Typography, Stack, CircularProgress } from "@mui/m
 import { acceptFollow, rejectFollow } from "../apis/followApi";
 import { fetchUserById } from "../apis/userApi";
 
-const FollowRequest = ({ currentUser }) => {
+const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, userData }) => {
   const [requestedUsers, setRequestedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -16,7 +16,6 @@ const FollowRequest = ({ currentUser }) => {
       }
 
       try {
-        // Fetch all user details
         const usersPromises = currentUser.Requested.map(async (userId) => {
           try {
             return await fetchUserById(userId);
@@ -27,9 +26,7 @@ const FollowRequest = ({ currentUser }) => {
         });
 
         const usersData = await Promise.all(usersPromises);
-        
-        // Filter out any null results from failed requests
-        setRequestedUsers(usersData.filter(user => user));
+        setRequestedUsers(usersData.filter((user) => user));
       } catch (error) {
         console.error("Error fetching requested users:", error);
       } finally {
@@ -42,17 +39,22 @@ const FollowRequest = ({ currentUser }) => {
 
   const handleAccept = async (userId) => {
     if (!currentUser?._id) return;
-    
+
     try {
       const response = await acceptFollow(currentUser._id, userId);
-      
+
       if (response.error) {
         console.error("Error accepting follow:", response.error);
         return;
       }
-      
-      // Update local state regardless of the specific success response
+
       setRequestedUsers((prev) => prev.filter((user) => user._id !== userId));
+      setCurrentUser((prev) => ({
+        ...prev,
+        followers: [...prev.followers, userId],
+        Requested: prev.Requested.filter((id) => id !== userId),
+      }));
+      setFollowRequestCount((prev) => prev - 1);
     } catch (error) {
       console.error("Error in handleAccept:", error);
     }
@@ -64,19 +66,30 @@ const FollowRequest = ({ currentUser }) => {
     try {
       const response = await rejectFollow(currentUser._id, userId);
 
-      // Even if we get a "No follow request" error, we should still remove it from the UI
-      // since it means it's already been handled on the backend
       if (response.error && !response.error.includes("No follow request")) {
         console.error("Error rejecting follow:", response.error);
         return;
       }
-      
-      // Update local state regardless of backend status
+
       setRequestedUsers((prev) => prev.filter((user) => user._id !== userId));
+      setCurrentUser((prev) => ({
+        ...prev,
+        Requested: prev.Requested.filter((id) => id !== userId),
+      }));
+      setFollowRequestCount((prev) => prev - 1);
     } catch (error) {
       console.error("Error in handleReject:", error);
     }
   };
+
+  if(currentUser._id !== userData._id)
+  {
+    return (
+      <p className="flex justify-center mx-auto w-full text-pink-700 text-xl text-opacity-90 font-medium mt-6">
+        You are not allowed to see follow requests for this user
+      </p>
+    )
+  }
 
   return (
     <div className="w-full mt-6 p-4 bg-inherit rounded-lg text-white shadow-lg">

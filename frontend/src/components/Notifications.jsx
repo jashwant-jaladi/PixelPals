@@ -6,7 +6,7 @@ import { fetchNotifications, markNotificationAsRead } from "../apis/postApi";
 import Avatar from "@mui/material/Avatar";
 import PersonIcon from "@mui/icons-material/Person";
 
-const Notifications = ({ onNotificationUpdate }) => {
+const Notifications = ({ onNotificationUpdate, userData }) => {
     const [notifications, setNotifications] = useState([]);
     const currentUser = useRecoilValue(getUser);
 
@@ -33,6 +33,13 @@ const Notifications = ({ onNotificationUpdate }) => {
             console.error("Error marking notification as read", error);
         }
     };
+
+    if(currentUser._id !== userData._id){
+        return(
+        <p className="flex justify-center mx-auto w-full text-pink-700 text-xl text-opacity-90 font-medium mt-6">
+            You are not allowed to see notifications for this user
+        </p>)
+    }    
 
     return (
         <div className="w-full mt-6 p-4 bg-inherit rounded-lg text-white">
