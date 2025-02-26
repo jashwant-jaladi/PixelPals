@@ -96,17 +96,12 @@ export const registerUser = async (input) => {
 
 export const fetchSuggestedUsers = async () => {
   try {
-    const token = localStorage.getItem("token"); // Get the token from localStorage
-
-    if (!token) {
-      throw new Error("Unauthorized: No token found.");
-    }
+ 
 
     const response = await fetch("/api/users/suggested", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // Attach token
       },
     });
 

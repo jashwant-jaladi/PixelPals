@@ -92,17 +92,16 @@ const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, use
   }
 
   return (
-    <div className="w-full mt-6 p-4 bg-inherit rounded-lg text-white shadow-lg">
-      <Typography variant="h5" className="text-pink-500 font-bold mb-4 text-center">
-        Follow Requests
-      </Typography>
-
+    <div className="w-full mt-6 p-4 bg-inherit rounded-lg text-white">
+    
       {loading ? (
         <div className="flex justify-center">
           <CircularProgress color="secondary" />
         </div>
       ) : requestedUsers.length === 0 ? (
-        <p className="text-center text-pink-700 text-lg">No new follow requests</p>
+        <p className="flex justify-center mx-auto w-full text-pink-700 text-xl text-opacity-90 font-medium">
+                    No new Follow Requests
+                </p>
       ) : (
         <div className="space-y-4">
           {requestedUsers.map((user) => (

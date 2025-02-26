@@ -19,6 +19,7 @@ const Homepage = () => {
   const [searchResult, setSearchResult] = useState(null); 
   const [following, setFollowing] = useState(false);
   const [updating, setUpdating] = useState(false);
+ 
 
   const currentUser = useRecoilValue(getUser);
 
@@ -108,43 +109,47 @@ const Homepage = () => {
           <SuggestedUsers />
           <SearchUsers onSearchResult={handleSearchResult} /> 
           
-          {searchResult && (
-            <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
-              <Stack direction="row" spacing={2} component={Link} to={`/${searchResult.username}`} alignItems="center">
-                <Avatar src={searchResult.profilePic} />
-                <Box>
-                  <Typography variant="body1" fontWeight="bold">
-                    {searchResult.username}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {searchResult.name}
-                  </Typography>
-                </Box>
-              </Stack>
-      
-              <Button
-                size="small"
-                color="primary"
-                variant={following ? 'outlined' : 'contained'}
-                onClick={() => handleFollowUnfollow(searchResult)}
-                disabled={updating}
-                sx={{
-                  minWidth: 80,
-                  backgroundColor: pink[500], 
-                  '&:hover': {
-                    backgroundColor: pink[700], 
-                  },
-                  '&:disabled': {
-                    backgroundColor: pink[100], 
-                  },
-                  color: 'black', 
-                  fontWeight: 'bold', 
-                }}
-              >
-                {following ? 'Unfollow' : 'Follow'}
-              </Button>
-            </Stack>
-          )}
+          {searchResult && (() => {
+  const followRequested = searchResult?.Requested?.includes(currentUser?._id) || false;
+
+  return (
+    <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
+      <Stack direction="row" spacing={2} component={Link} to={`/${searchResult.username}`} alignItems="center">
+        <Avatar src={searchResult.profilePic} />
+        <Box>
+          <Typography variant="body1" fontWeight="bold">
+            {searchResult.username}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {searchResult.name}
+          </Typography>
+        </Box>
+      </Stack>
+
+      {currentUser && (
+        <Button
+          size="small"
+          color="primary"
+          variant={following ? "outlined" : "contained"}
+          onClick={() => handleFollowUnfollow(searchResult)}
+          disabled={followRequested || updating}
+          sx={{
+            minWidth: 80,
+            backgroundColor: followRequested ? pink[300] : pink[500],
+            "&:hover": { backgroundColor: followRequested ? pink[300] : pink[700] },
+            "&:disabled": { backgroundColor: pink[700] },
+            color: "black",
+            fontWeight: "bold",
+          }}
+        >
+          {followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
+        </Button>
+      )}
+    </Stack>
+  );
+})()}
+
+
         </Box>
       </Box>
 

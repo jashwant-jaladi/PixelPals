@@ -170,8 +170,8 @@ const getFollowersAndFollowing = async (req, res) => {
         const { userId } = req.params;
 
         const user = await User.findById(userId)
-            .populate("followers", "name profilePic username")
-            .populate("following", "name profilePic username");
+            .populate("followers", "name profilePic username Requested")
+            .populate("following", "name profilePic username Requested");
 
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -189,6 +189,32 @@ const getFollowersAndFollowing = async (req, res) => {
 
 
 
+ const cancelFollowRequest = async (req, res) => {
+  try {
+    const { userId } = req.body; // ID of the user whose request we are canceling
+    const currentUserId = req.user._id; // ID of the logged-in user
+
+    // Find the target user (the one who received the follow request)
+    const targetUser = await User.findById(userId);
+    if (!targetUser) return res.status(404).json({ error: "User not found" });
+
+    // Remove currentUserId from the target user's "Requested" array
+    targetUser.Requested = targetUser.Requested.filter(
+      (id) => id.toString() !== currentUserId.toString()
+    );
+
+    await targetUser.save();
+
+    // Return success response
+    res.status(200).json({ success: true, message: "Follow request canceled." });
+  } catch (error) {
+    console.error("Error canceling follow request:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
 
 
-export { requestFollow, acceptFollow, rejectFollow, followandUnfollowUser, getFollowersAndFollowing};
+
+
+
+export { requestFollow, acceptFollow, rejectFollow, cancelFollowRequest, followandUnfollowUser, getFollowersAndFollowing};

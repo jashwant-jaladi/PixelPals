@@ -28,11 +28,20 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [selectedTab, setSelectedTab] = useState("followers");
   const [userData, setUserData] = useState(user);
   const [notificationCount, setNotificationCount] = useState(0);
-  const [followRequested, setFollowRequested] = useState(false);
+  const [followRequested, setFollowRequested] = useState(
+    // Check if the current user ID is in the user's pendingFollowers array
+    currentUser && user.followers?.includes(currentUser._id)
+  );
   const [followRequestCount, setFollowRequestCount] = useState(currentUser?.Requested?.length || 0);
-
+  console.log(userData)
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
+  useEffect(() => {
+    if (currentUser && userData) {
+      // Check if current user has already requested to follow this user
+      setFollowRequested(userData.Requested?.includes(currentUser._id));
+    }
+  }, [currentUser, userData]);
 
   const handleCopyProfileUrl = () => {
     navigator.clipboard
@@ -56,9 +65,16 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       if (userData.private && !following) {
         response = await requestFollow(userData._id, currentUser._id);
         if (response.error) throw new Error(response.error);
-
+      
         setFollowRequested(true);
+        setUserData((prev) => ({
+          ...prev,
+          followers: [...prev.followers, currentUser._id],
+        }));
         setSnackbarMessage("Follow request sent!");
+      
+    
+        
       } else {
         response = await followUser(userData._id);
         if (response.error) throw new Error(response.error);

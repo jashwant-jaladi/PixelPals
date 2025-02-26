@@ -150,3 +150,19 @@ export const rejectFollow = async (currentUserId, senderUserId) => {
     return { error: "Something went wrong" };
   }
 };
+
+
+export const cancelFollowRequest = (requestedUserId, currentUserId) => {
+  try {
+    return fetch(`/api/followUsers/cancel-request`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ requestedUserId, currentUserId }),
+    });
+  } catch (error) {
+    console.error("Error cancelling follow request:", error);
+    return { error: "Something went wrong" };
+  }
+}
