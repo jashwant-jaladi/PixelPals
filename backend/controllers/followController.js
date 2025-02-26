@@ -1,4 +1,5 @@
 import User from "../models/userModel.js";
+import Notification from "../models/notificationModel.js";
 
 
 
@@ -20,8 +21,7 @@ const requestFollow = async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        console.log("Requested User Found:", requestedUser);
-        console.log("Sender Found:", sender);
+      
 
         if (userId === requestedUserId) {
             return res.status(400).json({ message: "You cannot follow yourself" });
@@ -71,7 +71,15 @@ const acceptFollow = async (req, res) => {
             sender.following.push(currentUser._id.toString());
         }
 
-        await Promise.all([currentUser.save(), sender.save()]);
+        const notification = new Notification({
+            recipient: userId, // The user who sent the request
+            sender: currentUser._id, // The user who accepted the request
+            type: "follow_accept",
+            message: `accepted your follow request.`,
+            // No post reference needed for follow notifications
+        });
+
+        await Promise.all([currentUser.save(), sender.save(), notification.save()]);
 
         res.status(200).json({ 
             message: "Follow request accepted", 
@@ -101,8 +109,19 @@ const acceptFollow = async (req, res) => {
             // Remove from requested array
             currentUser.Requested = currentUser.Requested.filter(id => id.toString() !== userId.toString());
 
+            const notification = new Notification({
+                recipient: userId, // The user who sent the request
+                sender: currentUser._id, // The user who rejected the request
+                type: "follow_reject",
+                message: `declined your follow request.`,
+                // No post reference needed for follow notifications
+            });
+
             // Save changes
-            await currentUser.save();
+            await Promise.all([
+                currentUser.save(),
+                notification.save()
+            ]);
             
 
             // Fetch the updated user after rejecting
