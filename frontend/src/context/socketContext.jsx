@@ -17,10 +17,10 @@ export const SocketProvider = ({ children }) => {
     const currentUser = useRecoilValue(getUser);
 
     useEffect(() => {
-        const socket = io("/", {
+        const socket = io("http://localhost:4000", {
             query: {
                 userId: currentUser?._id
-            }
+            },
         });
         setSocket(socket);
         socket.on("getOnlineUsers", (users) => {
@@ -30,9 +30,9 @@ export const SocketProvider = ({ children }) => {
            socket && socket.close();
         }
     }, [currentUser?._id]);
-    
+    console.log(onlineUsers, "onlineUsers");
     return (
-        <SocketContext.Provider value={{socket, onlineUsers}}>
+        <SocketContext.Provider value={{socket, onlineUsers}}>  
             {children}
         </SocketContext.Provider>
     )

@@ -31,15 +31,7 @@ app.use("/api/followUsers", followRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 
-// ✅ Update Socket.IO CORS Configuration (If using WebSockets)
-import { io } from "./socket/socket.js";
-io.attach(server, {
-  cors: {
-    origin: "*", // Allow all origins for WebSockets too
-    methods: ["GET", "POST"],
-    credentials: true,
-  },
-});
+
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
