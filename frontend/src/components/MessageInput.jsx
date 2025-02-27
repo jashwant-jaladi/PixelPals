@@ -95,7 +95,7 @@ const MessageInput = ({ setMessages }) => {
     const imgData = selectedFile ? await convertToBase64(selectedFile) : null;
 
     const optimisticMessage = {
-      _id: Date.now().toString(), // Temporary ID
+      _id: Date.now().toString(), 
       text: message,
       sender: currentUser._id,
       img: imgData,
@@ -103,10 +103,10 @@ const MessageInput = ({ setMessages }) => {
       seen: false,
     };
 
-    // 🔹 Optimistically update UI (sender sees message immediately)
+    
     setMessages((prev) => [...prev, optimisticMessage]);
 
-    // 🔹 UPDATE: Also update the conversations list with new last message
+   
     setConversations((prev) => {
       return prev.map((conversation) => {
         if (conversation._id === selectedConversation._id) {
@@ -115,7 +115,7 @@ const MessageInput = ({ setMessages }) => {
             lastMessage: {
               text: message,
               sender: currentUser._id,
-              seen: false,
+              
             },
           };
         }
