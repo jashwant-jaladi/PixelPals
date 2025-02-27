@@ -4,10 +4,12 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import Message from './Message';
 import MessageInput from './MessageInput';
 import { useRecoilValue } from 'recoil';
+import { messageAtom } from '../Atom/messageAtom';
 import { conversationAtom } from '../Atom/messageAtom';
 import getUser from '../Atom/getUser';
 import { useSocket } from '../context/socketContext.jsx';
 import { fetchMessages } from '../apis/messageApi.js';
+import { useSetRecoilState } from 'recoil';
 
 const MessageContainer = ({ isDeleted }) => {
   const selectedConversation = useRecoilValue(conversationAtom);
@@ -16,21 +18,92 @@ const MessageContainer = ({ isDeleted }) => {
   const [messages, setMessages] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const { socket } = useSocket();
+  const setConversations = useSetRecoilState(messageAtom);
   const messageEndRef = useRef(null);
+
+  useEffect(() => {
+		socket.on("newMessage", (message) => {
+			if (selectedConversation._id === message.conversationId) {
+				setMessages((prev) => [...prev, message]);
+			}
+
+	
+
+			setConversations((prev) => {
+				const updatedConversations = prev.map((conversation) => {
+					if (conversation._id === message.conversationId) {
+						return {
+							...conversation,
+							lastMessage: {
+								text: message.text,
+								sender: message.sender,
+							},
+						};
+					}
+					return conversation;
+				});
+				return updatedConversations;
+			});
+		});
+
+		return () => socket.off("newMessage");
+	}, [socket, selectedConversation, setConversations]);
 
   useEffect(() => {
     if (!socket) return;
 
     const handleTyping = (data) => {
-      if (selectedConversation._id === data.conversationId && data.userId !== currentUser._id) {
-        setIsTyping(true);
-        setTimeout(() => setIsTyping(false), 2000);
-      }
+        if (selectedConversation._id === data.conversationId && data.userId !== currentUser._id) {
+            setIsTyping(true);
+            setTimeout(() => setIsTyping(false), 2000); // Hide after 2s
+        }
     };
 
-    socket.on('typing', handleTyping);
-    return () => socket.off('typing', handleTyping);
-  }, [socket, selectedConversation, currentUser._id]);
+    const handleStopTyping = ({ conversationId }) => {
+        if (selectedConversation._id === conversationId) {
+            setIsTyping(false);
+        }
+    };
+
+    socket.on("typing", handleTyping);
+    socket.on("stopTyping", handleStopTyping);
+
+    return () => {
+        socket.off("typing", handleTyping);
+        socket.off("stopTyping", handleStopTyping);
+    };
+}, [socket, selectedConversation, currentUser._id]);
+
+  useEffect(() => {
+		const lastMessageIsFromOtherUser = messages.length && messages[messages.length - 1].sender !== currentUser._id;
+		if (lastMessageIsFromOtherUser) {
+			socket.emit("markMessagesAsSeen", {
+				conversationId: selectedConversation._id,
+				userId: selectedConversation.userId,
+			});
+		}
+
+		socket.on("messagesSeen", ({ conversationId }) => {
+			if (selectedConversation._id === conversationId) {
+				setMessages((prev) => {
+					const updatedMessages = prev.map((message) => {
+						if (!message.seen) {
+							return {
+								...message,
+								seen: true,
+							};
+						}
+						return message;
+					});
+					return updatedMessages;
+				});
+			}
+		});
+	}, [socket, currentUser._id, messages, selectedConversation]);
+
+	useEffect(() => {
+		messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	}, [messages]);
 
   useEffect(() => {
     const getMessages = async () => {

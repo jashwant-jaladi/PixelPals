@@ -46,6 +46,13 @@ const MessageInput = ({ setMessages }) => {
     { id: 4, name: 'Formal', emoji: '😐', color: '#9E9E9E' },
   ];
 
+  const handleTyping = () => {
+    socket.emit("typing", {
+        conversationId: selectedConversation._id,
+        userId: currentUser._id,
+    });
+};
+
   const handleMoodClick = (event) => {
     setAnchorEl(event.currentTarget);
   };
@@ -84,6 +91,12 @@ const MessageInput = ({ setMessages }) => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() && !selectedFile) return;
+
+    socket.emit("stopTyping", {
+        conversationId: selectedConversation._id,
+    });
+
+
   
     const imgData = selectedFile ? await convertToBase64(selectedFile) : null;
     const optimisticMessage = {
@@ -164,22 +177,26 @@ const MessageInput = ({ setMessages }) => {
           </Menu>
 
           <TextField
-            onChange={(e) => setMessage(e.target.value)}
-            value={message}
-            variant="outlined"
-            placeholder="Type a message..."
-            fullWidth
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton type="submit">
+    onChange={(e) => {
+        setMessage(e.target.value);
+        handleTyping(); // Emit typing event when user types
+    }}
+    value={message}
+    variant="outlined"
+    placeholder="Type a message..."
+    fullWidth
+    InputProps={{
+        endAdornment: (
+            <InputAdornment position="end">
+                <IconButton type="submit">
                     <SendIcon sx={{ color: pink[500] }} />
-                  </IconButton>
-                </InputAdornment>
-              ),
-              style: { borderRadius: 50 },
-            }}
-          />
+                </IconButton>
+            </InputAdornment>
+        ),
+        style: { borderRadius: 50 },
+    }}
+/>
+
 
           <input
             type="file"
