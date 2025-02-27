@@ -10,7 +10,7 @@ import {
   MenuItem,
   Typography,
   CircularProgress
-  
+
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
@@ -48,10 +48,10 @@ const MessageInput = ({ setMessages }) => {
 
   const handleTyping = () => {
     socket.emit("typing", {
-        conversationId: selectedConversation._id,
-        userId: currentUser._id,
+      conversationId: selectedConversation._id,
+      userId: currentUser._id,
     });
-};
+  };
 
   const handleMoodClick = (event) => {
     setAnchorEl(event.currentTarget);
@@ -63,13 +63,13 @@ const MessageInput = ({ setMessages }) => {
   const handleMoodSelection = async (mood) => {
     setSelectedMood(mood);
     setAnchorEl(null);
-  
+
     if (!message) {
       alert('Please enter a message before selecting a mood.');
       return;
     }
     setLoading(true);
-  
+
     try {
       const data = await analyzeMood(mood.name, message); // Call API function
       setSuggestion(data.suggestion);
@@ -80,7 +80,7 @@ const MessageInput = ({ setMessages }) => {
       setLoading(false);
     }
   };
-  
+
   const handleReplaceSuggestion = () => {
     setMessage(suggestion);
     setSuggestion('');
@@ -92,34 +92,60 @@ const MessageInput = ({ setMessages }) => {
     e.preventDefault();
     if (!message.trim() && !selectedFile) return;
 
-    socket.emit("stopTyping", {
-        conversationId: selectedConversation._id,
-    });
-
-
-  
     const imgData = selectedFile ? await convertToBase64(selectedFile) : null;
+
     const optimisticMessage = {
-      _id: Date.now().toString(),
+      _id: Date.now().toString(), // Temporary ID
       text: message,
       sender: currentUser._id,
       img: imgData,
       createdAt: new Date().toISOString(),
       seen: false,
     };
-  
+
+    // 🔹 Optimistically update UI (sender sees message immediately)
     setMessages((prev) => [...prev, optimisticMessage]);
+
+    // 🔹 UPDATE: Also update the conversations list with new last message
+    setConversations((prev) => {
+      return prev.map((conversation) => {
+        if (conversation._id === selectedConversation._id) {
+          return {
+            ...conversation,
+            lastMessage: {
+              text: message,
+              sender: currentUser._id,
+              seen: false,
+            },
+          };
+        }
+        return conversation;
+      });
+    });
+
     setMessage('');
     setFilePreview(null);
-  
+    setSelectedFile(null);
+
     try {
-      const data = await sendMessage(message, selectedConversation.userId, imgData); // Call API function
+      const data = await sendMessage(message, selectedConversation.userId, imgData); // API call to send message
+
+
       setMessages((prev) => prev.map((msg) => (msg._id === optimisticMessage._id ? data : msg)));
+
     } catch (error) {
+
       setMessages((prev) => prev.filter((msg) => msg._id !== optimisticMessage._id));
+
+      setConversations((prev) => {
+
+        return prev;
+      });
+
       console.error(error);
     }
   };
+
 
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -177,25 +203,25 @@ const MessageInput = ({ setMessages }) => {
           </Menu>
 
           <TextField
-    onChange={(e) => {
-        setMessage(e.target.value);
-        handleTyping(); // Emit typing event when user types
-    }}
-    value={message}
-    variant="outlined"
-    placeholder="Type a message..."
-    fullWidth
-    InputProps={{
-        endAdornment: (
-            <InputAdornment position="end">
-                <IconButton type="submit">
+            onChange={(e) => {
+              setMessage(e.target.value);
+              handleTyping(); // Emit typing event when user types
+            }}
+            value={message}
+            variant="outlined"
+            placeholder="Type a message..."
+            fullWidth
+            InputProps={{
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton type="submit">
                     <SendIcon sx={{ color: pink[500] }} />
-                </IconButton>
-            </InputAdornment>
-        ),
-        style: { borderRadius: 50 },
-    }}
-/>
+                  </IconButton>
+                </InputAdornment>
+              ),
+              style: { borderRadius: 50 },
+            }}
+          />
 
 
           <input
@@ -230,7 +256,7 @@ const MessageInput = ({ setMessages }) => {
           }}
         >
           <Typography variant="subtitle1" sx={{ mt: 2, color: 'black', fontWeight: 'bold' }}>Suggested Alternative:</Typography>
-          <Typography variant="body1" sx={{ mt: 2, mb: 2, color: 'black', fontWeight: 'bold'  }}>
+          <Typography variant="body1" sx={{ mt: 2, mb: 2, color: 'black', fontWeight: 'bold' }}>
             {suggestion}
           </Typography>
           <Button

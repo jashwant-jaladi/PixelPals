@@ -22,17 +22,16 @@ const MessageContainer = ({ isDeleted }) => {
   const messageEndRef = useRef(null);
 
   useEffect(() => {
+    if (!socket) return;
 		socket.on("newMessage", (message) => {
 			if (selectedConversation._id === message.conversationId) {
 				setMessages((prev) => [...prev, message]);
 			}
 
-	
-
 			setConversations((prev) => {
 				const updatedConversations = prev.map((conversation) => {
 					if (conversation._id === message.conversationId) {
-						return {
+						return {  
 							...conversation,
 							lastMessage: {
 								text: message.text,
@@ -75,6 +74,7 @@ const MessageContainer = ({ isDeleted }) => {
 }, [socket, selectedConversation, currentUser._id]);
 
   useEffect(() => {
+    if (!socket) return;
 		const lastMessageIsFromOtherUser = messages.length && messages[messages.length - 1].sender !== currentUser._id;
 		if (lastMessageIsFromOtherUser) {
 			socket.emit("markMessagesAsSeen", {
