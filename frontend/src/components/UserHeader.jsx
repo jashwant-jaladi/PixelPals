@@ -9,6 +9,7 @@ import { Link } from "react-router-dom";
 import FollowersFollowingDialog from "./FollowersFollowingDialog";
 import Notifications from "./Notifications";
 import { followUser, fetchFollowersAndFollowing } from "../apis/followApi";
+import { fetchNotifications } from "../apis/postApi";
 import { requestFollow } from "../apis/followApi";
 import CreatePost from "./CreatePost";
 import FollowRequest from "./FollowRequest";
@@ -28,6 +29,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [selectedTab, setSelectedTab] = useState("followers");
   const [userData, setUserData] = useState(user);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [notifications, setNotifications] = useState([]);
   const [followRequested, setFollowRequested] = useState(
     // Check if the current user ID is in the user's pendingFollowers array
     currentUser && user.followers?.includes(currentUser._id)
@@ -42,6 +44,21 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       setFollowRequested(userData.Requested?.includes(currentUser._id));
     }
   }, [currentUser, userData]);
+
+      useEffect(() => {
+          const loadNotifications = async () => {
+              try {
+                  const data = await fetchNotifications();
+                  setNotificationCount(data.length);
+                  setNotifications(data);
+                 
+              } catch (error) {
+                  console.error("Error fetching notifications", error);
+              }
+          };
+  
+          loadNotifications();
+      }, []);
 
   const handleCopyProfileUrl = () => {
     navigator.clipboard
@@ -293,7 +310,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         />
       </Tabs>
 
-      {tabIndex === 1 && <Notifications onNotificationUpdate={setNotificationCount} userData={userData} />}
+      {tabIndex === 1 && <Notifications onNotificationUpdate={setNotificationCount} userData={userData} notifications={notifications} setNotifications={setNotifications} />}
       {tabIndex === 2 && <FollowRequest currentUser={currentUser} setCurrentUser={setCurrentUser} userData={userData} setFollowRequestCount={setFollowRequestCount} />}
 
       <Snackbar

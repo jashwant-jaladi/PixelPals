@@ -1,28 +1,15 @@
-import { useEffect, useState } from "react";
 import { Link } from "react-router-dom"; 
 import { useRecoilValue } from "recoil";
 import getUser from "../Atom/getUser";
-import { fetchNotifications, markNotificationAsRead } from "../apis/postApi"; 
+import {  markNotificationAsRead } from "../apis/postApi"; 
 import Avatar from "@mui/material/Avatar";
 import PersonIcon from "@mui/icons-material/Person";
 
-const Notifications = ({ onNotificationUpdate, userData }) => {
-    const [notifications, setNotifications] = useState([]);
+const Notifications = ({ onNotificationUpdate, userData, notifications, setNotifications }) => {
+    
     const currentUser = useRecoilValue(getUser);
 
-    useEffect(() => {
-        const loadNotifications = async () => {
-            try {
-                const data = await fetchNotifications();
-                setNotifications(data);
-                onNotificationUpdate(data.length);
-            } catch (error) {
-                console.error("Error fetching notifications", error);
-            }
-        };
 
-        loadNotifications();
-    }, [onNotificationUpdate]);
 
     const handleMarkAsRead = async (notificationId) => {
         try {
