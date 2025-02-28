@@ -67,10 +67,6 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         if (response.error) throw new Error(response.error);
       
         setFollowRequested(true);
-        setUserData((prev) => ({
-          ...prev,
-          followers: [...prev.followers, currentUser._id],
-        }));
         setSnackbarMessage("Follow request sent!");
       
     
@@ -161,15 +157,18 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
               <Link to="/update">Edit Profile</Link>
             </button>
           </div>
-        ) : (
+        ) : ( 
           <>
-            <button
-              className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
-              onClick={handleFollowToggle}
-              disabled={updating || followRequested}
-            >
-              {updating ? <CircularProgress size={24} color="inherit" /> : followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
-            </button>
+           <button
+  className={`text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect transition duration-300 ${
+    followRequested ? "opacity-50 cursor-not-allowed" : "hover:bg-pink-700 hover:text-white"
+  }`}
+  onClick={handleFollowToggle}
+  disabled={updating || followRequested}
+>
+  {updating ? <CircularProgress size={24} color="inherit" /> : followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
+</button>
+
 
             {following && (
               <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
