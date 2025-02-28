@@ -1,44 +1,73 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRecoilState, useRecoilValue } from "recoil";
-import { unreadMessagesAtom } from "../Atom/messageAtom";
+import { unreadMessagesAtom, conversationAtom } from "../Atom/messageAtom";
 import getUser from "../Atom/getUser";
-import { io } from "socket.io-client";
 import Badge from "@mui/material/Badge";
 import ChatIcon from "@mui/icons-material/Chat";
 import { Button } from "@mui/material";
-import { fetchUnreadCount, markAllMessagesAsSeen } from "../apis/messageApi";
+import { fetchUnreadCount } from "../apis/messageApi";
+import { useSocket } from "../context/socketContext";
 
 const ChatButton = () => {
   const navigate = useNavigate();
   const [unreadCount, setUnreadCount] = useRecoilState(unreadMessagesAtom);
+  const selectedConversation = useRecoilValue(conversationAtom);
   const user = useRecoilValue(getUser);
+  const { socket } = useSocket();
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  useEffect(() => {
-    if (!user) return;
-
-    const initializeUnreadCount = async () => {
+  const refreshUnreadCount = async () => {
+    if (!user?._id) return;
+    try {
       const count = await fetchUnreadCount(user._id);
       setUnreadCount(count);
+      console.log("✅ Unread count updated:", count);
+    } catch (error) {
+      console.error("❌ Error fetching unread count:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !socket || isInitialized) return;
+
+    refreshUnreadCount();
+    setIsInitialized(true);
+
+    const handleNewMessage = (message) => {
+      console.log("📩 Received new message:", message);
+
+     
+      if (message.recipient === user._id) {
+        if (!selectedConversation || selectedConversation._id !== message.conversationId) {
+          setUnreadCount((prev) => prev + 1);
+          console.log("🔴 Unread count incremented");
+        }
+      }
     };
 
-    initializeUnreadCount();
+    const handleMessagesSeen = ({ conversationId }) => {
+      console.log("👀 Messages marked as seen:", conversationId);
+      refreshUnreadCount();
+    };
 
-    const socket = io("/"); 
+    socket.on("newMessage", handleNewMessage);
+    socket.on("messagesSeen", handleMessagesSeen);
 
-    socket.on("newMessage", (message) => {
-      if (message.recipient === user._id) {
-        setUnreadCount((prev) => prev + 1);
-      }
-    });
+    return () => {
+      socket.off("newMessage", handleNewMessage);
+      socket.off("messagesSeen", handleMessagesSeen);
+    };
+  }, [user, socket, selectedConversation, isInitialized]);
 
-    return () => socket.disconnect();
-  }, [user, setUnreadCount]);
+  useEffect(() => {
+    if (isInitialized && !selectedConversation) {
+      refreshUnreadCount();
+    }
+  }, [selectedConversation, isInitialized]);
 
-  const handleChatClick = async () => {
+  const handleChatClick = () => {
     navigate("/chat");
-    setUnreadCount(0);
-    await markAllMessagesAsSeen(user.token);
   };
 
   return (
@@ -55,8 +84,8 @@ const ChatButton = () => {
           backgroundColor: "rgba(176, 73, 174, 0.2)",
           boxShadow: "0 6px 35px rgba(0, 0, 0, 0.15)",
         },
-        minWidth: '36px',
-          height: '36px',
+        minWidth: "36px",
+        height: "36px",
       }}
       onClick={handleChatClick}
     >
@@ -67,4 +96,4 @@ const ChatButton = () => {
   );
 };
 
-export default ChatButton;
+export default ChatButton; 

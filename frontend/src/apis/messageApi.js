@@ -53,7 +53,7 @@ export const sendMessage = async (message, recipientId, img) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ messageId }),
-        credentials: "include", // Ensures cookies (if any) are sent with the request
+        
       });
   
       if (!response.ok) {
@@ -79,19 +79,7 @@ export const sendMessage = async (message, recipientId, img) => {
       return 0;
     }
   };
-  
-  export const markAllMessagesAsSeen = async (token) => {
-    try {
-      await fetch("/api/messages/mark-all-seen", {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-          },
-      });
-    } catch (error) {
-      console.error("Error marking messages as seen:", error);
-    }
-  };
+
   
   export const fetchConversations = async () => {
     try {

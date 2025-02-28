@@ -147,6 +147,7 @@ const MessageInput = ({ setMessages }) => {
   };
 
 
+
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -154,6 +155,12 @@ const MessageInput = ({ setMessages }) => {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
+  };
+
+  const handleSendFile = () => {
+    // Close modal and initiate sending
+    handleSendMessage({ preventDefault: () => {} });
+    setOpenModal(false);
   };
 
   return (
@@ -286,24 +293,30 @@ const MessageInput = ({ setMessages }) => {
             maxWidth: '400px',
           }}
         >
-          {filePreview && (
-            <img
-              src={filePreview}
-              alt="Preview"
-              style={{ width: '100%', borderRadius: '10px' }}
-            />
+        {filePreview && (
+            <Box>
+              <img
+                src={filePreview}
+                alt="Selected preview"
+                style={{ width: '100%', height: 'auto', borderRadius: '10px' }}
+              />
+            </Box>
           )}
           <Button
-            onClick={() => setOpenModal(false)}
+            onClick={handleSendFile}
             variant="contained"
+            color="primary"
             sx={{
               marginTop: '15px',
               backgroundColor: pink[500],
-              '&:hover': { backgroundColor: pink[700] },
+              '&:hover': {
+                backgroundColor: pink[700],
+              },
             }}
           >
-            Close
+            Send
           </Button>
+         
         </Box>
       </Modal>
     </Box>

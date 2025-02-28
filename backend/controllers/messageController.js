@@ -177,4 +177,6 @@ const messageSeenCount = async (req, res) => {
   }
 
 
-export { sendMessage, getMessages, getConversations, analyseMessage, markMessageAsSeen, messageSeenCount };
+
+
+export { sendMessage, getMessages, getConversations, analyseMessage, markMessageAsSeen, messageSeenCount};

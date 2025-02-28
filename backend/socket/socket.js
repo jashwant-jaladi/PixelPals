@@ -6,7 +6,8 @@ import Conversation from "../models/conversationModel.js";
 
 const app = express();
 const server = http.createServer(app);
-const typing = {};  // Changed from typingUsers to typing
+const userSocketMap = {}; 
+const typing = {};  
 
 const io = new Server(server, {
     cors: {
@@ -16,51 +17,65 @@ const io = new Server(server, {
 });
 
 export const getRecipientSocketId = (recipientId) => {
-	return userSocketMap[recipientId];
+    return userSocketMap[recipientId] || null;
 };
-
-const userSocketMap = {};
 
 io.on("connection", (socket) => {
     console.log(`User connected: ${socket.id}`);
     const userId = socket.handshake.query.userId;
+
     if (userId && userId !== "undefined") {
         userSocketMap[userId] = socket.id;
+        io.emit("getOnlineUsers", Object.keys(userSocketMap));
     }
-    io.emit("getOnlineUsers", Object.keys(userSocketMap));
 
     socket.on("markMessagesAsSeen", async ({ conversationId, userId }) => {
         try {
-            await Message.updateMany({ conversationId: conversationId, seen: false }, { $set: { seen: true } });
-            await Conversation.updateOne({ _id: conversationId }, { $set: { "lastMessage.seen": true } });
-            if (userSocketMap[userId]) {
-                io.to(userSocketMap[userId]).emit("messagesSeen", { conversationId });
-            }
+            await Message.updateMany(
+                { conversationId, seen: false },
+                { $set: { seen: true } }
+            );
+            await Conversation.updateOne(
+                { _id: conversationId },
+                { $set: { "lastMessage.seen": true } }
+            );
+    
+            // Notify the user that messages have been seen
+            io.emit("messagesSeen", { conversationId });
         } catch (error) {
-            console.log(error);
+            console.error("Error marking messages as seen:", error);
         }
     });
+    
 
-	socket.on("typing", ({ conversationId, userId }) => {
-		typing[conversationId] = userId;
-		socket.broadcast.emit("typing", { conversationId, userId });
-	});
+    socket.on("typing", ({ conversationId, userId }) => {
+        if (!typing[conversationId]) typing[conversationId] = new Set();
+        typing[conversationId].add(userId);
+        io.to(conversationId).emit("typing", { conversationId, users: Array.from(typing[conversationId]) });
+    });
 
-	socket.on("stopTyping", ({ conversationId }) => {
-		delete typing[conversationId];
-		socket.broadcast.emit("stopTyping", { conversationId });
-	});
+    socket.on("stopTyping", ({ conversationId, userId }) => {
+        if (typing[conversationId]) {
+            typing[conversationId].delete(userId);
+            if (typing[conversationId].size === 0) delete typing[conversationId];
+        }
+        io.to(conversationId).emit("stopTyping", { conversationId, users: Array.from(typing[conversationId] || []) });
+    });
+
+    const updateOnlineUsers = () => {
+        io.emit("getOnlineUsers", Object.keys(userSocketMap));
+    };
 
     socket.on("disconnect", () => {
-        console.log("User disconnected");
-        // Find and remove this socket's user ID from the map
+        console.log(`User disconnected: ${socket.id}`);
         const userIdToRemove = Object.keys(userSocketMap).find(
             key => userSocketMap[key] === socket.id
         );
+
         if (userIdToRemove) {
             delete userSocketMap[userIdToRemove];
+            updateOnlineUsers();
         }
-        io.emit("getOnlineUsers", Object.keys(userSocketMap));
     });
 });
 

@@ -43,6 +43,8 @@ const ChatPage = () => {
         );
     });
 
+    
+
     return () => {
         socket.off("messagesSeen");
     };
