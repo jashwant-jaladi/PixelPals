@@ -13,6 +13,9 @@ import { fetchNotifications } from "../apis/postApi";
 import { requestFollow } from "../apis/followApi";
 import CreatePost from "./CreatePost";
 import FollowRequest from "./FollowRequest";
+import { useRefreshUser } from "../hooks/useRefreshUser";
+
+
 
 const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [currentUser, setCurrentUser] = useRecoilState(getUser);
@@ -31,13 +34,16 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [notificationCount, setNotificationCount] = useState(0);
   const [notifications, setNotifications] = useState([]);
   const [followRequested, setFollowRequested] = useState(
-    // Check if the current user ID is in the user's pendingFollowers array
+    
     currentUser && user.followers?.includes(currentUser._id)
   );
   const [followRequestCount, setFollowRequestCount] = useState(currentUser?.Requested?.length || 0);
-  console.log(userData)
+
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
+  
+  useRefreshUser(3000);
+  
   useEffect(() => {
     if (currentUser && userData) {
       // Check if current user has already requested to follow this user
@@ -45,20 +51,26 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     }
   }, [currentUser, userData]);
 
-      useEffect(() => {
-          const loadNotifications = async () => {
-              try {
-                  const data = await fetchNotifications();
-                  setNotificationCount(data.length);
-                  setNotifications(data);
-                 
-              } catch (error) {
-                  console.error("Error fetching notifications", error);
-              }
-          };
-  
-          loadNotifications();
-      }, []);
+  useEffect(() => {
+    // Only fetch notifications if viewing own profile
+    if (currentUser && userData && currentUser._id === userData._id) {
+      const loadNotifications = async () => {
+        try {
+          const data = await fetchNotifications();
+          setNotificationCount(data.length);
+          setNotifications(data);
+        } catch (error) {
+          console.error("Error fetching notifications", error);
+        }
+      };
+      
+      loadNotifications();
+    } else {
+      // Reset notifications when viewing other profiles
+      setNotificationCount(0);
+      setNotifications([]);
+    }
+  }, [currentUser, userData]);
 
   const handleCopyProfileUrl = () => {
     navigator.clipboard
@@ -85,9 +97,6 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
       
         setFollowRequested(true);
         setSnackbarMessage("Follow request sent!");
-      
-    
-        
       } else {
         response = await followUser(userData._id);
         if (response.error) throw new Error(response.error);
@@ -151,6 +160,9 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     }
   }, [currentUser]);
 
+  // Show notification badge only on user's own profile
+  const isOwnProfile = currentUser?._id === userData?._id;
+  
   return (
     <div className="font-parkinsans px-4 sm:px-8 md:px-16 lg:px-10 xl:px-10">
       <div className="flex flex-col md:flex-row items-center justify-between mt-10 w-full">
@@ -176,16 +188,15 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
           </div>
         ) : ( 
           <>
-           <button
-  className={`text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect transition duration-300 ${
-    followRequested ? "opacity-50 cursor-not-allowed" : "hover:bg-pink-700 hover:text-white"
-  }`}
-  onClick={handleFollowToggle}
-  disabled={updating || followRequested}
->
-  {updating ? <CircularProgress size={24} color="inherit" /> : followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
-</button>
-
+            <button
+              className={`text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect transition duration-300 ${
+                followRequested ? "opacity-50 cursor-not-allowed" : "hover:bg-pink-700 hover:text-white"
+              }`}
+              onClick={handleFollowToggle}
+              disabled={updating || followRequested}
+            >
+              {updating ? <CircularProgress size={24} color="inherit" /> : followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
+            </button>
 
             {following && (
               <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
@@ -244,8 +255,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
           label={
             <Badge
               color="error"
-              badgeContent={notificationCount}
-              invisible={notificationCount === 0}
+              badgeContent={isOwnProfile ? notificationCount : 0}
+              invisible={!isOwnProfile || notificationCount === 0}
               sx={{
                 "& .MuiBadge-badge": {
                   fontSize: "10px",
@@ -278,8 +289,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
           label={
             <Badge
               color="error"
-              badgeContent={followRequestCount}
-              invisible={followRequestCount === 0}
+              badgeContent={isOwnProfile ? followRequestCount : 0}
+              invisible={!isOwnProfile || followRequestCount === 0}
               sx={{
                 "& .MuiBadge-badge": {
                   fontSize: "10px",

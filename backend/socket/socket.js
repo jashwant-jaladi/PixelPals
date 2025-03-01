@@ -46,7 +46,7 @@ io.on("connection", (socket) => {
             console.error("Error marking messages as seen:", error);
         }
     });
-    
+
 
     socket.on("typing", ({ conversationId, userId }) => {
         if (!typing[conversationId]) typing[conversationId] = new Set();
