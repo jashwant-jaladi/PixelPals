@@ -51,8 +51,25 @@ const ChatPage = () => {
           });
         } else {
           // For new conversations, we'll update conversations when we receive sender info
-          return prev;
+          const newConversation = {
+            _id: message.conversationId,
+            participants: [
+              {
+                _id: message.sender,
+                username: "Loading...", // Placeholder until we get real data
+                profilePic: "/default-profile.png" // Default pic
+              }
+            ],
+            lastMessage: {
+              text: message.text,
+              sender: message.sender,
+              seen: false
+            }
+          };
+          
+          return [...prev, newConversation];
         }
+          
       });
     });
 
