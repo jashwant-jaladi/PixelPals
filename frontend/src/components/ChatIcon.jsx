@@ -22,49 +22,37 @@ const ChatButton = () => {
     try {
       const count = await fetchUnreadCount(user._id);
       setUnreadCount(count);
-      console.log("✅ Unread count updated:", count);
     } catch (error) {
-      console.error("❌ Error fetching unread count:", error);
+      console.error("Error fetching unread count:", error);
     }
   };
 
   useEffect(() => {
-    if (!user || !socket || isInitialized) return;
+    if (!user?._id || !socket) return;
 
     refreshUnreadCount();
     setIsInitialized(true);
 
-    const handleNewMessage = (message) => {
-      console.log("📩 Received new message:", message);
-
-     
-      if (message.recipient === user._id) {
+    // Listen for new messages
+    socket.on("newMessage", (message) => {
+      // Only increment unread count if message is for current user and not from current conversation
+      if (message.sender !== user._id) {
         if (!selectedConversation || selectedConversation._id !== message.conversationId) {
           setUnreadCount((prev) => prev + 1);
-          console.log("🔴 Unread count incremented");
         }
       }
-    };
+    });
 
-    const handleMessagesSeen = ({ conversationId }) => {
-      console.log("👀 Messages marked as seen:", conversationId);
+    // Listen for seen messages
+    socket.on("messagesSeen", () => {
       refreshUnreadCount();
-    };
-
-    socket.on("newMessage", handleNewMessage);
-    socket.on("messagesSeen", handleMessagesSeen);
+    });
 
     return () => {
-      socket.off("newMessage", handleNewMessage);
-      socket.off("messagesSeen", handleMessagesSeen);
+      socket.off("newMessage");
+      socket.off("messagesSeen");
     };
-  }, [user, socket, selectedConversation, isInitialized]);
-
-  useEffect(() => {
-    if (isInitialized && !selectedConversation) {
-      refreshUnreadCount();
-    }
-  }, [selectedConversation, isInitialized]);
+  }, [user?._id, socket, selectedConversation?._id]);
 
   const handleChatClick = () => {
     navigate("/chat");
@@ -96,4 +84,4 @@ const ChatButton = () => {
   );
 };
 
-export default ChatButton; 
+export default ChatButton;

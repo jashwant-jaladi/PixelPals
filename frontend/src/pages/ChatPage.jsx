@@ -26,36 +26,66 @@ const ChatPage = () => {
   useEffect(() => {
     if (!socket) return;
 
-    socket.on("messagesSeen", ({ conversationId }) => {
-        setMessages((prev) =>
-            prev.map((conv) => {
-                if (conv._id === conversationId) {
-                    return {
-                        ...conv,
-                        lastMessage: {
-                            ...conv.lastMessage,
-                            seen: true,
-                        },
-                    };
-                }
-                return conv;
-            })
+    // Listen for new messages
+    socket.on("newMessage", (message) => {
+      setMessages((prev) => {
+        // Find if there's already a conversation for this message
+        const conversationExists = prev.find(
+          (conv) => conv._id === message.conversationId
         );
+
+        if (conversationExists) {
+          // Update existing conversation
+          return prev.map((conv) => {
+            if (conv._id === message.conversationId) {
+              return {
+                ...conv,
+                lastMessage: {
+                  text: message.text,
+                  sender: message.sender,
+                  seen: false,
+                },
+              };
+            }
+            return conv;
+          });
+        } else {
+          // For new conversations, we'll update conversations when we receive sender info
+          return prev;
+        }
+      });
     });
 
-    
+    // Listen for seen messages
+    socket.on("messagesSeen", ({ conversationId }) => {
+      setMessages((prev) =>
+        prev.map((conv) => {
+          if (conv._id === conversationId) {
+            return {
+              ...conv,
+              lastMessage: {
+                ...conv.lastMessage,
+                seen: true,
+              },
+            };
+          }
+          return conv;
+        })
+      );
+    });
 
     return () => {
-        socket.off("messagesSeen");
+      socket.off("newMessage");
+      socket.off("messagesSeen");
     };
-}, [socket]);
-
+  }, [socket, setMessages]);
 
   useEffect(() => {
     const fetchConversationsData = async () => {
       try {
         const data = await fetchConversations();
         setMessages(data);
+        setConversations(data);
       } catch (error) {
         showToast('Error', error.message, 'error');
       } finally {
@@ -70,6 +100,11 @@ const ChatPage = () => {
       setSelectedConversation(JSON.parse(savedConversation));
     }
   }, []);
+
+  // Keep conversations in sync with messages recoil state
+  useEffect(() => {
+    setConversations(messages);
+  }, [messages]);
 
   useEffect(() => {
     if (selectedConversation) {
@@ -96,8 +131,8 @@ const ChatPage = () => {
         return;
       }
 
-      const existingConversation = conversations.find(
-        (conv) => conv.participants[0]._id === searchedUser._id
+      const existingConversation = messages.find(
+        (conv) => conv.participants[0]?._id === searchedUser._id
       );
 
       if (existingConversation) {
@@ -113,7 +148,7 @@ const ChatPage = () => {
       const mockConversation = {
         mock: true,
         lastMessage: { text: '', sender: '' },
-        _id: Date.now(),
+        _id: Date.now().toString(),
         participants: [
           {
             _id: searchedUser._id,
@@ -122,7 +157,11 @@ const ChatPage = () => {
           },
         ],
       };
+      
+      // Add to both local state and recoil state
       setConversations((prevConvs) => [...prevConvs, mockConversation]);
+      setMessages((prevMsgs) => [...prevMsgs, mockConversation]);
+      
       setSelectedConversation({
         _id: mockConversation._id,
         userId: searchedUser._id,
@@ -174,28 +213,27 @@ const ChatPage = () => {
             ))
           ) : (
             <div className="pt-5">
-             {messages.map((message) => {
-  const participant = message.participants[0] || {}; // Default empty object if user is deleted
-  const isDeleted = !participant._id; // If no ID, assume deleted
-  
-  return (
-    <Conversation
-      key={message._id}
-      conversation={{
-        ...message,
-        participants: [
-          {
-            _id: participant._id || "deleted",
-            username: participant.username || "Deleted User",
-            profilePic: participant.profilePic || "/default-profile.png", // Use a stock profile pic
-          },
-        ],
-      }}
-      isOnline={isDeleted ? false : onlineUsers.includes(participant._id)}
-    />
-  );
-})}
-
+              {conversations.map((message) => {
+                const participant = message.participants[0] || {}; // Default empty object if user is deleted
+                const isDeleted = !participant._id; // If no ID, assume deleted
+                
+                return (
+                  <Conversation
+                    key={message._id}
+                    conversation={{
+                      ...message,
+                      participants: [
+                        {
+                          _id: participant._id || "deleted",
+                          username: participant.username || "Deleted User",
+                          profilePic: participant.profilePic || "/default-profile.png", // Use a stock profile pic
+                        },
+                      ],
+                    }}
+                    isOnline={isDeleted ? false : onlineUsers.includes(participant._id)}
+                  />
+                );
+              })}
             </div>
           )}
         </div>

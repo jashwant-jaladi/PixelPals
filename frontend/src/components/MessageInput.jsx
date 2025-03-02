@@ -10,7 +10,6 @@ import {
   MenuItem,
   Typography,
   CircularProgress
-
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
@@ -60,6 +59,7 @@ const MessageInput = ({ setMessages }) => {
   const handleMoodClose = () => {
     setAnchorEl(null);
   };
+  
   const handleMoodSelection = async (mood) => {
     setSelectedMood(mood);
     setAnchorEl(null);
@@ -94,6 +94,7 @@ const MessageInput = ({ setMessages }) => {
 
     const imgData = selectedFile ? await convertToBase64(selectedFile) : null;
 
+    // Create optimistic message
     const optimisticMessage = {
       _id: Date.now().toString(), 
       text: message,
@@ -103,24 +104,53 @@ const MessageInput = ({ setMessages }) => {
       seen: false,
     };
 
-    
+    // Add to message list
     setMessages((prev) => [...prev, optimisticMessage]);
 
-   
+    // Check if this is a new conversation
+    const isNewConversation = selectedConversation.mock;
+
+    // Update conversations in sidebar for both existing and new conversations
     setConversations((prev) => {
-      return prev.map((conversation) => {
-        if (conversation._id === selectedConversation._id) {
-          return {
-            ...conversation,
+      // Find if conversation already exists in the list
+      const existingConversationIndex = prev.findIndex(
+        (conversation) => conversation._id === selectedConversation._id
+      );
+
+      if (existingConversationIndex >= 0) {
+        // Update existing conversation
+        const updatedConversations = [...prev];
+        updatedConversations[existingConversationIndex] = {
+          ...updatedConversations[existingConversationIndex],
+          lastMessage: {
+            text: message,
+            sender: currentUser._id,
+            seen: false,
+          },
+        };
+        return updatedConversations;
+      } else {
+        // It's a new conversation, add it to the list
+        return [
+          ...prev,
+          {
+            _id: selectedConversation._id,
+            participants: [
+              {
+                _id: selectedConversation.userId,
+                username: selectedConversation.username,
+                profilePic: selectedConversation.userProfilePic,
+              },
+            ],
             lastMessage: {
               text: message,
               sender: currentUser._id,
-              
+              seen: false,
             },
-          };
-        }
-        return conversation;
-      });
+            createdAt: new Date().toISOString(),
+          },
+        ];
+      }
     });
 
     setMessage('');
@@ -128,25 +158,27 @@ const MessageInput = ({ setMessages }) => {
     setSelectedFile(null);
 
     try {
-      const data = await sendMessage(message, selectedConversation.userId, imgData); // API call to send message
+      // Send message to server
+      const data = await sendMessage(message, selectedConversation.userId, imgData);
 
-
+      // Update the message with the real server data
       setMessages((prev) => prev.map((msg) => (msg._id === optimisticMessage._id ? data : msg)));
 
+      // Socket will handle updating other clients
     } catch (error) {
-
+      // If error, remove the optimistic message
       setMessages((prev) => prev.filter((msg) => msg._id !== optimisticMessage._id));
 
-      setConversations((prev) => {
-
-        return prev;
-      });
+      // And remove from conversations if it was a new one
+      if (isNewConversation) {
+        setConversations((prev) => 
+          prev.filter((conv) => conv._id !== selectedConversation._id)
+        );
+      }
 
       console.error(error);
     }
   };
-
-
 
   const convertToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -229,7 +261,6 @@ const MessageInput = ({ setMessages }) => {
               style: { borderRadius: 50 },
             }}
           />
-
 
           <input
             type="file"
