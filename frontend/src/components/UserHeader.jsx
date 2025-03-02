@@ -14,6 +14,8 @@ import { requestFollow } from "../apis/followApi";
 import CreatePost from "./CreatePost";
 import FollowRequest from "./FollowRequest";
 import { useRefreshUser } from "../hooks/useRefreshUser";
+import { conversationAtom } from "../Atom/messageAtom";
+import { useNavigate } from "react-router-dom";
 
 
 
@@ -39,6 +41,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   );
   const [followRequestCount, setFollowRequestCount] = useState(currentUser?.Requested?.length || 0);
   const [currentUserFollowing, setCurrentUserFollowing] = useState([]);
+  const [conversation, setSelectedConversation] = useRecoilState(conversationAtom);
+  const Navigate = useNavigate();
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -215,6 +219,25 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   }, [refreshFollowData]);
   // Show notification badge only on user's own profile
   const isOwnProfile = currentUser?._id === userData?._id;
+
+  const handleDirectMessage = () => {
+    // Create a conversation object
+    const conversationObj = {
+      _id: Date.now(),
+      userId: userData._id,
+      username: userData.username,
+      userProfilePic: userData.profilePic
+    };
+    
+    // Update Recoil state
+    setSelectedConversation(conversationObj);
+    
+    // Save to localStorage
+    localStorage.setItem('selectedConversation', JSON.stringify(conversationObj));
+    
+    // Navigate to the chat page
+    Navigate('/chat');
+  };
   
   return (
     <div className="font-parkinsans px-4 sm:px-8 md:px-16 lg:px-10 xl:px-10">
@@ -252,10 +275,13 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
             </button>
 
             {following && (
-              <Link to="/chat" className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300">
-                Message
-              </Link>
-            )}
+  <button 
+    onClick={handleDirectMessage}
+    className="text-pink-700 font-bold border-2 border-pink-700 px-3 py-1 rounded-md glasseffect hover:bg-pink-700 hover:text-white transition duration-300"
+  >
+    Message
+  </button>
+)}
           </>
         )}
       </div>
