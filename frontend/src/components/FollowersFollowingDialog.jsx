@@ -37,8 +37,24 @@ const FollowersFollowingDialog = ({
   }, [currentUserFollowing]);
 
   useEffect(() => {
-    setSelectedList(selectedTab === "followers" ? followers : following);
+    // Make sure we have unique users by ID in the selected list
+    const uniqueUsers = selectedTab === "followers" 
+      ? removeDuplicateById(followers) 
+      : removeDuplicateById(following);
+    setSelectedList(uniqueUsers);
   }, [selectedTab, followers, following]);
+
+  // Helper function to remove duplicates by ID
+  const removeDuplicateById = (users) => {
+    const uniqueMap = {};
+    return users.filter(user => {
+      if (user._id && !uniqueMap[user._id]) {
+        uniqueMap[user._id] = true;
+        return true;
+      }
+      return false;
+    });
+  };
 
   async function handleFollowUnfollow(userId, isFollowing) {
     setLoadingStates((prev) => ({ ...prev, [userId]: true }));
@@ -78,9 +94,7 @@ const FollowersFollowingDialog = ({
 
   const handleTabChange = (event, newValue) => {
     setSelectedTab(newValue);
-    setSelectedList(newValue === "followers" ? followers : following);
   };
-
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" scroll="paper">
@@ -108,9 +122,8 @@ const FollowersFollowingDialog = ({
           </div>
         ) : selectedList.length > 0 ? (
           <ul>
-            {[...new Set(selectedList)].map((user) => {
-            
-            const isFollowing = followingMap[user._id] || false;
+            {selectedList.map((user) => {
+              const isFollowing = followingMap[user._id] || false;
               const isLoading = loadingStates[user._id] || false;
 
               return (
@@ -124,37 +137,35 @@ const FollowersFollowingDialog = ({
                   </div>
 
                   {user._id === currentUser?._id ? (
-  <button 
-    disabled 
-    className="text-sm font-bold px-4 py-2 rounded-lg bg-gray-900 text-gray-500 border-2 border-gray-700 cursor-not-allowed"
-    style={{ fontFamily: "Parkinsans" }}
-  >
-    You
-  </button>
-) : user?.Requested?.includes(currentUser._id) ? ( // Check if currentUser has requested to follow
-  <button 
-    disabled 
-    className="text-sm font-bold px-4 py-2 rounded-lg border-2 border-gray-500 bg-gray-700 text-gray-400 cursor-not-allowed"
-    style={{ fontFamily: "Parkinsans" }}
-  >
-    Requested
-  </button>
-) : (
-  <button
-    onClick={() => handleFollowUnfollow(user._id, isFollowing)}
-    disabled={isLoading}
-    className={`text-sm font-bold px-4 py-2 rounded-lg border-2 border-pink-500 
-      ${isLoading ? "bg-gray-500 text-white cursor-not-allowed" : "text-pink-500 hover:bg-pink-700 hover:text-white transition-all duration-300 tracking-wide"}`}
-    style={{ fontFamily: "Parkinsans" }}
-  >
-    {isLoading ? "Processing..." : isFollowing ? "Unfollow" : "Follow"}
-  </button>
-)}
-
+                    <button 
+                      disabled 
+                      className="text-sm font-bold px-4 py-2 rounded-lg bg-gray-900 text-gray-500 border-2 border-gray-700 cursor-not-allowed"
+                      style={{ fontFamily: "Parkinsans" }}
+                    >
+                      You
+                    </button>
+                  ) : user?.Requested?.includes(currentUser._id) ? (
+                    <button 
+                      disabled 
+                      className="text-sm font-bold px-4 py-2 rounded-lg border-2 border-gray-500 bg-gray-700 text-gray-400 cursor-not-allowed"
+                      style={{ fontFamily: "Parkinsans" }}
+                    >
+                      Requested
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => handleFollowUnfollow(user._id, isFollowing)}
+                      disabled={isLoading}
+                      className={`text-sm font-bold px-4 py-2 rounded-lg border-2 border-pink-500 
+                        ${isLoading ? "bg-gray-500 text-white cursor-not-allowed" : "text-pink-500 hover:bg-pink-700 hover:text-white transition-all duration-300 tracking-wide"}`}
+                      style={{ fontFamily: "Parkinsans" }}
+                    >
+                      {isLoading ? "Processing..." : isFollowing ? "Unfollow" : "Follow"}
+                    </button>
+                  )}
                 </li>
               );
-            }
-            )}
+            })}
           </ul>
         ) : (
           <p className="text-center text-gray-500 py-6" style={{ fontFamily: "Parkinsans", fontWeight: "bold" }}>No {selectedTab} yet.</p>
