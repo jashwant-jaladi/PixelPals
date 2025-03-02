@@ -16,16 +16,25 @@ const FollowersFollowingDialog = ({
   open,
   onClose,
   loading,
-  setLoading,
   setFollowingList,
   followers,
   following,
   selectedTab,
   setSelectedTab,
   currentUser,
+  currentUserFollowing=[],
 }) => {
   const [selectedList, setSelectedList] = useState([]);
   const [loadingStates, setLoadingStates] = useState({});
+  const [followingMap, setFollowingMap] = useState({});
+
+  useEffect(() => {
+    const map = {};
+    currentUserFollowing.forEach(id => {
+      map[id] = true;
+    });
+    setFollowingMap(map);
+  }, [currentUserFollowing]);
 
   useEffect(() => {
     setSelectedList(selectedTab === "followers" ? followers : following);
@@ -33,24 +42,35 @@ const FollowersFollowingDialog = ({
 
   async function handleFollowUnfollow(userId, isFollowing) {
     setLoadingStates((prev) => ({ ...prev, [userId]: true }));
-
+  
     try {
+      // API call
+      const response = await followUser(userId);
+      if (!response?.success) throw new Error("Follow/unfollow failed");
+  
+      // Update local state only after successful API call
+      setFollowingMap(prev => ({
+        ...prev,
+        [userId]: !isFollowing
+      }));
+  
+      // If current user is unfollowing someone
       if (isFollowing) {
         setFollowingList((prev) => prev.filter((user) => user._id !== userId));
       } else {
+        // If current user is following someone
         const newUser = followers.find((user) => user._id === userId) || following.find((user) => user._id === userId);
         if (newUser) {
           setFollowingList((prev) => [...prev, newUser]);
         }
       }
-
-      setSelectedList(selectedTab === "followers" ? followers : following);
-
-      // API call
-      const response = await followUser(userId);
-      if (!response?.success) throw new Error("Follow/unfollow failed");
     } catch (error) {
       console.error("Follow/unfollow error:", error);
+      // Revert the UI state if the API call fails
+      setFollowingMap(prev => ({
+        ...prev,
+        [userId]: isFollowing // Revert to the previous state
+      }));
     } finally {
       setLoadingStates((prev) => ({ ...prev, [userId]: false }));
     }
@@ -88,9 +108,9 @@ const FollowersFollowingDialog = ({
           </div>
         ) : selectedList.length > 0 ? (
           <ul>
-            {selectedList.map((user) => {
+            {[...new Set(selectedList)].map((user) => {
             
-              const isFollowing = following.some((f) => f._id === user._id);
+            const isFollowing = followingMap[user._id] || false;
               const isLoading = loadingStates[user._id] || false;
 
               return (
@@ -133,7 +153,8 @@ const FollowersFollowingDialog = ({
 
                 </li>
               );
-            })}
+            }
+            )}
           </ul>
         ) : (
           <p className="text-center text-gray-500 py-6" style={{ fontFamily: "Parkinsans", fontWeight: "bold" }}>No {selectedTab} yet.</p>

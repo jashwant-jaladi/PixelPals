@@ -38,11 +38,27 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     currentUser && user.followers?.includes(currentUser._id)
   );
   const [followRequestCount, setFollowRequestCount] = useState(currentUser?.Requested?.length || 0);
+  const [currentUserFollowing, setCurrentUserFollowing] = useState([]);
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
   
   useRefreshUser(3000);
+
+  useEffect(() => {
+    const fetchCurrentUserFollowingIds = async () => {
+      if (currentUser?._id) {
+        try {
+          const { following = [] } = await fetchFollowersAndFollowing(currentUser._id);
+          setCurrentUserFollowing(following.map(f => f._id));
+        } catch (error) {
+          console.error("Error fetching current user following:", error);
+        }
+      }
+    };
+    
+    fetchCurrentUserFollowingIds();
+  }, [currentUser?._id]);
   
   useEffect(() => {
     if (currentUser && userData) {
@@ -395,7 +411,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         setFollowersList={setFollowersList}
         setFollowingList={setFollowingList}
         currentUser={currentUser}
-        handleFollowToggle={handleFollowToggle}
+        currentUserFollowing={currentUserFollowing}
       />
     </div>
   );
