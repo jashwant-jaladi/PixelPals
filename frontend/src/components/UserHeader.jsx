@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Avatar, IconButton, Menu, MenuItem, Snackbar, CircularProgress, Tabs, Tab, Badge } from "@mui/material";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import ShareIcon from "@mui/icons-material/Share";
@@ -160,6 +160,43 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
     }
   }, [currentUser]);
 
+  const refreshFollowData = useCallback(async () => {
+    try {
+      const { followers = [], following = [] } = await fetchFollowersAndFollowing(userData._id);
+      
+      // Update the count in userData state
+      setUserData((prev) => ({
+        ...prev,
+        followers: followers.map((f) => f._id),
+        following: following.map((f) => f._id),
+      }));
+
+      // If dialog is open, also update those lists
+      if (followersDialogOpen) {
+        setFollowersList(followers);
+        setFollowingList(following);
+      }
+
+      if (currentUser) {
+        setFollowing(followers.some((f) => f._id === currentUser._id));
+      }
+    } catch (error) {
+      console.error("Error refreshing follow data:", error);
+    }
+  }, [userData?._id, followersDialogOpen, currentUser]);
+
+  // Set up polling - refresh every 5 seconds
+  useEffect(() => {
+    const pollingInterval = setInterval(() => {
+      refreshFollowData();
+    }, 2000); // Poll every 5 seconds
+
+    // Initial fetch
+    refreshFollowData();
+
+    // Clean up on unmount
+    return () => clearInterval(pollingInterval);
+  }, [refreshFollowData]);
   // Show notification badge only on user's own profile
   const isOwnProfile = currentUser?._id === userData?._id;
   
