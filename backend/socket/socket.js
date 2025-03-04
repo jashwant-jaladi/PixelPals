@@ -51,16 +51,21 @@ io.on("connection", (socket) => {
     socket.on("typing", ({ conversationId, userId }) => {
         if (!typing[conversationId]) typing[conversationId] = new Set();
         typing[conversationId].add(userId);
-        io.to(conversationId).emit("typing", { conversationId, users: Array.from(typing[conversationId]) });
+        
+        // Emit to all users in that conversation except sender
+        socket.broadcast.emit("typing", { conversationId, users: Array.from(typing[conversationId]) });
     });
-
+    
     socket.on("stopTyping", ({ conversationId, userId }) => {
         if (typing[conversationId]) {
             typing[conversationId].delete(userId);
             if (typing[conversationId].size === 0) delete typing[conversationId];
         }
-        io.to(conversationId).emit("stopTyping", { conversationId, users: Array.from(typing[conversationId] || []) });
+        
+        // Emit to all users in that conversation except sender
+        socket.broadcast.emit("stopTyping", { conversationId, users: Array.from(typing[conversationId] || []) });
     });
+    
 
     const updateOnlineUsers = () => {
         io.emit("getOnlineUsers", Object.keys(userSocketMap));
