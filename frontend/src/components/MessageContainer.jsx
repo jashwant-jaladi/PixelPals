@@ -101,12 +101,12 @@ const MessageContainer = ({ isDeleted }) => {
 		});
 	}, [socket, currentUser._id, messages, selectedConversation]);
 
-	useEffect(() => {
-    if (!currentUser) return; // Ensure user exists
-
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-}, [messages, currentUser]);
-
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    if (messages.length > 0) {
+      messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [messages]);
 
   useEffect(() => {
     const getMessages = async () => {
@@ -150,11 +150,15 @@ const MessageContainer = ({ isDeleted }) => {
             </div>
           ))
         ) : (
-          messages.map((message) => (
-            <div ref={messages.length - 1 === messages.indexOf(message) ? messageEndRef : null} className="flex flex-col" key={message._id}>
+          <>
+          {messages.map((message) => (
+            <div className="flex flex-col" key={message._id}>
               <Message message={message} ownMessage={message.sender === currentUser._id} />
             </div>
-          ))
+          ))}
+          {/* Add a separate div for scrolling reference */}
+          <div ref={messageEndRef} />
+        </>
         )}
       </div>
 

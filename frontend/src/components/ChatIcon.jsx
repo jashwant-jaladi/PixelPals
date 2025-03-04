@@ -30,43 +30,50 @@ const ChatButton = () => {
   useEffect(() => {
     if (!user?._id || !socket) return;
 
-    refreshUnreadCount();
-    setIsInitialized(true);
+    // Only initialize once to avoid resetting the badge repeatedly
+    if (!isInitialized) {
+      refreshUnreadCount();
+      setIsInitialized(true);
+    }
 
     // Listen for new messages
-    // In ChatIcon.jsx, update the newMessage handler to only count unread messages for the recipient
-socket.on("newMessage", (message) => {
-  // Only increment unread count if this message is intended for the current user
-  // AND sent by someone else (not the current user)
-  if (message.sender !== user._id && message.recipient === user._id) {
-    const isCurrentConversation = selectedConversation && 
-                                  selectedConversation._id === message.conversationId &&
-                                  window.location.pathname === '/chat';
-    
-    // Don't increment if viewing the current conversation
-    if (!isCurrentConversation ) {
-      setUnreadCount((prev) => prev + 1);
-      
-      // Show browser notification if supported
-      if ("Notification" in window && Notification.permission === "granted") {
-        const notification = new Notification("New Message", {
-          body: message.text || "You received a new message",
-          icon: "/favicon.ico"
-        });
+    const handleNewMessage = (message) => {
+      // Only handle notifications in ChatIcon component when:
+      // 1. Message is for current user AND
+      // 2. Current user is NOT the sender AND
+      // 3. User is either not in chat page OR not viewing this specific conversation
+      if (message.recipient === user._id && message.sender !== user._id) {
+        const isCurrentConversation = selectedConversation && 
+                                    selectedConversation._id === message.conversationId &&
+                                    window.location.pathname === '/chat';
         
-        notification.onclick = () => {
-          window.focus();
-          navigate('/chat');
-        };
+        // Don't increment if viewing the current conversation
+        if (!isCurrentConversation) {
+          setUnreadCount((prev) => prev + 1);
+          
+          // Show browser notification if supported
+          if ("Notification" in window && Notification.permission === "granted") {
+            const notification = new Notification("New Message", {
+              body: message.text || "You received a new message",
+              icon: "/favicon.ico"
+            });
+            
+            notification.onclick = () => {
+              window.focus();
+              navigate('/chat');
+            };
+          }
+        }
       }
-    }
-  }
-});
+    };
 
     // Listen for seen messages
-    socket.on("messagesSeen", () => {
+    const handleMessagesSeen = () => {
       refreshUnreadCount();
-    });
+    };
+
+    socket.on("newMessage", handleNewMessage);
+    socket.on("messagesSeen", handleMessagesSeen);
 
     // Request notification permission
     if ("Notification" in window && Notification.permission !== "denied") {
@@ -74,14 +81,16 @@ socket.on("newMessage", (message) => {
     }
 
     return () => {
-      socket.off("newMessage");
-      socket.off("messagesSeen");
+      socket.off("newMessage", handleNewMessage);
+      socket.off("messagesSeen", handleMessagesSeen);
     };
   }, [user?._id, socket, selectedConversation, navigate]);
 
-  // Reset unread count when entering chat page
+  // Reset unread count only when entering chat page, not on every location change
   useEffect(() => {
-    if (window.location.pathname === '/chat') {
+    const currentPath = window.location.pathname;
+    // Only refresh when actually entering the chat page
+    if (currentPath === '/chat' && !isInitialized) {
       refreshUnreadCount();
     }
   }, [window.location.pathname]);

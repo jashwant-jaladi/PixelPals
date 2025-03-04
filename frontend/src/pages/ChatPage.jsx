@@ -79,15 +79,7 @@ const ChatPage = () => {
     socket.on("newMessage", (message) => {
       // Update the conversation list
       updateConversationWithMessage(message);
-      
-      // Update unread count if message is not from current user
-      // and not from the currently selected conversation
-      if (message.sender !== currentUser._id && 
-          (!selectedConversation || selectedConversation._id !== message.conversationId)) {
-        setUnreadCount((prev) => prev + 1);
-      }
     });
-
     // Listen for seen messages
     socket.on("messagesSeen", ({ conversationId }) => {
       setMessages((prev) =>

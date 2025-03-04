@@ -368,11 +368,6 @@ const guestLogin = async (req, res) => {
         // Generate token and set cookies
         const token = generateAndSetCookies(guestUser, res);
 
-        // Emit an event to join the socket room after login
-        if (req.app.get("io")) {
-            req.app.get("io").emit("joinRoom", { userId: guestUser._id });
-        }
-
         res.status(200).json({ token, user: guestUser });
     } catch (error) {
         console.error("Guest Login Error:", error);
