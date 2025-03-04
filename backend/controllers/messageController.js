@@ -34,6 +34,7 @@ async function sendMessage(req, res) {
 		const newMessage = new Message({
 			conversationId: conversation._id,
 			sender: senderId,
+			recipient: recipientId,
 			text: message,
 			img: img || "",
 		});
@@ -52,6 +53,7 @@ async function sendMessage(req, res) {
 		if (recipientSocketId) {
 			io.to(recipientSocketId).emit("newMessage", newMessage);
 		}
+		res.status(201).json(newMessage);
 	} catch (error) {
 		res.status(500).json({ error: error.message });
 	}
@@ -167,14 +169,14 @@ const messageSeenCount = async (req, res) => {
 	try {
 	  const { userId } = req.params;
 	  const unreadCount = await Message.countDocuments({
-		recipient: userId, 
+		recipient: userId,  // Make sure this field exists and is set correctly
 		seen: false,
 	  });
 	  res.json({ unreadCount });
 	} catch (error) {
 	  res.status(500).json({ error: "Failed to fetch unread messages count" });
 	}
-  }
+  };
 
 
 

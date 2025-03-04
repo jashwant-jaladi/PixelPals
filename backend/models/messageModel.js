@@ -3,7 +3,8 @@ import mongoose from "mongoose";
 const messageSchema = new mongoose.Schema(
 	{
 		conversationId: { type: mongoose.Schema.Types.ObjectId, ref: "Conversation" },
-		sender: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+		sender: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+		recipient: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 		text: String,
 		seen: {
 			type: Boolean,

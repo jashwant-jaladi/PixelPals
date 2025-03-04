@@ -359,21 +359,27 @@ const resetPassword = async (req, res) => {
 // controllers/userController.js
 const guestLogin = async (req, res) => {
     try {
-      const guestUser = await User.findOne({ email: "jashwant.jvs@gmail.com" });
-  
-      if (!guestUser) {
-        return res.status(404).json({ error: "Guest user not found" });
-      }
-  
-      // Use your helper function to generate the token and set cookies
-      const token = generateAndSetCookies(guestUser, res);
-  
-      res.status(200).json({ token, user: guestUser }); // Also send user data
+        const guestUser = await User.findOne({ email: "jashwant.jvs@gmail.com" });
+
+        if (!guestUser) {
+            return res.status(404).json({ error: "Guest user not found" });
+        }
+
+        // Generate token and set cookies
+        const token = generateAndSetCookies(guestUser, res);
+
+        // Emit an event to join the socket room after login
+        if (req.app.get("io")) {
+            req.app.get("io").emit("joinRoom", { userId: guestUser._id });
+        }
+
+        res.status(200).json({ token, user: guestUser });
     } catch (error) {
-      console.error("Guest Login Error:", error);
-      res.status(500).json({ error: "Guest login failed" });
+        console.error("Guest Login Error:", error);
+        res.status(500).json({ error: "Guest login failed" });
     }
-  };
+};
+
   
   const fetchUserById = async (req, res) => {
     try {

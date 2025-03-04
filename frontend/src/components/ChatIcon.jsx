@@ -34,30 +34,34 @@ const ChatButton = () => {
     setIsInitialized(true);
 
     // Listen for new messages
-    socket.on("newMessage", (message) => {
-      // Only increment unread count if message is for current user and not from current conversation
-      if (message.sender !== user._id) {
-        const isCurrentConversation = selectedConversation && selectedConversation._id === message.conversationId;
+    // In ChatIcon.jsx, update the newMessage handler to only count unread messages for the recipient
+socket.on("newMessage", (message) => {
+  // Only increment unread count if this message is intended for the current user
+  // AND sent by someone else (not the current user)
+  if (message.sender !== user._id && message.recipient === user._id) {
+    const isCurrentConversation = selectedConversation && 
+                                  selectedConversation._id === message.conversationId &&
+                                  window.location.pathname === '/chat';
+    
+    // Don't increment if viewing the current conversation
+    if (!isCurrentConversation ) {
+      setUnreadCount((prev) => prev + 1);
+      
+      // Show browser notification if supported
+      if ("Notification" in window && Notification.permission === "granted") {
+        const notification = new Notification("New Message", {
+          body: message.text || "You received a new message",
+          icon: "/favicon.ico"
+        });
         
-        // Don't increment if message is part of the current conversation and user is on chat page
-        if (!isCurrentConversation || window.location.pathname !== '/chat') {
-          setUnreadCount((prev) => prev + 1);
-          
-          // Show browser notification if supported
-          if ("Notification" in window && Notification.permission === "granted") {
-            const notification = new Notification("New Message", {
-              body: message.text || "You received a new message",
-              icon: "/favicon.ico" // Add your app icon path
-            });
-            
-            notification.onclick = () => {
-              window.focus();
-              navigate('/chat');
-            };
-          }
-        }
+        notification.onclick = () => {
+          window.focus();
+          navigate('/chat');
+        };
       }
-    });
+    }
+  }
+});
 
     // Listen for seen messages
     socket.on("messagesSeen", () => {

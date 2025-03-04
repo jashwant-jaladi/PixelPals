@@ -102,8 +102,11 @@ const MessageContainer = ({ isDeleted }) => {
 	}, [socket, currentUser._id, messages, selectedConversation]);
 
 	useEffect(() => {
-		messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-	}, [messages]);
+    if (!currentUser) return; // Ensure user exists
+
+    messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
+}, [messages, currentUser]);
+
 
   useEffect(() => {
     const getMessages = async () => {
