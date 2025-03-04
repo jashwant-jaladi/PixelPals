@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Avatar, Skeleton } from '@mui/material';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import Message from './Message';
@@ -19,7 +19,42 @@ const MessageContainer = ({ isDeleted }) => {
   const [isTyping, setIsTyping] = useState(false);
   const { socket } = useSocket();
   const setConversations = useSetRecoilState(messageAtom);
-  const messageEndRef = useRef(null);
+
+  const messagesContainerRef = useRef(null);
+  const [isScrolledToBottom, setIsScrolledToBottom] = useState(true);
+
+  const scrollToBottom = useCallback(() => {
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      setIsScrolledToBottom(true);
+    }
+  }, []);
+
+  // Check scroll position
+  const checkScrollPosition = useCallback(() => {
+    if (messagesContainerRef.current) {
+      const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+      const atBottom = scrollHeight - scrollTop <= clientHeight + 50; // 50px buffer
+      setIsScrolledToBottom(atBottom);
+    }
+  }, []);
+  useEffect(() => {
+    // Scroll to bottom when messages change, but only if previously at bottom
+    if (messages.length > 0 && isScrolledToBottom) {
+      scrollToBottom();
+    }
+  }, [messages, isScrolledToBottom, scrollToBottom]);
+
+  // Add scroll event listener to track scroll position
+  useEffect(() => {
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+      return () => {
+        container.removeEventListener('scroll', checkScrollPosition);
+      };
+    }
+  }, [checkScrollPosition]);
 
   useEffect(() => {
     if (!socket) return;
@@ -101,12 +136,6 @@ const MessageContainer = ({ isDeleted }) => {
 		});
 	}, [socket, currentUser._id, messages, selectedConversation]);
 
-  useEffect(() => {
-    // Scroll to bottom when messages change
-    if (messages.length > 0) {
-      messageEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages]);
 
   useEffect(() => {
     const getMessages = async () => {
@@ -137,7 +166,7 @@ const MessageContainer = ({ isDeleted }) => {
         <hr className="mt-3 border-pink-500" />
       </div>
 
-      <div className="flex-1 overflow-auto p-5 space-y-4">
+      <div className="flex-1 overflow-auto p-5 space-y-4 relative" ref={messagesContainerRef}>
         {loading ? (
           Array.from({ length: 5 }).map((_, index) => (
             <div key={index} className={`flex items-center gap-3 mb-4 p-5 ${index % 2 === 0 ? 'justify-end' : 'justify-start'}`}>
@@ -156,8 +185,16 @@ const MessageContainer = ({ isDeleted }) => {
               <Message message={message} ownMessage={message.sender === currentUser._id} />
             </div>
           ))}
-          {/* Add a separate div for scrolling reference */}
-          <div ref={messageEndRef} />
+      {!isScrolledToBottom && (
+              <button 
+                onClick={scrollToBottom}
+                className="sticky bottom-5 left-1/2 transform -translate-x-1/2 
+                           bg-pink-500 text-white px-4 py-2 rounded-full 
+                           shadow-lg hover:bg-pink-600 z-10"
+              >
+                Scroll to Latest
+              </button>
+            )}
         </>
         )}
       </div>
