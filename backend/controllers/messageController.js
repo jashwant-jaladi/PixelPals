@@ -135,35 +135,50 @@ async function generateCohereResponse(req, res) {
 
   async function markMessageAsSeen(req, res) {
 	try {
-		const { messageId } = req.body;
-		const userId = req.user._id;
-
-		const message = await Message.findById(messageId);
-		if (!message) {
-			return res.status(404).json({ error: "Message not found" });
-		}
-
-		// Ensure only the recipient can mark it as seen
-		const conversation = await Conversation.findById(message.conversationId);
-		if (!conversation.participants.includes(userId)) {
-			return res.status(403).json({ error: "Unauthorized" });
-		}
-
-		// Update the seen status
+	  const { messageId } = req.body;
+	  const userId = req.user._id;
+  
+	  const message = await Message.findById(messageId);
+	  if (!message) {
+		return res.status(404).json({ error: "Message not found" });
+	  }
+  
+	  // Ensure only the recipient can mark it as seen
+	  const conversation = await Conversation.findById(message.conversationId);
+	  if (!conversation.participants.includes(userId)) {
+		return res.status(403).json({ error: "Unauthorized" });
+	  }
+  
+	  // Only update if not already seen
+	  if (!message.seen) {
 		message.seen = true;
 		await message.save();
-
+  
+		// Update conversation's last message seen status
+		await Conversation.updateOne(
+		  { _id: message.conversationId },
+		  { 
+			$set: { 
+			  "lastMessage.seen": true 
+			} 
+		  }
+		);
+  
 		// Notify the sender in real time
 		const senderSocketId = getRecipientSocketId(message.sender);
 		if (senderSocketId) {
-			io.to(senderSocketId).emit("messageSeen", { messageId });
+		  io.to(senderSocketId).emit("messageSeen", { 
+			messageId, 
+			conversationId: message.conversationId 
+		  });
 		}
-
-		res.status(200).json({ success: true });
+	  }
+  
+	  res.status(200).json({ success: true });
 	} catch (error) {
-		res.status(500).json({ error: error.message });
+	  res.status(500).json({ error: error.message });
 	}
-}
+  }
 
 const messageSeenCount = async (req, res) => {
 	try {

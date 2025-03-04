@@ -31,21 +31,35 @@ io.on("connection", (socket) => {
 
     socket.on("markMessagesAsSeen", async ({ conversationId, userId }) => {
         try {
-            await Message.updateMany(
-                { conversationId, seen: false },
-                { $set: { seen: true } }
-            );
-            await Conversation.updateOne(
-                { _id: conversationId },
-                { $set: { "lastMessage.seen": true } }
-            );
-    
-            // Notify the user that messages have been seen
-            io.emit("messagesSeen", { conversationId });
+          // Update all unseen messages in the conversation
+          await Message.updateMany(
+            { 
+              conversationId, 
+              recipient: userId,
+              seen: false 
+            },
+            { $set: { seen: true } }
+          );
+      
+          // Update conversation's last message
+          await Conversation.updateOne(
+            { _id: conversationId },
+            { 
+              $set: { 
+                "lastMessage.seen": true 
+              } 
+            }
+          );
+      
+          // Broadcast to all clients
+          io.emit("messagesSeen", { 
+            conversationId, 
+            userId 
+          });
         } catch (error) {
-            console.error("Error marking messages as seen:", error);
+          console.error("Error marking messages as seen:", error);
         }
-    });
+      });
 
 
     socket.on("typing", ({ conversationId, userId }) => {
