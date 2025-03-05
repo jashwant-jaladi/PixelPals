@@ -7,7 +7,7 @@ import VerifiedIcon from '@mui/icons-material/Verified';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import useGetUserProfile from '../hooks/useGetUserProfile';
 import { useParams, useNavigate } from 'react-router-dom';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
@@ -91,26 +91,39 @@ const PostPage = () => {
       setSnackbarOpen(true);
     }
   };
-  
 
   if (!currentPost) return null;
+
+  // Format date for small screens
+  const formattedDate = currentPost.createdAt
+    ? format(new Date(currentPost.createdAt), 'MMM d') // e.g., "Mar 4"
+    : '';
 
   return (
     <div className="font-parkinsans">
       <div className="max-w-4xl mx-auto px-4">
         <div className="pl-5">
-          <div className="flex justify-between w-full mt-10 font-bold">
+          {/* Avatar Section */}
+          <div className="flex justify-center my-4">
+            <Avatar src={user?.profilePic} sx={{ width: 60, height: 60 }} />
+          </div>
+
+          {/* Username, Verified Icon, Date, and Actions Section */}
+          <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-2 sm:gap-0">
+            {/* Username and Verified Icon */}
             <div className="flex items-center gap-2">
-              <Avatar src={user?.profilePic} sx={{ width: 60, height: 60, marginRight: 2 }} />
-              <div className="flex items-center gap-2">
-                <div>{user?.username}</div>
-                <VerifiedIcon color="primary" />
-              </div>
+              <div className="font-bold">{user?.username}</div>
+              <VerifiedIcon color="primary" />
             </div>
-            
-            <div className="flex gap-3 items-center">
+
+            {/* Date and Actions */}
+            <div className="flex items-center gap-3">
+              {/* Show shortened date on small screens and full relative time on larger screens */}
               <div className="text-sm text-gray-500">
-                {currentPost.createdAt && formatDistanceToNow(new Date(currentPost.createdAt))} ago
+                <span className="sm:hidden">{formattedDate}</span>
+                <span className="hidden sm:inline">
+                  {currentPost.createdAt && formatDistanceToNow(new Date(currentPost.createdAt))} ago
+                </span>
               </div>
               <MoreHorizIcon />
               {currentUser?._id === user?._id && (
@@ -123,8 +136,10 @@ const PostPage = () => {
             </div>
           </div>
           
+          {/* Caption Section */}
           <p className="mt-7 pl-5 font-bold">{currentPost?.caption}</p>
           
+          {/* Image Section */}
           <div className="w-full">
             <img
               src={currentPost?.image}
@@ -133,15 +148,17 @@ const PostPage = () => {
             />
           </div>
 
+          {/* Actions Section */}
           <div className='flex justify-center'> 
             <Actions post={currentPost} />
           </div>
 
+          {/* Login Prompt Section */}
           {!currentUser && (
             <div>
               <hr className="my-3" />
-              <div className="flex justify-between items-center">
-                <p className="font-bold">👋 Login to like, post and comment on posts.</p>
+              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p className="font-bold text-center sm:text-left">👋 Login to like, post and comment on posts.</p>
                 <Link to="/auth">
                   <Button 
                     sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white' }} 
@@ -156,6 +173,7 @@ const PostPage = () => {
 
           <hr className="my-3" />
 
+          {/* Comments Section */}
           {[...currentPost.comments].reverse().map((comment) => (
             <Comment 
               key={comment._id} 
@@ -170,6 +188,7 @@ const PostPage = () => {
           <div className="mt-10"></div>
         </div>
         
+        {/* Snackbar for Notifications */}
         <Snackbar 
           open={snackbarOpen} 
           autoHideDuration={6000} 

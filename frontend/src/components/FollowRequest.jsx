@@ -82,34 +82,33 @@ const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, use
     }
   };
 
-  if(currentUser._id !== userData._id)
-  {
+  if (currentUser._id !== userData._id) {
     return (
       <p className="flex justify-center mx-auto w-full text-pink-700 text-xl text-opacity-90 font-medium mt-6">
         You are not allowed to see follow requests for this user
       </p>
-    )
+    );
   }
 
   return (
     <div className="w-full mt-6 p-4 bg-inherit rounded-lg text-white">
-    
       {loading ? (
         <div className="flex justify-center">
           <CircularProgress color="secondary" />
         </div>
       ) : requestedUsers.length === 0 ? (
         <p className="flex justify-center mx-auto w-full text-pink-700 text-xl text-opacity-90 font-medium">
-                    No new Follow Requests
-                </p>
+          No new Follow Requests
+        </p>
       ) : (
         <div className="space-y-4">
           {requestedUsers.map((user) => (
             <Box
               key={user._id}
-              className="flex items-center justify-between p-3 border border-gray-700 rounded-lg bg-gray-800 shadow-md"
+              className="flex flex-col sm:flex-row items-center justify-between p-3 border border-gray-700 rounded-lg bg-gray-800 shadow-md"
             >
-              <Stack direction="row" spacing={2} alignItems="center">
+              {/* User Info */}
+              <Stack direction="row" spacing={2} alignItems="center" className="w-full sm:w-auto ">
                 <Avatar src={user.profilePic} alt={user.name} />
                 <Box>
                   <Typography variant="body1" className="font-bold">
@@ -121,13 +120,22 @@ const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, use
                 </Box>
               </Stack>
 
-              <Stack direction="row" spacing={2}>
+              {/* Buttons */}
+              <Stack
+                direction="row"
+                spacing={2}
+                className="w-full sm:w-auto mt-4 sm:mt-0 justify-end"
+              >
                 <Button
                   variant="contained"
                   color="primary"
                   size="small"
                   onClick={() => handleAccept(user._id)}
-                  sx={{ backgroundColor: "green", "&:hover": { backgroundColor: "darkgreen" } }}
+                  sx={{
+                    backgroundColor: "green",
+                    "&:hover": { backgroundColor: "darkgreen" },
+                    width: { xs: "100%", sm: "auto" },
+                  }}
                 >
                   Accept
                 </Button>
@@ -136,6 +144,7 @@ const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, use
                   color="error"
                   size="small"
                   onClick={() => handleReject(user._id)}
+                  sx={{ width: { xs: "100%", sm: "auto" } }}
                 >
                   Reject
                 </Button>
