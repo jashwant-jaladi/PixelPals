@@ -13,7 +13,7 @@ const SuggestedUsers = () => {
     const getSuggestedUsers = async () => {
       try {
         const users = await fetchSuggestedUsers();
-        setSuggestedUsers(users);
+        setSuggestedUsers(users.slice(0, 4));
       } catch (error) {
         setError(error.message); // Display the error message
       } finally {
@@ -29,7 +29,7 @@ const SuggestedUsers = () => {
       <h3 className="text-lg font-bold mb-4 text-center text-primary font-parkinsans">Suggested Users</h3>
       
       {loading ? (
-        Array.from({ length: 5 }).map((_, index) => (
+        Array.from({ length: 4}).map((_, index) => (
           <Box
             key={index}
             sx={{

@@ -105,7 +105,7 @@ const ChatButton = () => {
         variant="contained"
         sx={{
           backgroundColor: unreadCount > 0 ? "rgba(233, 30, 99, 0.2)" : "rgba(176, 73, 174, 0.1)",
-          color: "#ffffff",
+          color: "inherit",
           fontWeight: "bold",
           borderRadius: "12px",
           border: unreadCount > 0 ? "1px solid rgba(233, 30, 99, 0.69)" : "1px solid rgba(176, 73, 174, 0.69)",

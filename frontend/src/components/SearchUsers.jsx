@@ -46,7 +46,7 @@ const SearchUsers = ({ onSearchResult }) => {
   return (
     <div className="flex flex-col items-center gap-4 p-6 bg-inherit rounded-lg shadow-sm font-parkinsans">
       {/* Title */}
-      <Typography variant="h5">Search User</Typography>
+      <Typography variant="h5" fontFamily={'Parkinsans'}>Search User</Typography>
 
       {/* Search Input Field */}
       <TextField
@@ -64,9 +64,11 @@ const SearchUsers = ({ onSearchResult }) => {
           style: {
             border: '1px solid #ccc',
             borderColor: pink[500],
+            fontFamily: 'Parkinsans',
           },
         }}
         className="border-pink-700"
+        
       />
 
       {/* Search Button */}
@@ -78,6 +80,7 @@ const SearchUsers = ({ onSearchResult }) => {
           borderColor: pink[500],
           color: 'white',
           textTransform: 'none',
+          fontFamily: 'Parkinsans',
         }}
         onClick={handleSearch}
         startIcon={<SearchIcon />}

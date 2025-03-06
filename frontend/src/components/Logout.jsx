@@ -37,7 +37,7 @@ const Logout = () => {
         size='small'
         sx={{
           backgroundColor: 'rgba(176, 73, 174, 0.1)', // Matches glasseffect
-          color: '#ffffff', // Text color
+          color: 'inherit', // Text color
           fontWeight: 'bold',
           borderRadius: '8px',
           border: '1px solid rgba(176, 73, 174, 0.69)', // Border from glasseffect

@@ -80,7 +80,7 @@ const Register = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-black flex items-center justify-center p-4 font-parkinsans text-black">
+      <div className="min-h-screen bg-inherit flex items-center justify-center p-4 font-parkinsans text-black">
         <div className="flex flex-col-reverse lg:flex-row w-full max-w-6xl bg-white rounded-lg shadow-2xl overflow-hidden border-2 border-purple-900">
           {/* Left Side */}
           <div className="w-full lg:w-1/2 bg-gradient-to-r from-pink-600 to-purple-600 p-8 flex flex-col justify-center items-center text-white">

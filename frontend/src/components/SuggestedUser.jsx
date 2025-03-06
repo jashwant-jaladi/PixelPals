@@ -56,10 +56,10 @@ const SuggestedUser = ({ user }) => {
         <Stack direction="row" spacing={2} component={Link} to={`/${user.username}`} alignItems="center">
           <Avatar src={user.profilePic} />
           <Box>
-            <Typography variant="body1" fontWeight="bold">
+            <Typography variant="body1" fontWeight="bold" fontFamily={'Parkinsans'}>
               {user.username}
             </Typography>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" color="text.secondary" fontFamily={'Parkinsans'}>
               {user.name}
             </Typography>
           </Box>
@@ -85,6 +85,7 @@ const SuggestedUser = ({ user }) => {
     color: followRequested ? 'black' : 'white', // Makes "Requested" easy to read
     fontWeight: 'bold',
     textTransform: 'none', // Optional: Makes text easier to read
+    fontFamily: 'Parkinsans', // Optional: Custom font
   }}
 >
   {following ? 'Unfollow' : followRequested ? 'Requested' : 'Follow'}

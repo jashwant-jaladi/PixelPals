@@ -53,7 +53,7 @@ const Login = () => {
 
   return (
     <>
-      <div className='min-h-screen bg-black flex items-center justify-center p-4 font-parkinsans'>
+      <div className='min-h-screen bg-inherit flex items-center justify-center p-4 font-parkinsans'>
         <div className='flex flex-col lg:flex-row w-full max-w-6xl bg-black rounded-lg shadow-2xl overflow-hidden border-2 border-purple-900'>
           {/* Left Side - Login Form */}
           <div className='w-full lg:w-1/2 p-8 flex flex-col justify-center items-center'>

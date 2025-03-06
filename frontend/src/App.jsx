@@ -43,7 +43,7 @@ const App = () => {
                 size="small"
                 sx={{
                   backgroundColor: 'rgba(176, 73, 174, 0.1)',
-                  color: '#ffffff',
+                  color: 'inherit',
                   fontWeight: 'bold',
                   borderRadius: '8px',
                   border: '1px solid rgba(176, 73, 174, 0.69)',
@@ -65,7 +65,7 @@ const App = () => {
                 size="small"
                 sx={{
                   backgroundColor: 'rgba(176, 73, 174, 0.1)',
-                  color: '#ffffff',
+                  color: 'inherit',
                   fontWeight: 'bold',
                   borderRadius: '8px',
                   border: '1px solid rgba(176, 73, 174, 0.69)',
@@ -89,7 +89,7 @@ const App = () => {
                 size="small"
                 sx={{
                   backgroundColor: 'rgba(176, 73, 174, 0.1)',
-                  color: '#ffffff',
+                  color: 'inherit',
                   fontWeight: 'bold',
                   borderRadius: '8px',
                   border: '1px solid rgba(176, 73, 174, 0.69)',

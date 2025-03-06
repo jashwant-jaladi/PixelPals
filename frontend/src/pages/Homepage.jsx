@@ -125,10 +125,10 @@ const Homepage = () => {
                   >
                     <Avatar src={searchResult.profilePic} />
                     <Box>
-                      <Typography variant="body1" fontWeight="bold">
+                      <Typography variant="body1" fontWeight="bold" fontFamily={'Parkinsans'}>
                         {searchResult.username}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography variant="body2" color="text.secondary" fontFamily={'Parkinsans'}>
                         {searchResult.name}
                       </Typography>
                     </Box>
@@ -178,15 +178,17 @@ const Homepage = () => {
               >
                 <SentimentDissatisfiedIcon style={{ fontSize: '50px', color: '#e91e63' }} />
                 <Typography
-                  variant="h6"
-                  sx={{
-                    color: '#e91e63',
-                    fontWeight: 'bold',
-                    mt: 2,
-                  }}
-                >
-                  No posts found, follow some users to see their posts
-                </Typography>
+  variant="h6"
+  sx={{
+    color: '#e91e63',// Set the font
+    fontWeight: 'bold',
+    mt: 2,
+  }}
+  fontFamily={'Parkinsans'}
+>
+  No posts found, follow some users to see their posts
+</Typography>
+
               </Box>
             )}
             {posts.length > 0 &&
@@ -227,12 +229,13 @@ const Homepage = () => {
             }}>
               <SentimentDissatisfiedIcon style={{ fontSize: '50px', color: '#e91e63' }} />
               <Typography
-                variant="h4"
+                variant="h5"
                 style={{
                   color: '#e91e63 ',
                   fontWeight: 'bold',
                   marginTop: '10px',
                 }}
+                fontFamily={'Parkinsans'}
               >
                 No posts found, follow some users to see their posts
               </Typography>
@@ -256,10 +259,10 @@ const Homepage = () => {
                 <Stack direction="row" spacing={2} component={Link} to={`/${searchResult.username}`} alignItems="center">
                   <Avatar src={searchResult.profilePic} />
                   <Box>
-                    <Typography variant="body1" fontWeight="bold">
+                    <Typography variant="body1" fontWeight="bold" fontFamily={'Parkinsans'}>
                       {searchResult.username}
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" fontFamily={'Parkinsans'}>
                       {searchResult.name}
                     </Typography>
                   </Box>
@@ -280,6 +283,7 @@ const Homepage = () => {
                       color: "black",
                       fontWeight: "bold",
                     }}
+                    fontFamily={'Parkinsans'}
                   >
                     {followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
                   </Button>
