@@ -32,7 +32,7 @@ const Conversation = ({ conversation, isOnline }) => {
   return (
     <div>
       <div
-        className={`p-2 flex gap-3 items-center cursor-pointer ${isSelected ? 'bg-gray-800' : ''}`} 
+        className={`p-2 flex gap-3 items-center cursor-pointer ${isSelected ? 'bg-pink-600' : ''}`} 
         onClick={handleConversationClick}
       >
         <div>

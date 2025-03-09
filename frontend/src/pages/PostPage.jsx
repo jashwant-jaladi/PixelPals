@@ -1,17 +1,37 @@
 import React, { useEffect, useState } from 'react';
-import { Avatar, Button, CircularProgress, Snackbar } from '@mui/material';
+import { 
+  Avatar, 
+  Button, 
+  CircularProgress, 
+  Snackbar, 
+  Box, 
+  IconButton, 
+  Typography, 
+  useTheme, 
+  useMediaQuery, 
+  Card, 
+  CardContent, 
+  CardMedia, 
+  Divider, 
+  Chip,
+  Paper,
+  Tooltip,
+  Fade
+} from '@mui/material';
 import { pink } from '@mui/material/colors';
 import Comment from '../components/Comment';
 import Actions from '../components/Actions';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ShareIcon from '@mui/icons-material/Share';
 import useGetUserProfile from '../hooks/useGetUserProfile';
 import { useParams, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
-import DeleteIcon from '@mui/icons-material/Delete';
 import postAtom from '../Atom/postAtom';
 import { fetchPost, deletePost, deleteComment } from '../apis/postApi';
 
@@ -21,11 +41,15 @@ const PostPage = () => {
   const { id } = useParams();
   const currentUser = useRecoilValue(getUser);
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
 
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('error');
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const currentPost = post[0];
 
@@ -92,7 +116,41 @@ const PostPage = () => {
     }
   };
 
-  if (!currentPost) return null;
+  const handleSharePost = () => {
+    navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
+  if (!currentPost) {
+    return (
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          height: '70vh',
+          flexDirection: 'column',
+          gap: 3
+        }}
+      >
+        <CircularProgress sx={{ color: pink[500] }} />
+        <Typography 
+          variant="h6" 
+          sx={{ 
+            fontFamily: 'Parkinsans',
+            color: 'text.secondary'
+          }}
+        >
+          Loading post...
+        </Typography>
+      </Box>
+    );
+  }
 
   // Format date for small screens
   const formattedDate = currentPost.createdAt
@@ -100,104 +158,388 @@ const PostPage = () => {
     : '';
 
   return (
-    <div className="font-parkinsans">
-      <div className="max-w-4xl mx-auto px-4">
-        <div className="pl-5">
-          {/* Avatar Section */}
-          <div className="flex justify-center my-4">
-            <Avatar src={user?.profilePic} sx={{ width: 60, height: 60 }} />
-          </div>
+    <Box 
+      className="font-parkinsans"
+      sx={{
+        maxWidth: { xs: '100%', sm: '600px', md: '800px', lg: '1000px' },
+        mx: 'auto',
+        px: { xs: 2, sm: 4 },
+        py: { xs: 2, sm: 4 },
+      }}
+    >
+      <Card 
+        elevation={2}
+        sx={{ 
+          borderRadius: { xs: 3, sm: 4 },
+          overflow: 'hidden',
+          bgcolor: 'background.paper',
+          transition: 'all 0.3s ease',
+          mb: 4,
+          border: `1px solid ${pink[50]}`,
+        }}
+      >
+        {/* Header Section with Back Button */}
+        <Box 
+          sx={{ 
+            p: { xs: 2, sm: 3 },
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2
+          }}
+        >
+          <IconButton 
+            onClick={handleGoBack}
+            sx={{ 
+              color: pink[500],
+              '&:hover': { bgcolor: pink[50] }
+            }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontFamily: 'Parkinsans',
+              fontWeight: 'bold',
+              flex: 1,
+              textAlign: 'center'
+            }}
+          >
+            Post
+          </Typography>
+          
+          <Tooltip title={copied ? "Copied!" : "Share post"} arrow>
+            <IconButton 
+              onClick={handleSharePost}
+              sx={{ 
+                color: copied ? pink[700] : pink[500],
+                '&:hover': { bgcolor: pink[50] }
+              }}
+            >
+              <ShareIcon />
+            </IconButton>
+          </Tooltip>
+        </Box>
 
-          {/* Username, Verified Icon, Date, and Actions Section */}
-          <div className="flex flex-col sm:flex-row sm:justify-between items-center gap-2 sm:gap-0">
-            {/* Username and Verified Icon */}
-            <div className="flex items-center gap-2">
-              <div className="font-bold">{user?.username}</div>
-              <VerifiedIcon color="primary" />
-            </div>
+        {/* User Info Section */}
+        <Box 
+          sx={{ 
+            p: { xs: 2, sm: 3 },
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Box 
+            sx={{ 
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 2
+            }}
+          >
+            <Box 
+              sx={{ 
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2
+              }}
+            >
+              <Link to={`/${user?.username}`}>
+                <Avatar 
+                  src={user?.profilePic} 
+                  sx={{ 
+                    width: { xs: 50, sm: 60 }, 
+                    height: { xs: 50, sm: 60 },
+                    border: `3px solid ${pink[200]}`,
+                    transition: 'transform 0.2s ease',
+                    '&:hover': {
+                      transform: 'scale(1.05)'
+                    }
+                  }} 
+                />
+              </Link>
+              
+              <Box>
+                <Box 
+                  sx={{ 
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                  }}
+                >
+                  <Link 
+                    to={`/${user?.username}`}
+                    style={{ 
+                      textDecoration: 'none',
+                      color: 'inherit'
+                    }}
+                  >
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontWeight: 'bold',
+                        fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                        fontFamily: 'Parkinsans',
+                        '&:hover': {
+                          color: pink[500]
+                        }
+                      }}
+                    >
+                      {user?.username}
+                    </Typography>
+                  </Link>
+                  <VerifiedIcon 
+                    sx={{ 
+                      color: pink[500],
+                      fontSize: { xs: '1.1rem', sm: '1.25rem' },
+                    }} 
+                  />
+                </Box>
+                
+                <Typography 
+                  variant="body2" 
+                  sx={{ 
+                    color: 'text.secondary',
+                    fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5
+                  }}
+                >
+                  <span className="sm:hidden">{formattedDate}</span>
+                  <span className="hidden sm:inline">
+                    {currentPost.createdAt && formatDistanceToNow(new Date(currentPost.createdAt))} ago
+                  </span>
+                </Typography>
+              </Box>
+            </Box>
 
-            {/* Date and Actions */}
-            <div className="flex items-center gap-3">
-              {/* Show shortened date on small screens and full relative time on larger screens */}
-              <div className="text-sm text-gray-500">
-                <span className="sm:hidden">{formattedDate}</span>
-                <span className="hidden sm:inline">
-                  {currentPost.createdAt && formatDistanceToNow(new Date(currentPost.createdAt))} ago
-                </span>
-              </div>
-              <MoreHorizIcon />
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {currentUser?._id === user?._id && (
                 deleting ? (
-                  <CircularProgress size={24} color="error" />
+                  <CircularProgress size={24} sx={{ color: pink[500] }} />
                 ) : (
-                  <DeleteIcon sx={{ color: 'red', cursor: 'pointer' }} onClick={handleDeletePost} />
+                  <Tooltip title="Delete post" arrow>
+                    <IconButton 
+                      onClick={handleDeletePost}
+                      size={isMobile ? "small" : "medium"}
+                      sx={{ 
+                        color: 'error.main',
+                        '&:hover': {
+                          bgcolor: 'error.light',
+                          color: 'white'
+                        }
+                      }}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
+                  </Tooltip>
                 )
               )}
-            </div>
-          </div>
-          
-          {/* Caption Section */}
-          <p className="mt-7 pl-5 font-bold">{currentPost?.caption}</p>
-          
-          {/* Image Section */}
-          <div className="w-full">
-            <img
-              src={currentPost?.image}
-              alt="post"
-              className="w-full h-auto object-contain my-8 pl-5"
-            />
-          </div>
+              <IconButton 
+                size={isMobile ? "small" : "medium"}
+                sx={{ 
+                  color: 'text.secondary',
+                  '&:hover': { bgcolor: 'action.hover' }
+                }}
+              >
+                <MoreHorizIcon />
+              </IconButton>
+            </Box>
+          </Box>
+        </Box>
 
-          {/* Actions Section */}
-          <div className='flex justify-center'> 
-            <Actions post={currentPost} />
-          </div>
+        {/* Caption */}
+        <Box 
+          sx={{ 
+            p: { xs: 2, sm: 3 },
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Typography 
+            sx={{ 
+              fontSize: { xs: '1rem', sm: '1.1rem' },
+              fontWeight: 'medium',
+              whiteSpace: 'pre-wrap',
+              lineHeight: 1.6,
+              color: 'text.primary',
+              fontFamily: 'Parkinsans',
+            }}
+          >
+            {currentPost?.caption}
+          </Typography>
+        </Box>
 
-          {/* Login Prompt Section */}
-          {!currentUser && (
-            <div>
-              <hr className="my-3" />
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-                <p className="font-bold text-center sm:text-left">👋 Login to like, post and comment on posts.</p>
-                <Link to="/auth">
-                  <Button 
-                    sx={{ bgcolor: pink[500], fontWeight: 'bold', color: 'white' }} 
-                    variant="contained"
-                  >
-                    Login
-                  </Button>
-                </Link>
-              </div>
-            </div>
+        {/* Image */}
+        <Box 
+          sx={{ 
+            position: 'relative',
+            width: '100%',
+            bgcolor: 'black',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        >
+          <img
+            src={currentPost?.image}
+            alt="post"
+            style={{
+              width: '100%',
+              maxHeight: '80vh',
+              objectFit: 'contain',
+            }}
+          />
+        </Box>
+
+        {/* Actions */}
+        <Box 
+          sx={{ 
+            p: { xs: 2, sm: 3 },
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          }}
+        >
+          <Actions post={currentPost} />
+        </Box>
+
+        {/* Login Prompt */}
+        {!currentUser && (
+          <Box 
+            sx={{ 
+              p: { xs: 2, sm: 3 },
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              bgcolor: pink[50],
+            }}
+          >
+            <Box 
+              sx={{ 
+                display: 'flex',
+                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: { xs: 2, sm: 3 },
+              }}
+            >
+              <Typography 
+                sx={{ 
+                  fontWeight: 'bold',
+                  textAlign: { xs: 'center', sm: 'left' },
+                  fontSize: { xs: '0.9rem', sm: '1rem' },
+                  fontFamily: 'Parkinsans',
+                }}
+              >
+                👋 Login to like, post and comment on posts.
+              </Typography>
+              <Link to="/auth" style={{ textDecoration: 'none' }}>
+                <Button 
+                  variant="contained"
+                  sx={{ 
+                    bgcolor: pink[500],
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontFamily: 'Parkinsans',
+                    '&:hover': {
+                      bgcolor: pink[600],
+                    },
+                    px: { xs: 3, sm: 4 },
+                    py: { xs: 0.5, sm: 1 },
+                    borderRadius: '20px',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 15px rgba(0,0,0,0.15)',
+                      bgcolor: pink[700],
+                    }
+                  }}
+                >
+                  Login
+                </Button>
+              </Link>
+            </Box>
+          </Box>
+        )}
+
+        {/* Comments Section */}
+        <Box 
+          sx={{ 
+            borderTop: '1px solid',
+            borderColor: 'divider',
+            bgcolor: 'background.default',
+            p: { xs: 1, sm: 2 },
+          }}
+        >
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              fontFamily: 'Parkinsans',
+              fontWeight: 'bold',
+              mb: 2,
+              px: 2,
+              color: 'text.primary'
+            }}
+          >
+            Comments ({currentPost.comments.length})
+          </Typography>
+          
+          {currentPost.comments.length === 0 ? (
+            <Box 
+              sx={{ 
+                textAlign: 'center', 
+                py: 4,
+                color: 'text.secondary',
+                fontFamily: 'Parkinsans',
+              }}
+            >
+              <Typography variant="body1">
+                No comments yet. Be the first to comment!
+              </Typography>
+            </Box>
+          ) : (
+            [...currentPost.comments].reverse().map((comment) => (
+              <Comment 
+                key={comment._id} 
+                comment={comment} 
+                lastReply={comment._id === currentPost?.comments[0]._id} 
+                currentUser={currentUser}
+                postId={currentPost._id}
+                handleDeleteComment={handleDeleteComment}
+              />
+            ))
           )}
+        </Box>
+      </Card>
 
-          <hr className="my-3" />
-
-          {/* Comments Section */}
-          {[...currentPost.comments].reverse().map((comment) => (
-            <Comment 
-              key={comment._id} 
-              comment={comment} 
-              lastReply={comment._id === currentPost?.comments[0]._id} 
-              currentUser={currentUser}
-              postId={currentPost._id}
-              handleDeleteComment={handleDeleteComment}
-            />
-          ))}
-
-          <div className="mt-10"></div>
-        </div>
-        
-        {/* Snackbar for Notifications */}
-        <Snackbar 
-          open={snackbarOpen} 
-          autoHideDuration={6000} 
-          onClose={() => setSnackbarOpen(false)} 
-          message={snackbarMessage} 
-          severity={snackbarSeverity} 
-        />
-      </div>
-    </div>
+      {/* Snackbar */}
+      <Snackbar 
+        open={snackbarOpen} 
+        autoHideDuration={6000} 
+        onClose={() => setSnackbarOpen(false)} 
+        message={snackbarMessage} 
+        severity={snackbarSeverity}
+        anchorOrigin={{ 
+          vertical: 'bottom', 
+          horizontal: isMobile ? 'center' : 'right' 
+        }}
+        TransitionComponent={Fade}
+        sx={{
+          '& .MuiSnackbarContent-root': {
+            bgcolor: snackbarSeverity === 'error' ? 'error.main' : 'success.main',
+            color: 'white',
+            fontWeight: 'medium',
+            fontFamily: 'Parkinsans',
+            borderRadius: 2,
+            boxShadow: 3,
+          }
+        }}
+      />
+    </Box>
   );
 };
 

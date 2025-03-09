@@ -1,79 +1,117 @@
 import React, { useState, useEffect } from 'react';
 import Skeleton from '@mui/material/Skeleton';
 import SuggestedUser from './SuggestedUser';
-import { Box, Divider, Alert } from '@mui/material';
-import { fetchSuggestedUsers } from '../apis/userApi'; // Import the API function
+import { Box, Divider, Alert, Typography, Stack, Card, CardContent, useMediaQuery, useTheme } from '@mui/material';
+import { fetchSuggestedUsers } from '../apis/userApi';
+import { pink } from '@mui/material/colors';
 
-const SuggestedUsers = () => {
+const SuggestedUsers = ({ renderMode = 'desktop', onFollowClick }) => {
   const [loading, setLoading] = useState(true);
   const [suggestedUsers, setSuggestedUsers] = useState([]);
   const [error, setError] = useState(null);
+  
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const getSuggestedUsers = async () => {
       try {
         const users = await fetchSuggestedUsers();
-        setSuggestedUsers(users.slice(0, 4));
+        // Show more users in mobile mode
+        const limit = renderMode === 'mobile' ? 3 : 4;
+        setSuggestedUsers(users.slice(0, limit));
       } catch (error) {
-        setError(error.message); // Display the error message
+        setError(error.message);
       } finally {
         setLoading(false);
       }
     };
 
     getSuggestedUsers();
-  }, []);
+  }, [renderMode]);
 
-  return (
-    <>
-      <h3 className="text-lg font-bold mb-4 text-center text-primary font-parkinsans">Suggested Users</h3>
-      
-      {loading ? (
-        Array.from({ length: 4}).map((_, index) => (
-          <Box
-            key={index}
-            sx={{
-              display: 'flex',
-              gap: 2,
-              alignItems: 'center',
-              marginBottom: 3,
-              padding: 2,
-              borderRadius: 2,
-              boxShadow: 2,
-              backgroundColor: 'rgba(0, 0, 0, 0.05)', // Slightly tinted background
-              '&:hover': {
-                backgroundColor: 'rgba(0, 0, 0, 0.1)', // Hover effect
-              },
-            }}
-          >
-            {/* Profile Skeleton */}
-            <Skeleton variant="circular" width={50} height={50} />
-            
-            <Box sx={{ flex: 1 }}>
-              {/* Name and Username Skeleton */}
-              <Skeleton variant="text" width="80%" height={20} />
-              <Skeleton variant="text" width="60%" height={20} />
-            </Box>
-            
-            {/* Follow Button Skeleton */}
+  // Loading skeletons
+  const LoadingSkeletons = () => (
+    <Stack spacing={2}>
+      {Array.from({ length: renderMode === 'mobile' ? 3 : 4 }).map((_, index) => (
+        <Card
+          key={index}
+          sx={{
+            p: 2,
+            borderRadius: 2,
+            border: '1px solid rgba(233, 30, 99, 0.1)',
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.05)',
+            bgcolor: 'background.paper',
+          }}
+        >
+          <Stack direction="row" spacing={2} alignItems="center" justifyContent="space-between">
+            <Stack direction="row" spacing={2} alignItems="center">
+              <Skeleton variant="circular" width={40} height={40} sx={{ bgcolor: 'rgba(233, 30, 99, 0.1)' }} />
+              <Box>
+                <Skeleton variant="text" width={80} height={20} sx={{ bgcolor: 'rgba(233, 30, 99, 0.1)' }} />
+                <Skeleton variant="text" width={60} height={16} sx={{ bgcolor: 'rgba(233, 30, 99, 0.1)' }} />
+              </Box>
+            </Stack>
             <Skeleton
               variant="rectangular"
-              width={100}
-              height={35}
-              sx={{ borderRadius: '20px' }}
+              width={80}
+              height={32}
+              sx={{ borderRadius: '16px', bgcolor: 'rgba(233, 30, 99, 0.1)' }}
             />
-          </Box>
-        ))
-      ) : error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : (
-        <div className="flex flex-col gap-4">
-          {suggestedUsers.map((user) => <SuggestedUser key={user._id} user={user} />)}
-        </div>
-      )}
+          </Stack>
+        </Card>
+      ))}
+    </Stack>
+  );
 
-      <Divider sx={{ marginY: 3, backgroundColor: 'rgba(0, 0, 0, 0.12)' }} />
-    </>
+  // Error state
+  if (error) {
+    return (
+      <Alert 
+        severity="error" 
+        sx={{ 
+          borderRadius: 2, 
+          fontFamily: 'Parkinsans',
+          mb: 2
+        }}
+      >
+        {error}
+      </Alert>
+    );
+  }
+
+  return (
+    <Box>
+      {loading ? (
+        <LoadingSkeletons />
+      ) : (
+        <Stack spacing={2}>
+          {suggestedUsers.map((user) => (
+            <SuggestedUser 
+              key={user._id} 
+              user={user} 
+              onFollowClick={onFollowClick}
+              renderMode={renderMode}
+            />
+          ))}
+          
+          {suggestedUsers.length === 0 && (
+            <Box 
+              sx={{ 
+                textAlign: 'center', 
+                py: 2,
+                color: 'text.secondary',
+                fontFamily: 'Parkinsans'
+              }}
+            >
+              <Typography variant="body2">
+                No suggestions available at the moment
+              </Typography>
+            </Box>
+          )}
+        </Stack>
+      )}
+    </Box>
   );
 };
 

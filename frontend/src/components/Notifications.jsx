@@ -5,6 +5,19 @@ import { markNotificationAsRead } from "../apis/postApi";
 import Avatar from "@mui/material/Avatar";
 import PersonIcon from "@mui/icons-material/Person";
 
+// Helper function to format notification message
+const formatNotificationMessage = (notification) => {
+  // Check if it's a follow request notification
+  if (notification.type === 'follow_request_declined' || notification.type === 'follow_reject') {
+    return 'declined your follow request';
+  } else if (notification.type === 'follow_request_accepted' || notification.type === 'follow_accept') {
+    return 'accepted your follow request';
+  } else {
+    // Return the original message for other notification types
+    return notification.message || 'interacted with your post';
+  }
+};
+
 const Notifications = ({ onNotificationUpdate, userData, notifications, setNotifications }) => {
   const currentUser = useRecoilValue(getUser);
 
@@ -54,7 +67,7 @@ const Notifications = ({ onNotificationUpdate, userData, notifications, setNotif
                     className="text-white text-opacity-90 hover:text-opacity-100 flex-1 min-w-0"
                   >
                     <p className="text-sm sm:text-base break-words">
-                      <strong>{notif.sender.username}</strong> {notif.message}
+                      <strong>{notif.sender.username}</strong> {formatNotificationMessage(notif)}
                     </p>
                   </Link>
                 )}

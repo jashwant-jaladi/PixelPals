@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Avatar, Snackbar, Alert, CircularProgress } from '@mui/material';
+import { Avatar, Snackbar, Alert, CircularProgress, Box, Card, CardContent, CardMedia, IconButton } from '@mui/material';
 import Actions from './Actions';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow, format } from 'date-fns';
 import getUser from '../Atom/getUser';
-import DeleteIcon from '@mui/icons-material/Delete';
 import postAtom from '../Atom/postAtom';
 import { useRecoilState, useRecoilValue } from 'recoil';
 import { deletePost } from '../apis/postApi';
@@ -48,96 +48,139 @@ const Post = ({ post }) => {
   if (!post) return null;
 
   return (
-    <div className='flex font-parkinsans justify-center'>
-      <div className='mt-6 flex flex-col'>
-        <Link to={`/${post.postedBy.username}`} className='hidden sm:block'>
-          <Avatar
-            src={post.postedBy.profilePic}
-            alt={`${post.postedBy.username}'s profile picture`}
-            sx={{ width: 60, height: 60 }}
-          />
-        </Link>
-        <div className='border-l-2 mt-2 flex-1 border-gray-500 m-auto hidden sm:flex'></div>
-        <div className='flex flex-col mt-2 mx-auto hidden sm:flex'>
-          {post.comments.length > 0 && (
-            <div className='flex flex-col items-center'>
-              {post.comments[0]?.username && (
-                <Avatar
-                  sx={{ width: 25, height: 25, marginBottom: 1 }}
-                  src={post.comments[0]?.profilePic}
-                  alt={`${post.comments[0].username}'s profile picture`}
-                  onClick={() => navigate(`/${post.comments[0].username}`)}
-                  style={{ cursor: 'pointer' }}
-                />
-              )}
-              <div className='flex gap-2'>
-                {post.comments[1]?.username && (
-                  <Avatar
-                    sx={{ width: 25, height: 25 }}
-                    src={post.comments[1]?.profilePic}
-                    alt={`${post.comments[1].username}'s profile picture`}
-                    onClick={() => navigate(`/${post.comments[1].username}`)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                )}
-                {post.comments[2]?.username && (
-                  <Avatar
-                    sx={{ width: 25, height: 25 }}
-                    src={post.comments[2]?.profilePic}
-                    alt={`${post.comments[2].username}'s profile picture`}
-                    onClick={() => navigate(`/${post.comments[2].username}`)}
-                    style={{ cursor: 'pointer' }}
-                  />
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      <div className='pl-5'>
-        <div className='flex justify-between w-[100%] mt-10 font-bold'>
-          <div className='flex gap-2'>
-            <Link to={`/${post.postedBy.username}`} className='flex items-center'>
-              <div>{post.postedBy.username}</div>
-              <VerifiedIcon color='primary' sx={{ fontSize: 15 }} style={{ marginLeft: 5 }} />
+    <Card 
+      sx={{ 
+        maxWidth: { xs: '100%', sm: '90%', md: '80%', lg: '700px' }, 
+        width: '100%',
+        mb: 4, 
+        borderRadius: 2,
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        overflow: 'visible'
+      }}
+      className="font-parkinsans"
+    >
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        {/* Post Header */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Link to={`/${post.postedBy.username}`}>
+              <Avatar
+                src={post.postedBy.profilePic}
+                alt={`${post.postedBy.username}'s profile picture`}
+                sx={{ width: { xs: 40, sm: 50 }, height: { xs: 40, sm: 50 } }}
+              />
             </Link>
-          </div>
-          <div className='flex gap-3'>
-            <div className='text-sm text-gray-500'>
-              {window.innerWidth < 640
-                ? format(new Date(post.createdAt), 'MMM d')
-                : formatDistanceToNow(new Date(post.createdAt)) + ' ago'}
-            </div>
-            <MoreHorizIcon />
+            <Box>
+              <Link to={`/${post.postedBy.username}`} className="flex items-center">
+                <Box sx={{ fontWeight: 'bold', fontSize: { xs: '0.9rem', sm: '1rem' } }}>
+                  {post.postedBy.username}
+                </Box>
+                <VerifiedIcon color="primary" sx={{ fontSize: { xs: 14, sm: 16 }, ml: 0.5 }} />
+              </Link>
+              <Box sx={{ fontSize: { xs: '0.7rem', sm: '0.8rem' }, color: 'text.secondary' }}>
+                {window.innerWidth < 640
+                  ? format(new Date(post.createdAt), 'MMM d')
+                  : formatDistanceToNow(new Date(post.createdAt)) + ' ago'}
+              </Box>
+            </Box>
+          </Box>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             {currentUser?._id === post.postedBy._id && (
               isDeleting ? (
                 <CircularProgress size={20} sx={{ color: 'red' }} />
               ) : (
-                <DeleteIcon sx={{ color: 'red', cursor: 'pointer' }} onClick={handleDeletePost} />
+                <IconButton 
+                  size="small" 
+                  sx={{ color: 'red' }} 
+                  onClick={handleDeletePost}
+                >
+                  <DeleteIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+                </IconButton>
               )
             )}
-          </div>
-        </div>
+            <IconButton size="small">
+              <MoreHorizIcon sx={{ fontSize: { xs: 18, sm: 20 } }} />
+            </IconButton>
+          </Box>
+        </Box>
+
+        {/* Post Caption */}
         <Link to={`/${post.postedBy.username}/${post._id}`}>
-          <p className='mt-5 font-bold'>{post.caption}</p>
-          <div className='flex justify-start'>
-            <img
-              src={post.image}
-              alt='post content'
-              width={600}
-              height={500}
-              className='mt-8'
-            />
-          </div>
+          <Box sx={{ 
+            fontWeight: 'bold', 
+            mb: 2, 
+            fontSize: { xs: '0.9rem', sm: '1rem' },
+            wordBreak: 'break-word'
+          }}>
+            {post.caption}
+          </Box>
         </Link>
-        <Actions post={post} />
-      </div>
+
+        {/* Post Image */}
+        <Link to={`/${post.postedBy.username}/${post._id}`}>
+          <CardMedia
+            component="img"
+            image={post.image}
+            alt="Post content"
+            sx={{ 
+              borderRadius: 1,
+              maxHeight: { xs: '300px', sm: '400px', md: '500px' },
+              objectFit: 'contain',
+              width: '100%',
+              bgcolor: 'black'
+            }}
+          />
+        </Link>
+
+        {/* Post Actions */}
+        <Box sx={{ mt: 2 }}>
+          <Actions post={post} />
+        </Box>
+
+        {/* Comment Preview */}
+        {post.comments.length > 0 && (
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1, 
+            mt: 2,
+            flexWrap: 'wrap'
+          }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              {post.comments.slice(0, 3).map((comment, index) => (
+                <Avatar
+                  key={index}
+                  sx={{ 
+                    width: { xs: 20, sm: 24 }, 
+                    height: { xs: 20, sm: 24 },
+                    cursor: 'pointer'
+                  }}
+                  src={comment.profilePic}
+                  alt={`${comment.username}'s profile picture`}
+                  onClick={() => navigate(`/${comment.username}`)}
+                />
+              ))}
+            </Box>
+            <Box sx={{ 
+              fontSize: { xs: '0.7rem', sm: '0.8rem' }, 
+              color: 'text.secondary',
+              flex: 1
+            }}>
+              {post.comments.length === 1 
+                ? '1 comment' 
+                : `${post.comments.length} comments`}
+            </Box>
+          </Box>
+        )}
+      </CardContent>
+
       <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={handleSnackbarClose}>
         <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </div>
+    </Card>
   );
 };
 

@@ -145,7 +145,7 @@ const CreatePost = () => {
 
         >
 
-          <p className="font-bold">Create Post</p>
+          <p className="font-bold ">Create Post</p>
 
 
         </button>
@@ -164,7 +164,7 @@ const CreatePost = () => {
             },
           }}
         >
-          <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title">
+          <DialogTitle sx={{ m: 0, p: 2 }} id="customized-dialog-title" fontFamily={'ParkinSans'}>
             Create a Post
           </DialogTitle>
           <IconButton

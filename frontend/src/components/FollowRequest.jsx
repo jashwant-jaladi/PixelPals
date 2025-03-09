@@ -1,11 +1,27 @@
 import React, { useEffect, useState } from "react";
-import { Avatar, Button, Box, Typography, Stack, CircularProgress } from "@mui/material";
+import { 
+  Avatar, 
+  Button, 
+  Box, 
+  Typography, 
+  Stack, 
+  CircularProgress, 
+  Paper,
+  useTheme,
+  useMediaQuery
+} from "@mui/material";
+import { pink } from "@mui/material/colors";
 import { acceptFollow, rejectFollow } from "../apis/followApi";
 import { fetchUserById } from "../apis/userApi";
+import { useRecoilState } from "recoil";
+import getUser from "../Atom/getUser";
 
-const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, userData }) => {
+const FollowRequest = ({ userData, setFollowRequestCount }) => {
+  const [currentUser, setCurrentUser] = useRecoilState(getUser);
   const [requestedUsers, setRequestedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   useEffect(() => {
     const fetchRequestedUsers = async () => {
@@ -48,13 +64,26 @@ const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, use
         return;
       }
 
+      // Immediately update the UI by removing this user from the list
       setRequestedUsers((prev) => prev.filter((user) => user._id !== userId));
-      setCurrentUser((prev) => ({
-        ...prev,
-        followers: [...prev.followers, userId],
-        Requested: prev.Requested.filter((id) => id !== userId),
+      
+      // Update the currentUser state with the new follower and remove from Requested
+      setCurrentUser((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          followers: [...(prev.followers || []), userId],
+          Requested: (prev.Requested || []).filter((id) => id !== userId),
+        };
+      });
+      
+      // Update the follow request count
+      setFollowRequestCount((prev) => Math.max(0, prev - 1));
+      
+      // Force update userData in parent component by dispatching a custom event
+      window.dispatchEvent(new CustomEvent('followStatusChanged', { 
+        detail: { userId, action: 'accept' } 
       }));
-      setFollowRequestCount((prev) => prev - 1);
     } catch (error) {
       console.error("Error in handleAccept:", error);
     }
@@ -71,89 +100,152 @@ const FollowRequest = ({ currentUser, setFollowRequestCount, setCurrentUser, use
         return;
       }
 
+      // Immediately update the UI by removing this user from the list
       setRequestedUsers((prev) => prev.filter((user) => user._id !== userId));
-      setCurrentUser((prev) => ({
-        ...prev,
-        Requested: prev.Requested.filter((id) => id !== userId),
+      
+      // Update the currentUser state to remove from Requested
+      setCurrentUser((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          Requested: (prev.Requested || []).filter((id) => id !== userId),
+        };
+      });
+      
+      // Update the follow request count
+      setFollowRequestCount((prev) => Math.max(0, prev - 1));
+      
+      // Force update userData in parent component by dispatching a custom event
+      window.dispatchEvent(new CustomEvent('followStatusChanged', { 
+        detail: { userId, action: 'reject' } 
       }));
-      setFollowRequestCount((prev) => prev - 1);
     } catch (error) {
       console.error("Error in handleReject:", error);
     }
   };
 
-  if (currentUser._id !== userData._id) {
+  if (currentUser?._id !== userData?._id) {
     return (
-      <p className="flex justify-center mx-auto w-full text-pink-700 text-xl text-opacity-90 font-medium mt-6">
-        You are not allowed to see follow requests for this user
-      </p>
+      <Box sx={{ textAlign: 'center', py: 3, color: 'pink.700' }}>
+        <Typography variant="h6" fontFamily="Parkinsans">
+          You are not allowed to see follow requests for this user
+        </Typography>
+      </Box>
     );
   }
 
   return (
-    <div className="w-full mt-6 p-4 bg-inherit rounded-lg text-white">
+    <Box sx={{ width: '100%', mt: 2, p: { xs: 1, sm: 2 }, borderRadius: 2 }}>
       {loading ? (
-        <div className="flex justify-center">
-          <CircularProgress color="secondary" />
-        </div>
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress sx={{ color: pink[500] }} />
+        </Box>
       ) : requestedUsers.length === 0 ? (
-        <p className="flex justify-center mx-auto w-full text-pink-700 text-xl text-opacity-90 font-medium">
-          No new Follow Requests
-        </p>
+        <Box sx={{ textAlign: 'center', py: 3 }}>
+          <Typography 
+            variant="h6" 
+            fontFamily="Parkinsans" 
+            color="text.secondary"
+            sx={{ opacity: 0.9 }}
+          >
+            No new follow requests
+          </Typography>
+        </Box>
       ) : (
-        <div className="space-y-4">
+        <Stack spacing={2}>
           {requestedUsers.map((user) => (
-            <Box
+            <Paper
               key={user._id}
-              className="flex flex-col sm:flex-row items-center justify-between p-3 border border-gray-700 rounded-lg bg-gray-800 shadow-md"
+              elevation={1}
+              sx={{ 
+                p: { xs: 2, sm: 3 }, 
+                borderRadius: 2,
+                bgcolor: 'background.paper',
+              }}
             >
-              {/* User Info */}
-              <Stack direction="row" spacing={2} alignItems="center" className="w-full sm:w-auto ">
-                <Avatar src={user.profilePic} alt={user.name} />
-                <Box>
-                  <Typography variant="body1" className="font-bold">
-                    {user.name}
-                  </Typography>
-                  <Typography variant="body2" className="text-gray-400">
-                    @{user.username}
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {/* Buttons */}
-              <Stack
-                direction="row"
-                spacing={2}
-                className="w-full sm:w-auto mt-4 sm:mt-0 justify-end"
+              <Stack 
+                direction={{ xs: 'column', sm: 'row' }} 
+                spacing={2} 
+                alignItems={{ xs: 'center', sm: 'flex-start' }}
+                justifyContent="space-between"
               >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  onClick={() => handleAccept(user._id)}
-                  sx={{
-                    backgroundColor: "green",
-                    "&:hover": { backgroundColor: "darkgreen" },
-                    width: { xs: "100%", sm: "auto" },
+                {/* User Info */}
+                <Stack direction="row" spacing={2} alignItems="center">
+                  <Avatar 
+                    src={user.profilePic} 
+                    alt={user.name} 
+                    sx={{ 
+                      width: { xs: 40, sm: 48 }, 
+                      height: { xs: 40, sm: 48 },
+                      border: `2px solid ${pink[200]}`
+                    }}
+                  />
+                  <Box>
+                    <Typography 
+                      variant="body1" 
+                      sx={{ 
+                        fontWeight: 'bold',
+                        fontFamily: 'Parkinsans',
+                        fontSize: { xs: '0.9rem', sm: '1rem' }
+                      }}
+                    >
+                      {user.name}
+                    </Typography>
+                    <Typography 
+                      variant="body2" 
+                      color="text.secondary"
+                      sx={{ 
+                        fontFamily: 'Parkinsans',
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                      }}
+                    >
+                      @{user.username}
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                {/* Buttons */}
+                <Stack 
+                  direction="row" 
+                  spacing={2} 
+                  sx={{ 
+                    width: { xs: '100%', sm: 'auto' },
+                    mt: { xs: 2, sm: 0 },
+                    justifyContent: { xs: 'space-between', sm: 'flex-end' }
                   }}
                 >
-                  Accept
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="error"
-                  size="small"
-                  onClick={() => handleReject(user._id)}
-                  sx={{ width: { xs: "100%", sm: "auto" } }}
-                >
-                  Reject
-                </Button>
+                  <Button
+                    variant="contained"
+                    size={isMobile ? "small" : "medium"}
+                    onClick={() => handleAccept(user._id)}
+                    sx={{
+                      bgcolor: 'success.main',
+                      '&:hover': { bgcolor: 'success.dark' },
+                      minWidth: { xs: '45%', sm: '80px' },
+                      fontFamily: 'Parkinsans'
+                    }}
+                  >
+                    Accept
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    size={isMobile ? "small" : "medium"}
+                    onClick={() => handleReject(user._id)}
+                    sx={{ 
+                      minWidth: { xs: '45%', sm: '80px' },
+                      fontFamily: 'Parkinsans'
+                    }}
+                  >
+                    Reject
+                  </Button>
+                </Stack>
               </Stack>
-            </Box>
+            </Paper>
           ))}
-        </div>
+        </Stack>
       )}
-    </div>
+    </Box>
   );
 };
 

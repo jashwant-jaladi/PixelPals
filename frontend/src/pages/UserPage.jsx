@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Snackbar, CircularProgress, Alert } from '@mui/material';
+import { Snackbar, CircularProgress, Alert, Box, Container } from '@mui/material';
 import UserHeader from '../components/UserHeader';
 import Post from '../components/Post';
 import { useParams } from 'react-router-dom';
@@ -54,9 +54,9 @@ const UserPage = () => {
   // Show loading spinner while fetching user profile
   if (loadingUser) {
     return (
-      <div className="flex justify-center mt-10">
+      <Box className="flex justify-center items-center" sx={{ minHeight: '50vh' }}>
         <CircularProgress />
-      </div>
+      </Box>
     );
   }
 
@@ -67,36 +67,40 @@ const UserPage = () => {
     (user.followers && user.followers.includes(currentUser._id)); 
 
   return (
-    <>
+    <Container maxWidth="lg" disableGutters sx={{ px: { xs: 1, sm: 2, md: 3 } }}>
       <UserHeader user={user} setTabIndex={setTabIndex} tabIndex={tabIndex} />
 
-      <div className="mt-5">
+      <Box className="mt-5" sx={{ width: '100%' }}>
         {tabIndex === 0 && (
           <>
             {!canViewPosts ? (
-              <div className="text-center text-xl mt-10 font-parkinsans text-pink-700">
+              <Box className="text-center py-10 px-4" sx={{ typography: { xs: 'h6', sm: 'h5' }, color: 'pink.700' }}>
                 This account is private. Follow to see their posts.
-              </div>
+              </Box>
             ) : fetchingPosts ? (
-              <div className="flex justify-center mt-10">
+              <Box className="flex justify-center items-center" sx={{ minHeight: '30vh' }}>
                 <CircularProgress />
-              </div>
+              </Box>
             ) : (
               <>
                 {posts.length === 0 ? (
-                  <div className="text-center font-parkinsans text-pink-700 text-xl">
+                  <Box className="text-center py-8 px-4" sx={{ typography: { xs: 'h6', sm: 'h5' }, color: 'pink.700' }}>
                     {currentUser._id === user._id
                       ? "Looks like you didn't post anything yet, please create a post."
                       : `Looks like ${user.username} hasn't posted anything yet.`}
-                  </div>
+                  </Box>
                 ) : (
-                  posts.map((post) => <Post key={post._id} post={post} />)
+                  <Box className="flex flex-col items-center">
+                    {posts.map((post) => (
+                      <Post key={post._id} post={post} />
+                    ))}
+                  </Box>
                 )}
               </>
             )}
           </>
         )}
-      </div>
+      </Box>
 
       {/* Snackbar for errors */}
       <Snackbar
@@ -113,7 +117,7 @@ const UserPage = () => {
           {snackbarMessage}
         </Alert>
       </Snackbar>
-    </>
+    </Container>
   );
 };
 

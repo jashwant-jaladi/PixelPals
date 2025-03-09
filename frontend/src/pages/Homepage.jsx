@@ -10,7 +10,11 @@ import {
   useMediaQuery, 
   useTheme,
   Container,
-  Grid
+  Grid,
+  Paper,
+  Divider,
+  Card,
+  CardContent
 } from '@mui/material';
 import { Link } from 'react-router-dom';
 import SentimentDissatisfiedIcon from '@mui/icons-material/SentimentDissatisfied';
@@ -32,7 +36,9 @@ const Homepage = () => {
   const [updating, setUpdating] = useState(false);
 
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isLargeScreen = useMediaQuery(theme.breakpoints.up('lg'));
   const currentUser = useRecoilValue(getUser);
 
   React.useEffect(() => {
@@ -80,227 +86,352 @@ const Homepage = () => {
     setFollowing(user.followers.includes(currentUser._id));
   };
 
-  // Mobile Suggested Users Grid Component
-  const MobileSuggestedUsersGrid = () => {
+  // Search Result Component
+  const SearchResultComponent = ({ user }) => {
+    if (!user) return null;
+    
+    const followRequested = user?.Requested?.includes(currentUser?._id) || false;
+
     return (
-      <Box sx={{ width: '100%', mb: 2, mt: 2 }}>
-        
-        <SuggestedUsers 
-          renderMode="mobile" 
-          onFollowClick={handleFollowUnfollow}
-        />
-      </Box>
+      <Card 
+        elevation={1}
+        sx={{ 
+          mt: 2, 
+          mb: 3,
+          borderRadius: 2,
+          border: `1px solid ${pink[100]}`,
+          transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out',
+          '&:hover': {
+            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            transform: 'translateY(-2px)'
+          }
+        }}
+      >
+        <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+          <Stack 
+            direction="row" 
+            spacing={2} 
+            justifyContent="space-between" 
+            alignItems="center"
+          >
+            <Stack 
+              direction="row" 
+              spacing={2} 
+              component={Link} 
+              to={`/${user.username}`} 
+              alignItems="center"
+              sx={{ textDecoration: 'none' }}
+            >
+              <Avatar 
+                src={user.profilePic} 
+                sx={{ 
+                  width: { xs: 45, sm: 50 }, 
+                  height: { xs: 45, sm: 50 },
+                  border: `2px solid ${pink[200]}`,
+                }}
+              />
+              <Box>
+                <Typography 
+                  variant="body1" 
+                  fontWeight="bold" 
+                  fontFamily={'Parkinsans'}
+                  color="text.primary"
+                  sx={{ fontSize: { xs: '0.95rem', sm: '1.1rem' } }}
+                >
+                  {user.username}
+                </Typography>
+                <Typography 
+                  variant="body2" 
+                  color="text.secondary" 
+                  fontFamily={'Parkinsans'}
+                  sx={{ fontSize: { xs: '0.8rem', sm: '0.9rem' } }}
+                >
+                  {user.name}
+                </Typography>
+              </Box>
+            </Stack>
+
+            {currentUser && (
+              <Button
+                size={isMobile ? "small" : "medium"}
+                variant={following ? "outlined" : "contained"}
+                onClick={() => handleFollowUnfollow(user)}
+                disabled={followRequested || updating}
+                sx={{
+                  minWidth: { xs: 80, sm: 90 },
+                  backgroundColor: followRequested ? pink[300] : pink[500],
+                  "&:hover": { backgroundColor: followRequested ? pink[300] : pink[700] },
+                  "&:disabled": { backgroundColor: pink[300] },
+                  color: "black",
+                  fontWeight: "bold",
+                  fontFamily: 'Parkinsans',
+                  fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                  borderRadius: '20px',
+                  textTransform: 'none',
+                  boxShadow: '0 2px 5px rgba(0,0,0,0.1)',
+                  border: following ? `1px solid ${pink[500]}` : 'none',
+                }}
+              >
+                {followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
+              </Button>
+            )}
+          </Stack>
+        </CardContent>
+      </Card>
     );
   };
 
-  // Mobile Layout
-  if (isMobile) {
-    return (
-      <Container maxWidth="sm">
-        <Box>
-          {/* Mobile Suggested Users Grid */}
-          <MobileSuggestedUsersGrid />
+  // Empty State Component
+  const EmptyState = () => (
+    <Card
+      elevation={1}
+      sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'column',
+        textAlign: 'center',
+        py: { xs: 6, sm: 8, md: 10 },
+        px: 3,
+        borderRadius: 4,
+        border: `1px solid ${pink[100]}`,
+        bgcolor: 'rgba(255, 255, 255, 0.8)',
+        backdropFilter: 'blur(10px)',
+        maxWidth: '600px',
+        mx: 'auto',
+        mb: 4
+      }}
+    >
+      <SentimentDissatisfiedIcon 
+        sx={{ 
+          fontSize: { xs: '50px', sm: '60px', md: '70px' }, 
+          color: pink[500],
+          mb: 3,
+        }} 
+      />
+      <Typography
+        variant={isMobile ? "h6" : "h5"}
+        sx={{
+          color: pink[700],
+          fontWeight: 'bold',
+          fontFamily: 'Parkinsans',
+          mb: 2
+        }}
+      >
+        No posts found
+      </Typography>
+      <Typography
+        variant="body1"
+        sx={{
+          color: 'text.secondary',
+          fontFamily: 'Parkinsans',
+          maxWidth: '400px',
+          fontSize: { xs: '0.9rem', sm: '1rem' }
+        }}
+      >
+        Follow some users to see their posts in your feed
+      </Typography>
+    </Card>
+  );
 
-          {/* Search Users */}
-          <Box sx={{ mb: 2 }}>
-            <SearchUsers onSearchResult={handleSearchResult} />
-            
-            {searchResult && (() => {
-              const followRequested = searchResult?.Requested?.includes(currentUser?._id) || false;
+  // Loading Component
+  const LoadingComponent = () => (
+    <Box 
+      sx={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        flexDirection: 'column',
+        height: { xs: '200px', md: '300px' },
+        width: '100%',
+      }}
+    >
+      <CircularProgress sx={{ color: pink[500], mb: 2 }} />
+      <Typography 
+        variant="body1" 
+        sx={{ 
+          fontFamily: 'Parkinsans',
+          color: 'text.secondary'
+        }}
+      >
+        Loading posts...
+      </Typography>
+    </Box>
+  );
 
-              return (
-                <Stack 
-                  direction="row" 
-                  spacing={2} 
-                  justifyContent="space-between" 
-                  alignItems="center" 
-                  sx={{ mt: 2 }}
-                >
-                  <Stack 
-                    direction="row" 
-                    spacing={2} 
-                    component={Link} 
-                    to={`/${searchResult.username}`} 
-                    alignItems="center"
-                  >
-                    <Avatar src={searchResult.profilePic} />
-                    <Box>
-                      <Typography variant="body1" fontWeight="bold" fontFamily={'Parkinsans'}>
-                        {searchResult.username}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" fontFamily={'Parkinsans'}>
-                        {searchResult.name}
-                      </Typography>
-                    </Box>
-                  </Stack>
-
-                  {currentUser && (
-                    <Button
-                      size="small"
-                      color="primary"
-                      variant={following ? "outlined" : "contained"}
-                      onClick={() => handleFollowUnfollow(searchResult)}
-                      disabled={followRequested || updating}
-                      sx={{
-                        minWidth: 80,
-                        backgroundColor: followRequested ? pink[300] : pink[500],
-                        "&:hover": { backgroundColor: followRequested ? pink[300] : pink[700] },
-                        "&:disabled": { backgroundColor: pink[700] },
-                        color: "black",
-                        fontWeight: "bold",
-                      }}
-                    >
-                      {followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
-                    </Button>
-                  )}
-                </Stack>
-              );
-            })()}
-          </Box>
-
-          {/* Posts */}
-          <Box>
-            {loading && (
-              <CircularProgress
-                sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-              />
-            )}
-            {!loading && posts.length === 0 && (
-              <Box 
-                sx={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  flexDirection: 'column',
-                  textAlign: 'center',
-                  py: 4
+  return (
+    <Box sx={{ bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Container 
+        maxWidth={isLargeScreen ? "lg" : "md"} 
+        sx={{ 
+          py: { xs: 2, md: 3 },
+        }}
+      >
+        <Grid container spacing={3}>
+          {/* Main Content Area */}
+          <Grid item xs={12} md={8}>
+            <Box sx={{ mb: 3 }}>
+              {/* Search Users - Visible on all devices */}
+              <Card 
+                elevation={1} 
+                sx={{ 
+                  borderRadius: 3, 
+                  mb: 3,
+                  border: `1px solid ${pink[100]}`,
+                  overflow: 'visible'
                 }}
               >
-                <SentimentDissatisfiedIcon style={{ fontSize: '50px', color: '#e91e63' }} />
-                <Typography
-  variant="h6"
-  sx={{
-    color: '#e91e63',// Set the font
-    fontWeight: 'bold',
-    mt: 2,
-  }}
-  fontFamily={'Parkinsans'}
->
-  No posts found, follow some users to see their posts
-</Typography>
-
+                <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                  <SearchUsers onSearchResult={handleSearchResult} />
+                </CardContent>
+              </Card>
+              
+              <SearchResultComponent user={searchResult} />
+              
+              {/* Mobile/Tablet Suggested Users */}
+              {(isMobile || isTablet) && (
+                <Card 
+                  elevation={1} 
+                  sx={{ 
+                    borderRadius: 3, 
+                    mb: 3,
+                    border: `1px solid ${pink[100]}`,
+                    overflow: 'visible'
+                  }}
+                >
+                  <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+                    <Typography 
+                      variant="h6" 
+                      sx={{ 
+                        fontFamily: 'Parkinsans', 
+                        fontWeight: 'bold',
+                        mb: 2,
+                        color: pink[700],
+                        textAlign: 'center'
+                      }}
+                    >
+                      Suggested For You
+                    </Typography>
+                    <SuggestedUsers 
+                      renderMode="mobile" 
+                      onFollowClick={handleFollowUnfollow}
+                    />
+                  </CardContent>
+                </Card>
+              )}
+            </Box>
+            
+            {/* Posts Section */}
+            <Box>
+              {loading ? (
+                <LoadingComponent />
+              ) : posts.length === 0 ? (
+                <EmptyState />
+              ) : (
+                <Box sx={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  mb: 4 
+                }}>
+                  {posts.map((post) => (
+                    <Box key={post._id} sx={{ mb: 3, width: '100%', maxWidth: '600px' }}>
+                      <Post post={post} postedBy={post.postedBy} />
+                    </Box>
+                  ))}
+                </Box>
+              )}
+            </Box>
+          </Grid>
+          
+          {/* Sidebar - Only visible on desktop */}
+          {!isMobile && !isTablet && (
+            <Grid item md={4}>
+              <Box 
+                sx={{ 
+                  position: 'sticky',
+                  top: '20px',
+                }}
+              >
+                <Card 
+                  elevation={1}
+                  sx={{ 
+                    p: 0, 
+                    borderRadius: 3,
+                    border: `1px solid ${pink[100]}`,
+                    overflow: 'visible',
+                    mb: 3
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography 
+                      variant="h6" 
+                      fontFamily={'Parkinsans'} 
+                      fontWeight="bold"
+                      sx={{ 
+                        mb: 3,
+                        color: pink[700],
+                        fontSize: { sm: '1.1rem', md: '1.25rem' },
+                        textAlign: 'center'
+                      }}
+                    >
+                      Suggested For You
+                    </Typography>
+                    <SuggestedUsers onFollowClick={handleFollowUnfollow} />
+                  </CardContent>
+                </Card>
+                
+                <Card 
+                  elevation={1}
+                  sx={{ 
+                    p: 0, 
+                    borderRadius: 3,
+                    border: `1px solid ${pink[100]}`,
+                    overflow: 'visible'
+                  }}
+                >
+                  <CardContent sx={{ p: 3 }}>
+                    <Typography 
+                      variant="body2" 
+                      sx={{ 
+                        color: 'text.secondary',
+                        fontFamily: 'Parkinsans',
+                        textAlign: 'center',
+                        fontSize: '0.8rem'
+                      }}
+                    >
+                      © 2023 PixelPals • All Rights Reserved
+                    </Typography>
+                  </CardContent>
+                </Card>
               </Box>
-            )}
-            {posts.length > 0 &&
-              posts.map((post) => (
-                <Post key={post._id} post={post} postedBy={post.postedBy} />
-              ))}
-          </Box>
-        </Box>
+            </Grid>
+          )}
+        </Grid>
 
+        {/* Snackbar for notifications */}
         <Snackbar
           open={snackbarOpen}
           autoHideDuration={6000}
           onClose={handleSnackbarClose}
           message={snackbarMessage}
+          anchorOrigin={{ 
+            vertical: 'bottom', 
+            horizontal: isMobile ? 'center' : 'right' 
+          }}
+          sx={{
+            '& .MuiSnackbarContent-root': {
+              bgcolor: 'background.paper',
+              color: 'text.primary',
+              fontWeight: 'medium',
+              fontFamily: 'Parkinsans',
+              borderRadius: 2,
+              boxShadow: 3,
+            }
+          }}
         />
       </Container>
-    );
-  }
-
-  // Desktop Layout
-  return (
-    <>
-      <Box display="flex" justifyContent="space-between" flexWrap="wrap">
-        <Box flex={7} mr={2}>
-          {loading && (
-            <CircularProgress
-              sx={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
-            />
-          )}
-          {!loading && posts.length === 0 && (
-            <div style={{
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              height: '100vh',
-              flexDirection: 'column',
-              textAlign: 'center',
-            }}>
-              <SentimentDissatisfiedIcon style={{ fontSize: '50px', color: '#e91e63' }} />
-              <Typography
-                variant="h5"
-                style={{
-                  color: '#e91e63 ',
-                  fontWeight: 'bold',
-                  marginTop: '10px',
-                }}
-                fontFamily={'Parkinsans'}
-              >
-                No posts found, follow some users to see their posts
-              </Typography>
-            </div>
-          )}
-          {posts.length > 0 &&
-            posts.map((post) => (
-              <Post key={post._id} post={post} postedBy={post.postedBy} />
-            ))}
-        </Box>
-
-        <Box flex={3} p={2}>
-          <SuggestedUsers />
-          <SearchUsers onSearchResult={handleSearchResult} /> 
-          
-          {searchResult && (() => {
-            const followRequested = searchResult?.Requested?.includes(currentUser?._id) || false;
-
-            return (
-              <Stack direction="row" spacing={2} justifyContent="space-between" alignItems="center">
-                <Stack direction="row" spacing={2} component={Link} to={`/${searchResult.username}`} alignItems="center">
-                  <Avatar src={searchResult.profilePic} />
-                  <Box>
-                    <Typography variant="body1" fontWeight="bold" fontFamily={'Parkinsans'}>
-                      {searchResult.username}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" fontFamily={'Parkinsans'}>
-                      {searchResult.name}
-                    </Typography>
-                  </Box>
-                </Stack>
-
-                {currentUser && (
-                  <Button
-                    size="small"
-                    color="primary"
-                    variant={following ? "outlined" : "contained"}
-                    onClick={() => handleFollowUnfollow(searchResult)}
-                    disabled={followRequested || updating}
-                    sx={{
-                      minWidth: 80,
-                      backgroundColor: followRequested ? pink[300] : pink[500],
-                      "&:hover": { backgroundColor: followRequested ? pink[300] : pink[700] },
-                      "&:disabled": { backgroundColor: pink[700] },
-                      color: "black",
-                      fontWeight: "bold",
-                    }}
-                    fontFamily={'Parkinsans'}
-                  >
-                    {followRequested ? "Requested" : following ? "Unfollow" : "Follow"}
-                  </Button>
-                )}
-              </Stack>
-            );
-          })()}
-        </Box>
-      </Box>
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={handleSnackbarClose}
-        message={snackbarMessage}
-      />
-    </>
+    </Box>
   );
 };
 
