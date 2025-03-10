@@ -88,7 +88,7 @@ const Message = ({ ownMessage, message }) => {
           sx={{
             p: 1.5,
             borderRadius: 2,
-            bgcolor: ownMessage ? pink[100] : 'background.paper',
+            bgcolor: ownMessage ? pink[500] : 'background.paper',
             color: 'text.primary',
             border: `1px solid ${ownMessage ? pink[200] : theme.palette.divider}`,
             borderTopRightRadius: ownMessage ? 0 : 2,
@@ -161,8 +161,8 @@ const Message = ({ ownMessage, message }) => {
               message.seen ? (
                 <DoneAllIcon
                   sx={{
-                    fontSize: 14,
-                    color: '#4caf50',
+                    fontSize: 20,
+                    color: 'green',
                   }}
                 />
               ) : (

@@ -195,7 +195,7 @@ const Homepage = () => {
         px: 3,
         borderRadius: 4,
         border: `1px solid ${pink[100]}`,
-        bgcolor: 'rgba(255, 255, 255, 0.8)',
+        bgcolor: 'inherit',
         backdropFilter: 'blur(10px)',
         maxWidth: '600px',
         mx: 'auto',

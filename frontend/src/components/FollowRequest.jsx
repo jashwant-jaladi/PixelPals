@@ -126,10 +126,10 @@ const FollowRequest = ({ userData, setFollowRequestCount }) => {
 
   if (currentUser?._id !== userData?._id) {
     return (
-      <Box sx={{ textAlign: 'center', py: 3, color: 'pink.700' }}>
-        <Typography variant="h6" fontFamily="Parkinsans">
+      <Box sx={{ textAlign: 'center'  }}>
+        <p className="text-pink-700 text-lg sm:text-xl text-opacity-90 font-medium mt-6">
           You are not allowed to see follow requests for this user
-        </Typography>
+        </p>
       </Box>
     );
   }
@@ -141,15 +141,8 @@ const FollowRequest = ({ userData, setFollowRequestCount }) => {
           <CircularProgress sx={{ color: pink[500] }} />
         </Box>
       ) : requestedUsers.length === 0 ? (
-        <Box sx={{ textAlign: 'center', py: 3 }}>
-          <Typography 
-            variant="h6" 
-            fontFamily="Parkinsans" 
-            color="text.secondary"
-            sx={{ opacity: 0.9 }}
-          >
-            No new follow requests
-          </Typography>
+        <Box sx={{ textAlign: 'center'}}>
+        <p className="text-pink-700 text-lg sm:text-xl text-opacity-90 font-medium">no new follow requests</p>
         </Box>
       ) : (
         <Stack spacing={2}>

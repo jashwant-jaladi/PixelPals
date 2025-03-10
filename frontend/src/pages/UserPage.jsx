@@ -8,6 +8,7 @@ import { useRecoilState, useRecoilValue } from 'recoil';
 import postAtom from '../Atom/postAtom';
 import { fetchPosts } from '../apis/postApi';
 import getUser from '../Atom/getUser';
+import { pink } from '@mui/material/colors';
 
 const UserPage = () => {
   const currentUser = useRecoilValue(getUser);
@@ -74,9 +75,11 @@ const UserPage = () => {
         {tabIndex === 0 && (
           <>
             {!canViewPosts ? (
-              <Box className="text-center py-10 px-4" sx={{ typography: { xs: 'h6', sm: 'h5' }, color: 'pink.700' }}>
-                This account is private. Follow to see their posts.
-              </Box>
+               <Box sx={{ textAlign: 'center'  }}>
+                      <p className="text-pink-700 text-lg sm:text-xl text-opacity-90 font-medium mt-6">
+                        This user's posts are private, follow them to see their posts.
+                      </p>
+                    </Box>
             ) : fetchingPosts ? (
               <Box className="flex justify-center items-center" sx={{ minHeight: '30vh' }}>
                 <CircularProgress />
@@ -84,10 +87,12 @@ const UserPage = () => {
             ) : (
               <>
                 {posts.length === 0 ? (
-                  <Box className="text-center py-8 px-4" sx={{ typography: { xs: 'h6', sm: 'h5' }, color: 'pink.700' }}>
+                  <Box sx={{ textAlign: 'center' }}>
+                    <p className='text-pink-700 text-lg sm:text-xl text-opacity-90 font-medium mt-6'>
                     {currentUser._id === user._id
                       ? "Looks like you didn't post anything yet, please create a post."
                       : `Looks like ${user.username} hasn't posted anything yet.`}
+                      </p>
                   </Box>
                 ) : (
                   <Box className="flex flex-col items-center">

@@ -59,11 +59,11 @@ const Conversation = ({ conversation, isOnline }) => {
         borderRadius: 2,
         overflow: 'hidden',
         cursor: 'pointer',
-        bgcolor: isSelected ? pink[50] : 'background.paper',
+        bgcolor: isSelected ? pink[500] : 'background.paper',
         border: `1px solid ${isSelected ? pink[200] : 'transparent'}`,
         transition: 'all 0.2s ease',
         '&:hover': {
-          bgcolor: isSelected ? pink[100] : pink[50],
+          bgcolor: isSelected ? pink[500] : pink[700],
           transform: 'translateY(-2px)',
           boxShadow: '0 4px 8px rgba(0,0,0,0.05)',
         },
@@ -121,7 +121,7 @@ const Conversation = ({ conversation, isOnline }) => {
               sx={{
                 fontWeight: 'bold',
                 fontFamily: 'Parkinsans',
-                color: isSelected ? pink[700] : 'text.primary',
+                color: isSelected ? "inherit" : 'text.primary',
                 fontSize: { xs: '0.9rem', sm: '1rem' },
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',

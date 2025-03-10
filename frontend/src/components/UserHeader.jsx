@@ -367,7 +367,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
                 alignItems: "center",
                 fontSize: { xs: "12px", sm: "14px" },
               }}>
-                {isMobile ? "Alerts" : "Notifications"}
+                Notifications
               </span>
             </Badge>
           }
@@ -406,7 +406,7 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
                 alignItems: "center",
                 fontSize: { xs: "12px", sm: "14px" },
               }}>
-                {isMobile ? "Requests" : "Follow Requests"}
+                Follow Requests
               </span>
             </Badge>
           }

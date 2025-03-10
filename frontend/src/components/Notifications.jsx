@@ -49,7 +49,7 @@ const Notifications = ({ onNotificationUpdate, userData, notifications, setNotif
       {notifications.length === 0 ? (
         <div className="flex justify-center mx-auto w-full px-2 text-center">
           <p className="text-pink-700 text-lg sm:text-xl text-opacity-90 font-medium">
-            No new notifications
+            no new notifications
           </p>
         </div>
       ) : (
