@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Avatar, IconButton, Menu, MenuItem, Snackbar, CircularProgress, Tabs, Tab, Badge } from "@mui/material";
+import { Avatar, IconButton, Menu, MenuItem, Snackbar, CircularProgress, Tabs, Tab, Badge, useMediaQuery, useTheme } from "@mui/material";
 import InstagramIcon from "@mui/icons-material/Instagram";
 import ShareIcon from "@mui/icons-material/Share";
 import { pink } from "@mui/material/colors";
@@ -43,6 +43,8 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
   const [currentUserFollowing, setCurrentUserFollowing] = useState([]);
   const [conversation, setSelectedConversation] = useRecoilState(conversationAtom);
   const Navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const handleClick = (event) => setAnchorEl(event.currentTarget);
   const handleClose = () => setAnchorEl(null);
@@ -316,6 +318,18 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
           width: "100%",
           maxWidth: "100vw",
           overflowX: "auto",
+          "& .MuiTabs-flexContainer": {
+            gap: { xs: "4px", sm: "8px" },
+          },
+          "& .MuiTabs-scrollButtons": {
+            color: "pink",
+            "&.Mui-disabled": {
+              opacity: 0.3,
+            },
+          },
+          "& .MuiTab-root": {
+            textTransform: "none",
+          },
         }}
       >
         <Tab
@@ -323,9 +337,9 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
           sx={{
             color: "gray",
             "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-            minWidth: "unset",
-            padding: "6px 12px",
-            fontSize: "14px",
+            minWidth: { xs: "60px", sm: "unset" },
+            padding: { xs: "6px 8px", sm: "6px 12px" },
+            fontSize: { xs: "12px", sm: "14px" },
             flexShrink: 0,
           }}
         />
@@ -347,17 +361,22 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
                 },
               }}
             >
-              <span style={{ whiteSpace: "nowrap", display: "flex", alignItems: "center" }}>
-                Notifications
+              <span style={{ 
+                whiteSpace: "nowrap", 
+                display: "flex", 
+                alignItems: "center",
+                fontSize: { xs: "12px", sm: "14px" },
+              }}>
+                {isMobile ? "Alerts" : "Notifications"}
               </span>
             </Badge>
           }
           sx={{
             color: "gray",
             "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-            minWidth: "unset",
-            padding: "6px 12px",
-            fontSize: "14px",
+            minWidth: { xs: "60px", sm: "unset" },
+            padding: { xs: "6px 8px", sm: "6px 12px" },
+            fontSize: { xs: "12px", sm: "14px" },
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
@@ -381,17 +400,22 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
                 },
               }}
             >
-              <span style={{ whiteSpace: "nowrap", display: "flex", alignItems: "center" }}>
-                Follow Requests
+              <span style={{ 
+                whiteSpace: "nowrap", 
+                display: "flex", 
+                alignItems: "center",
+                fontSize: { xs: "12px", sm: "14px" },
+              }}>
+                {isMobile ? "Requests" : "Follow Requests"}
               </span>
             </Badge>
           }
           sx={{
             color: "gray",
             "&.Mui-selected": { color: "pink", fontWeight: "bold" },
-            minWidth: "unset",
-            padding: "6px 12px",
-            fontSize: "14px",
+            minWidth: { xs: "60px", sm: "unset" },
+            padding: { xs: "6px 8px", sm: "6px 12px" },
+            fontSize: { xs: "12px", sm: "14px" },
             flexShrink: 0,
             display: "flex",
             alignItems: "center",
