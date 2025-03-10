@@ -32,7 +32,7 @@ const Comment = ({ comment, currentUser, postId, handleDeleteComment }) => {
         bgcolor: 'background.paper',
         transition: 'all 0.2s ease',
         '&:hover': {
-          bgcolor: pink[50],
+          bgcolor: 'lightgrey',
         },
         border: '1px solid',
         borderColor: 'divider',

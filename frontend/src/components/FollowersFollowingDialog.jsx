@@ -11,6 +11,7 @@ import {
 import { pink } from "@mui/material/colors";
 import { Avatar } from "@mui/material";
 import { followUser } from "../apis/followApi";
+import {useNavigate} from "react-router-dom";
 
 const FollowersFollowingDialog = ({
   open,
@@ -27,7 +28,7 @@ const FollowersFollowingDialog = ({
   const [selectedList, setSelectedList] = useState([]);
   const [loadingStates, setLoadingStates] = useState({});
   const [followingMap, setFollowingMap] = useState({});
-
+  const navigate = useNavigate();
   useEffect(() => {
     const map = {};
     currentUserFollowing.forEach(id => {
@@ -128,7 +129,7 @@ const FollowersFollowingDialog = ({
 
               return (
                 <li key={user._id} className="flex items-center justify-between p-4 border-2 border-pink-500 bg-black rounded-lg mb-2">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/${user.username}`)}>
                     <Avatar src={user.profilePic} alt={user.name} sx={{ width: 55, height: 55 }} />
                     <div>
                       <div className="font-bold text-lg" style={{ fontFamily: "Parkinsans", color: "white" }}>{user.name}</div>

@@ -263,8 +263,8 @@ const Actions = ({ post }) => {
           sx={{
             fontFamily: 'Parkinsans',
             fontWeight: 'bold',
-            bgcolor: pink[50],
-            color: pink[700],
+            bgcolor: pink[500],
+            color: "inherit",
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
@@ -338,7 +338,7 @@ const Actions = ({ post }) => {
           <Button
             onClick={handleCommentSubmit}
             sx={{ 
-              color: 'white', 
+              color: 'inherit', 
               bgcolor: pink[500],
               fontFamily: 'Parkinsans',
               fontWeight: 'bold',
