@@ -25,7 +25,7 @@ export const SocketProvider = ({ children }) => {
     }
 
     // Avoid creating duplicate sockets
-    const newSocket = io("http://localhost:4000", {
+    const newSocket = io("/", {
       query: { userId: currentUser._id },
       reconnection: true, // Ensure auto-reconnection
       reconnectionAttempts: 5, // Retry 5 times before failing

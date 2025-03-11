@@ -10,9 +10,11 @@ import followRoutes from "./routes/followRoutes.js";
 import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./socket/socket.js";
 import path from "path";
+import job from "./cron/cron.js";
 
 dotenv.config();
 connectDB();
+job.start();
 
 const __dirname = path.resolve();
 // ✅ Enable CORS for ALL Origins
