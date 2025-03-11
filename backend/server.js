@@ -9,10 +9,12 @@ import messageRoutes from "./routes/messageRoutes.js";
 import followRoutes from "./routes/followRoutes.js";
 import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./socket/socket.js";
+import path from "path";
 
 dotenv.config();
 connectDB();
 
+const __dirname = path.resolve();
 // ✅ Enable CORS for ALL Origins
 app.use(
   cors({
@@ -31,7 +33,13 @@ app.use("/api/followUsers", followRoutes);
 app.use("/api/posts", postRoutes);
 app.use("/api/messages", messageRoutes);
 
-
+if(process.env.NODE_ENV === "production") {
+  app.use(express.static(path.join(__dirname, "/frontend/dist")));
+  app.get("*", (req, res) => {
+    res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+  }
+  );
+}
 
 server.listen(process.env.PORT, () => {
   console.log(`Server is running on port ${process.env.PORT}`);
