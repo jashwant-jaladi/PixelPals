@@ -26,6 +26,7 @@ import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
 import postAtom from '../Atom/postAtom';
 import { getFeedPosts } from '../apis/postApi';
+import { followUser, requestFollow } from '../apis/followApi';
 
 const Homepage = () => {
   const [loading, setLoading] = useState(true);
@@ -34,6 +35,7 @@ const Homepage = () => {
   const [searchResult, setSearchResult] = useState(null); 
   const [following, setFollowing] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [followRequested, setFollowRequested] = useState(false);
   const [posts, setPosts] = useRecoilState(postAtom);
 
   const theme = useTheme();
@@ -67,11 +69,25 @@ const Homepage = () => {
 
     setUpdating(true);
     try {
-      // Implement your follow/unfollow logic here
-      setSnackbarMessage(following ? `You have unfollowed ${user.username}.` : `You are now following ${user.username}!`);
-      setFollowing(!following);
+      let response;
+      if (user.private && !following) {
+        response = await requestFollow(user._id, currentUser._id);
+        if (response.error) throw new Error(response.error);
+        
+        setFollowRequested(true);
+        setSnackbarMessage("Follow request sent!");
+      } else {
+        response = await followUser(user._id);
+        if (response.error) throw new Error(response.error);
+
+        setFollowing(response.isFollowing);
+        setSnackbarMessage(response.isFollowing 
+          ? `You are now following ${user.username}!` 
+          : `You have unfollowed ${user.username}.`
+        );
+      }
     } catch (error) {
-      setSnackbarMessage('An error occurred while updating follow status.');
+      setSnackbarMessage(error.message || 'An error occurred while updating follow status.');
       setSnackbarOpen(true);
     } finally {
       setUpdating(false);
@@ -85,14 +101,13 @@ const Homepage = () => {
   const handleSearchResult = (user) => {
     setSearchResult(user);
     setFollowing(user.followers.includes(currentUser._id));
+    setFollowRequested(user.Requested?.includes(currentUser._id) || false);
   };
 
   // Search Result Component
   const SearchResultComponent = ({ user }) => {
     if (!user) return null;
     
-    const followRequested = user?.Requested?.includes(currentUser?._id) || false;
-
     return (
       <Card 
         elevation={1}
@@ -160,10 +175,16 @@ const Homepage = () => {
                 disabled={followRequested || updating}
                 sx={{
                   minWidth: { xs: 80, sm: 90 },
-                  backgroundColor: followRequested ? pink[300] : pink[500],
-                  "&:hover": { backgroundColor: followRequested ? pink[300] : pink[700] },
+                  backgroundColor: followRequested ? pink[300] : following ? 'transparent' : pink[500],
+                  "&:hover": { 
+                    backgroundColor: followRequested 
+                      ? pink[300] 
+                      : following 
+                        ? pink[50] 
+                        : pink[700] 
+                  },
                   "&:disabled": { backgroundColor: pink[300] },
-                  color: "black",
+                  color: following ? pink[500] : "white",
                   fontWeight: "bold",
                   fontFamily: 'Parkinsans',
                   fontSize: { xs: '0.8rem', sm: '0.9rem' },
