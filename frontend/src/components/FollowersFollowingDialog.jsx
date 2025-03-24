@@ -7,6 +7,11 @@ import {
   CircularProgress,
   Tabs,
   Tab,
+  useTheme,
+  useMediaQuery,
+  Box,
+  Stack,
+  Typography,
 } from "@mui/material";
 import { pink } from "@mui/material/colors";
 import { Avatar } from "@mui/material";
@@ -29,6 +34,10 @@ const FollowersFollowingDialog = ({
   const [loadingStates, setLoadingStates] = useState({});
   const [followingMap, setFollowingMap] = useState({});
   const navigate = useNavigate();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+
   useEffect(() => {
     const map = {};
     currentUserFollowing.forEach(id => {
@@ -98,10 +107,32 @@ const FollowersFollowingDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" scroll="paper">
+    <Dialog 
+      open={open} 
+      onClose={onClose} 
+      fullWidth 
+      maxWidth={isMobile ? "xs" : "sm"}
+      fullScreen={isMobile}
+      scroll="paper"
+      PaperProps={{
+        sx: {
+          bgcolor: 'black',
+          borderRadius: isMobile ? 0 : 2,
+          maxHeight: isMobile ? '100%' : '90vh',
+          m: isMobile ? 0 : 2,
+        }
+      }}
+    >
       <DialogTitle
-        className="text-center font-bold text-xl"
-        style={{ fontFamily: "Parkinsans", color: "white", backgroundColor: "black", fontWeight: "bold" }}
+        sx={{
+          textAlign: "center",
+          fontFamily: "Parkinsans",
+          color: "white",
+          bgcolor: "black",
+          fontWeight: "bold",
+          fontSize: { xs: '1.2rem', sm: '1.5rem' },
+          py: { xs: 1.5, sm: 2 }
+        }}
       >
         {selectedTab === "followers" ? "Followers" : "Following"}
       </DialogTitle>
@@ -110,72 +141,203 @@ const FollowersFollowingDialog = ({
         value={selectedTab}
         onChange={handleTabChange}
         centered
-        sx={{ backgroundColor: "black", ".MuiTabs-indicator": { backgroundColor: "pink" } }}
+        sx={{ 
+          bgcolor: "black", 
+          ".MuiTabs-indicator": { bgcolor: "pink" },
+          mb: { xs: 1, sm: 2 }
+        }}
       >
-        <Tab label="Followers" value="followers" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
-        <Tab label="Following" value="following" sx={{ color: "gray", "&.Mui-selected": { color: "pink", fontWeight: "bold" } }} />
+        <Tab 
+          label="Followers" 
+          value="followers" 
+          sx={{ 
+            color: "gray", 
+            "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+            fontSize: { xs: '0.9rem', sm: '1rem' }
+          }} 
+        />
+        <Tab 
+          label="Following" 
+          value="following" 
+          sx={{ 
+            color: "gray", 
+            "&.Mui-selected": { color: "pink", fontWeight: "bold" },
+            fontSize: { xs: '0.9rem', sm: '1rem' }
+          }} 
+        />
       </Tabs>
 
-      <DialogContent className="bg-black">
+      <DialogContent sx={{ bgcolor: "black", p: { xs: 1, sm: 2 } }}>
         {loading ? (
-          <div className="flex justify-center bg-black">
-            <CircularProgress color="secondary" />
-          </div>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+            <CircularProgress sx={{ color: pink[500] }} />
+          </Box>
         ) : selectedList.length > 0 ? (
-          <ul>
+          <Stack spacing={2}>
             {selectedList.map((user) => {
               const isFollowing = followingMap[user._id] || false;
               const isLoading = loadingStates[user._id] || false;
 
               return (
-                <li key={user._id} className="flex items-center justify-between p-4 border-2 border-pink-500 bg-black rounded-lg mb-2">
-                  <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate(`/${user.username}`)}>
-                    <Avatar src={user.profilePic} alt={user.name} sx={{ width: 55, height: 55 }} />
-                    <div>
-                      <div className="font-bold text-lg" style={{ fontFamily: "Parkinsans", color: "white" }}>{user.name}</div>
-                      <div className="text-gray-600 text-sm" style={{ fontFamily: "Parkinsans" }}>@{user.username}</div>
-                    </div>
-                  </div>
+                <Box 
+                  key={user._id} 
+                  sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    p: { xs: 2, sm: 3 },
+                    border: '2px solid',
+                    borderColor: 'pink.500',
+                    borderRadius: 2,
+                    bgcolor: 'black',
+                    transition: 'transform 0.2s ease-in-out',
+                    '&:hover': {
+                      transform: 'translateY(-2px)'
+                    }
+                  }}
+                >
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: { xs: 2, sm: 3 },
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => navigate(`/${user.username}`)}
+                  >
+                    <Avatar 
+                      src={user.profilePic} 
+                      alt={user.name} 
+                      sx={{ 
+                        width: { xs: 45, sm: 55 }, 
+                        height: { xs: 45, sm: 55 } 
+                      }} 
+                    />
+                    <Box>
+                      <Typography 
+                        sx={{ 
+                          fontFamily: "Parkinsans",
+                          color: "white",
+                          fontWeight: "bold",
+                          fontSize: { xs: '1rem', sm: '1.25rem' }
+                        }}
+                      >
+                        {user.name}
+                      </Typography>
+                      <Typography 
+                        sx={{ 
+                          fontFamily: "Parkinsans",
+                          color: "gray.600",
+                          fontSize: { xs: '0.8rem', sm: '0.9rem' }
+                        }}
+                      >
+                        @{user.username}
+                      </Typography>
+                    </Box>
+                  </Box>
 
                   {user._id === currentUser?._id ? (
-                    <button 
+                    <Button 
                       disabled 
-                      className="text-sm font-bold px-4 py-2 rounded-lg bg-gray-900 text-gray-500 border-2 border-gray-700 cursor-not-allowed"
-                      style={{ fontFamily: "Parkinsans" }}
+                      sx={{ 
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        fontWeight: "bold",
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 0.5, sm: 1 },
+                        borderRadius: 2,
+                        bgcolor: 'gray.900',
+                        color: 'gray.500',
+                        border: '2px solid',
+                        borderColor: 'gray.700',
+                        cursor: 'not-allowed',
+                        fontFamily: "Parkinsans"
+                      }}
                     >
                       You
-                    </button>
+                    </Button>
                   ) : user?.Requested?.includes(currentUser._id) ? (
-                    <button 
+                    <Button 
                       disabled 
-                      className="text-sm font-bold px-4 py-2 rounded-lg border-2 border-gray-500 bg-gray-700 text-gray-400 cursor-not-allowed"
-                      style={{ fontFamily: "Parkinsans" }}
+                      sx={{ 
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        fontWeight: "bold",
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 0.5, sm: 1 },
+                        borderRadius: 2,
+                        bgcolor: 'gray.700',
+                        color: 'gray.400',
+                        border: '2px solid',
+                        borderColor: 'gray.500',
+                        cursor: 'not-allowed',
+                        fontFamily: "Parkinsans"
+                      }}
                     >
                       Requested
-                    </button>
+                    </Button>
                   ) : (
-                    <button
+                    <Button
                       onClick={() => handleFollowUnfollow(user._id, isFollowing)}
                       disabled={isLoading}
-                      className={`text-sm font-bold px-4 py-2 rounded-lg border-2 border-pink-500 
-                        ${isLoading ? "bg-gray-500 text-white cursor-not-allowed" : "text-pink-500 hover:bg-pink-700 hover:text-white transition-all duration-300 tracking-wide"}`}
-                      style={{ fontFamily: "Parkinsans" }}
+                      sx={{ 
+                        fontSize: { xs: '0.8rem', sm: '0.9rem' },
+                        fontWeight: "bold",
+                        px: { xs: 2, sm: 3 },
+                        py: { xs: 0.5, sm: 1 },
+                        borderRadius: 2,
+                        border: '2px solid',
+                        borderColor: 'pink.500',
+                        color: isLoading ? 'white' : 'pink.500',
+                        bgcolor: isLoading ? 'gray.500' : 'transparent',
+                        '&:hover': {
+                          bgcolor: 'pink.700',
+                          color: 'white'
+                        },
+                        transition: 'all 0.3s ease',
+                        cursor: isLoading ? 'not-allowed' : 'pointer',
+                        fontFamily: "Parkinsans"
+                      }}
                     >
                       {isLoading ? "Processing..." : isFollowing ? "Unfollow" : "Follow"}
-                    </button>
+                    </Button>
                   )}
-                </li>
+                </Box>
               );
             })}
-          </ul>
+          </Stack>
         ) : (
-          <p className="text-center text-gray-500 py-6" style={{ fontFamily: "Parkinsans", fontWeight: "bold" }}>No {selectedTab} yet.</p>
+          <Typography 
+            sx={{ 
+              textAlign: "center", 
+              color: "gray.500", 
+              py: { xs: 4, sm: 6 },
+              fontFamily: "Parkinsans",
+              fontWeight: "bold",
+              fontSize: { xs: '0.9rem', sm: '1rem' }
+            }}
+          >
+            No {selectedTab} yet.
+          </Typography>
         )}
       </DialogContent>
 
-      <div className="flex justify-center p-4 bg-black">
-        <Button onClick={onClose} variant="outlined" sx={{ backgroundColor: pink[700], color: "white", fontFamily: "Parkinsans", fontWeight: "bold" }}>Close</Button>
-      </div>
+      <Box sx={{ p: { xs: 2, sm: 3 }, bgcolor: "black", display: 'flex', justifyContent: 'center' }}>
+        <Button 
+          onClick={onClose} 
+          sx={{ 
+            bgcolor: pink[700],
+            color: "white",
+            fontFamily: "Parkinsans",
+            fontWeight: "bold",
+            px: { xs: 3, sm: 4 },
+            py: { xs: 0.75, sm: 1 },
+            '&:hover': {
+              bgcolor: pink[800]
+            }
+          }}
+        >
+          Close
+        </Button>
+      </Box>
     </Dialog>
   );
 };

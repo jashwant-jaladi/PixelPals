@@ -22,18 +22,19 @@ import Post from '../components/Post';
 import SuggestedUsers from '../components/SuggestedUsers';
 import SearchUsers from '../components/SearchUsers';
 import { pink } from '@mui/material/colors'; 
-import { useRecoilValue } from 'recoil';
+import { useRecoilValue, useRecoilState } from 'recoil';
 import getUser from '../Atom/getUser';
+import postAtom from '../Atom/postAtom';
 import { getFeedPosts } from '../apis/postApi';
 
 const Homepage = () => {
-  const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [searchResult, setSearchResult] = useState(null); 
   const [following, setFollowing] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [posts, setPosts] = useRecoilState(postAtom);
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -55,7 +56,7 @@ const Homepage = () => {
       }
     };
     getPosts();
-  }, []);
+  }, [setPosts]);
 
   const handleFollowUnfollow = async (user) => {
     if (!currentUser) {

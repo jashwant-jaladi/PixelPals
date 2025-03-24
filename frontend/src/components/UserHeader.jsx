@@ -117,6 +117,12 @@ const UserHeader = ({ user, setTabIndex, tabIndex }) => {
         response = await requestFollow(userData._id, currentUser._id);
         if (response.error) throw new Error(response.error);
       
+        // Update the userData state to include the current user in Requested array
+        setUserData(prev => ({
+          ...prev,
+          Requested: [...(prev.Requested || []), currentUser._id]
+        }));
+        
         setFollowRequested(true);
         setSnackbarMessage("Follow request sent!");
       } else {
