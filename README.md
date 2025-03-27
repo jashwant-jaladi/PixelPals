@@ -60,7 +60,19 @@ Check out the live version of **PixelPals** here:
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## 📸 Screenshots
-*(Add relevant screenshots of the app here)*
+![auth](screenshots/auth.png)
+
+![home](screenshots/home.png)
+
+![white-home](screenshots/white-home.png)
+
+![post](screenshots/post.png)
+
+![privacy](screenshots/privacy.png)
+
+![mainpost](screenshots/mainpost.png)
+
+![chat](screenshots/chat.png)
 
 ## 🚀 Deployment
 The application is deployed on **Render**. To deploy your own version:
