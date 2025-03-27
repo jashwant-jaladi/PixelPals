@@ -18,7 +18,7 @@ PixelPals is a social media platform designed to connect users through engaging 
 
 ## 🌍 Live Demo
 Check out the live version of **PixelPals** here:
-🔗 **[PixelPals Live](your_live_demo_link_here)**
+🔗 **[PixelPals Live](https://pixelpals.onrender.com/auth)**
 
 ## 🛠 Tech Stack
 - **Frontend:** React, Chakra UI, Tailwind CSS, Recoil
@@ -31,7 +31,7 @@ Check out the live version of **PixelPals** here:
 ## 📦 Installation
 1. Clone the repository:
    ```sh
-   git clone https://github.com/yourusername/pixelpals.git
+   git clone https://github.com/jashwamt-jaladi/pixelpals.git
    cd pixelpals
    ```
 2. Install dependencies:
@@ -40,13 +40,16 @@ Check out the live version of **PixelPals** here:
    ```
 3. Set up environment variables in a `.env.local` file:
    ```plaintext
+   PORT=4000
    MONGO_URI=your_mongodb_connection_string
    JWT_SECRET=your_jwt_secret
    CLOUDINARY_NAME=your_cloudinary_name
    CLOUDINARY_API_KEY=your_cloudinary_api_key
    CLOUDINARY_API_SECRET=your_cloudinary_api_secret
    COHERE_API_KEY=your_cohere_api_key
-   SOCKET_SERVER_URL=your_socket_server_url
+   EMAIL_USER=your_email_addres
+   EMAIL_PASSWORD=your_email_password
+   CLIENT_URL=http://localhost:3000
    ```
    ⚠️ **Important:** Never commit this file to a public repository. Add `.env.local` to your `.gitignore` file to keep your credentials secure.
 
